@@ -1,0 +1,41 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "unicorn", "oxc", "eslint", "react", "import", "jsx-a11y", "vitest"],
+  "ignorePatterns": [".dev/**"],
+  "categories": {
+    "correctness": "error"
+  },
+  "rules": {
+    "@typescript-eslint/consistent-type-imports": [
+      "warn",
+      {
+        "prefer": "type-imports",
+        "fixStyle": "separate-type-imports"
+      }
+    ],
+    "@typescript-eslint/no-explicit-any": "warn",
+    "@typescript-eslint/no-import-type-side-effects": "warn",
+    "@typescript-eslint/no-misused-promises": "warn",
+    "@typescript-eslint/no-non-null-assertion": "warn",
+    "@typescript-eslint/return-await": "warn",
+    "@typescript-eslint/use-unknown-in-catch-callback-variable": "warn",
+    "import/no-duplicates": "warn",
+    "no-restricted-imports": [
+      "warn",
+      {
+        "patterns": [
+          {
+            "group": [".dev/*", "**/.dev/*"],
+            "message": "Do not import from .dev reference files."
+          }
+        ]
+      }
+    ],
+    "react/jsx-no-constructed-context-values": "warn",
+    "react/jsx-no-useless-fragment": "warn",
+    "react/no-array-index-key": "warn"
+  },
+  "env": {
+    "builtin": true
+  }
+}

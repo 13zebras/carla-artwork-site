@@ -1,0 +1,91 @@
+@import 'tailwindcss';
+@plugin '@tailwindcss/typography';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-ring: var(--ring);
+  --shadow-card: var(--card-shadow);
+  --breakpoint-xs: 35rem;
+}
+
+:root {
+  color-scheme: light;
+  --background: var(--color-stone-50);
+  --foreground: var(--color-stone-950);
+  --muted-foreground: var(--color-stone-600);
+  --accent: var(--color-stone-200);
+  --accent-foreground: var(--color-stone-900);
+  --border: var(--color-stone-200);
+  --popover: var(--color-stone-50);
+  --popover-foreground: var(--color-stone-950);
+  --ring: var(--color-stone-400);
+  --card-shadow: 0 10px 15px -3px var(--color-stone-500), 0 4px 6px -4px var(--color-stone-500);
+
+  --theme-dark-background: var(--color-black);
+  --theme-dark-foreground: var(--color-stone-50);
+  --theme-dark-muted-foreground: var(--color-stone-200);
+  --theme-dark-accent: var(--color-stone-900);
+  --theme-dark-accent-foreground: var(--color-stone-50);
+  --theme-dark-border: var(--color-stone-800);
+  --theme-dark-popover: var(--color-stone-950);
+  --theme-dark-popover-foreground: var(--color-stone-50);
+  --theme-dark-ring: var(--color-stone-600);
+  --theme-dark-card-shadow:
+    0 6px 10px -2px var(--color-stone-800), 0 3px 5px -3px var(--color-stone-800);
+}
+
+.dark {
+  color-scheme: dark;
+  --background: var(--theme-dark-background);
+  --foreground: var(--theme-dark-foreground);
+  --muted-foreground: var(--theme-dark-muted-foreground);
+  --accent: var(--theme-dark-accent);
+  --accent-foreground: var(--theme-dark-accent-foreground);
+  --border: var(--theme-dark-border);
+  --popover: var(--theme-dark-popover);
+  --popover-foreground: var(--theme-dark-popover-foreground);
+  --ring: var(--theme-dark-ring);
+  --card-shadow: var(--theme-dark-card-shadow);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not(.light):not(.dark) {
+    color-scheme: dark;
+    --background: var(--theme-dark-background);
+    --foreground: var(--theme-dark-foreground);
+    --muted-foreground: var(--theme-dark-muted-foreground);
+    --accent: var(--theme-dark-accent);
+    --accent-foreground: var(--theme-dark-accent-foreground);
+    --border: var(--theme-dark-border);
+    --popover: var(--theme-dark-popover);
+    --popover-foreground: var(--theme-dark-popover-foreground);
+    --ring: var(--theme-dark-ring);
+    --card-shadow: var(--theme-dark-card-shadow);
+  }
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  @apply m-0 bg-background text-foreground;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  body {
+    transition-duration: 200ms;
+    transition-property: background-color;
+    transition-timing-function: ease;
+  }
+}
