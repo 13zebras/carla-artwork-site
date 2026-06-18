@@ -13,22 +13,24 @@
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
   --color-ring: var(--ring);
+  --color-shadow-card: var(--card-shadow-color);
   --shadow-card: var(--card-shadow);
   --breakpoint-xs: 35rem;
 }
 
 :root {
   color-scheme: light;
-  --background: var(--color-stone-50);
+  --background: var(--color-taupe-100);
   --foreground: var(--color-stone-950);
-  --muted-foreground: var(--color-stone-600);
+  --muted-foreground: var(--color-stone-700);
   --accent: var(--color-stone-200);
   --accent-foreground: var(--color-stone-900);
   --border: var(--color-stone-200);
   --popover: var(--color-stone-50);
   --popover-foreground: var(--color-stone-950);
   --ring: var(--color-stone-400);
-  --card-shadow: 0 10px 15px -3px var(--color-stone-500), 0 4px 6px -4px var(--color-stone-500);
+  --card-shadow-color: var(--color-stone-600);
+  --card-shadow: 0 10px 15px -3px var(--color-shadow-card), 0 4px 6px -4px var(--color-shadow-card);
 
   --theme-dark-background: var(--color-black);
   --theme-dark-foreground: var(--color-stone-50);
@@ -39,8 +41,9 @@
   --theme-dark-popover: var(--color-stone-950);
   --theme-dark-popover-foreground: var(--color-stone-50);
   --theme-dark-ring: var(--color-stone-600);
+  --theme-dark-card-shadow-color: var(--color-stone-800);
   --theme-dark-card-shadow:
-    0 6px 10px -2px var(--color-stone-800), 0 3px 5px -3px var(--color-stone-800);
+    0 6px 10px -2px var(--color-shadow-card), 0 3px 5px -3px var(--color-shadow-card);
 }
 
 .dark {
@@ -54,6 +57,7 @@
   --popover: var(--theme-dark-popover);
   --popover-foreground: var(--theme-dark-popover-foreground);
   --ring: var(--theme-dark-ring);
+  --card-shadow-color: var(--theme-dark-card-shadow-color);
   --card-shadow: var(--theme-dark-card-shadow);
 }
 
@@ -69,6 +73,7 @@
     --popover: var(--theme-dark-popover);
     --popover-foreground: var(--theme-dark-popover-foreground);
     --ring: var(--theme-dark-ring);
+    --card-shadow-color: var(--theme-dark-card-shadow-color);
     --card-shadow: var(--theme-dark-card-shadow);
   }
 }
@@ -83,9 +88,18 @@ body {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  body {
+  body,
+  header {
     transition-duration: 200ms;
     transition-property: background-color;
     transition-timing-function: ease;
   }
+}
+
+.nav-menu-link {
+  @apply font-normal text-muted-foreground text-base xs:text-lg transition-colors;
+}
+
+.nav-menu-link-color-hover {
+  @apply hover:text-foreground hover:bg-orange-100 dark:hover:bg-orange-900/70;
 }

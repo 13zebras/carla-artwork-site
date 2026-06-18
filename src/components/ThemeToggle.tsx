@@ -2,6 +2,8 @@ import { Moon, Sun } from 'lucide-react';
 import { useEffect } from 'react';
 import { useLocalStorage } from 'usehooks-ts';
 
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+
 type Theme = 'light' | 'dark';
 
 const THEME_STORAGE_KEY = 'carla-theme';
@@ -66,22 +68,36 @@ export function ThemeToggle() {
   }
 
   return (
-    <button
-      type='button'
-      aria-label='Toggle color theme'
-      onClick={toggleTheme}
-      className='relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-accent text-accent-foreground transition-colors hover:bg-background focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground'
-    >
-      <Sun
-        aria-hidden='true'
-        size={18}
-        className='absolute text-yellow-400 opacity-0 motion-safe:transition-opacity motion-safe:duration-200 dark:opacity-100'
-      />
-      <Moon
-        aria-hidden='true'
-        size={18}
-        className='absolute text-sky-300 opacity-100 motion-safe:transition-opacity motion-safe:duration-200 dark:opacity-0'
-      />
-    </button>
+    <div className='absolute right-2 md:right-2 xl:right-6 top-2 md:top-2 z-50'>
+      <button
+        type='button'
+        aria-label='Toggle color theme'
+        onClick={toggleTheme}
+        className='relative inline-flex h-6 w-6 sm:h-8 sm:w-8 items-center justify-center rounded-full border-0 transition-colors dark:bg-yellow-400/20 hover:dark:bg-yellow-400/40 bg-sky-300/15 hover:bg-sky-300/30'
+      >
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className='absolute inline-flex pointer-events-none dark:pointer-events-auto'>
+              <Sun
+                aria-hidden='true'
+                className='size-4 sm:size-4.5 text-yellow-500 hover:text-yellow-400 opacity-0 motion-safe:transition-opacity motion-safe:duration-200 dark:opacity-100'
+              />
+            </span>
+          </TooltipTrigger>
+          <TooltipContent side='left'>select light mode</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className='absolute inline-flex pointer-events-auto dark:pointer-events-none'>
+              <Moon
+                aria-hidden='true'
+                className='size-4 sm:size-4.5 text-sky-400 hover:text-sky-500 opacity-100 motion-safe:transition-opacity motion-safe:duration-200 dark:opacity-0'
+              />
+            </span>
+          </TooltipTrigger>
+          <TooltipContent side='left'>select dark mode</TooltipContent>
+        </Tooltip>
+      </button>
+    </div>
   );
 }

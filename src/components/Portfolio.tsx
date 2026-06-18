@@ -5,7 +5,7 @@ const eagerImageCount = 12;
 
 export function Portfolio() {
   return (
-    <section aria-label='Artwork portfolio' className='mx-auto mt-4 max-w-7xl px-8'>
+    <section aria-label='Artwork portfolio' className='mx-auto pt-50 lg:pt-35 max-w-7xl px-8 pb-12'>
       <div className='columns-1 gap-8 sm:columns-2 lg:columns-3'>
         {artworks.map((artwork, index) => (
           <PortfolioCard key={artwork.slug} artwork={artwork} priority={index < eagerImageCount} />
