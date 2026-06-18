@@ -10,11 +10,11 @@ import {
 } from '@/components/ui/navigation-menu';
 
 const artworkLinks = [
-  { label: 'Paintings', to: '.' },
-  { label: 'Drawings', to: '.' },
-  { label: 'Prints', to: '.' },
-  { label: 'Sculpture', to: '.' },
-  { label: 'Mixed Media', to: '.' },
+  { label: 'Paintings', to: '/' },
+  { label: 'Drawings', to: '/' },
+  { label: 'Prints', to: '/' },
+  { label: 'Sculpture', to: '/' },
+  { label: 'Mixed Media', to: '/' },
 ] as const;
 
 export function ArtworkNavMenu() {

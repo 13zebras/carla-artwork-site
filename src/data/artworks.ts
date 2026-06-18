@@ -10,16 +10,16 @@ export type Artwork = {
 
 export const artworks: Array<Artwork> = [
   {
-    slug: 'night-garden',
+    slug: 'night-garden-4821',
     title: 'Night Garden',
     category: 'Painting',
-    imageSrc: 'https://picsum.photos/512/640',
+    imageSrc: 'https://picsum.photos/512/620',
     alt: 'Placeholder image for Night Garden',
     width: 512,
-    height: 640,
+    height: 620,
   },
   {
-    slug: 'quiet-room',
+    slug: 'quiet-room-7394',
     title: 'Quiet Room',
     category: 'Mixed Media',
     imageSrc: 'https://picsum.photos/512/550',
@@ -28,7 +28,7 @@ export const artworks: Array<Artwork> = [
     height: 550,
   },
   {
-    slug: 'blue-study',
+    slug: 'blue-study-1568',
     title: 'Blue Study',
     category: 'Drawing',
     imageSrc: 'https://picsum.photos/512/760',
@@ -37,7 +37,7 @@ export const artworks: Array<Artwork> = [
     height: 760,
   },
   {
-    slug: 'night-garden',
+    slug: 'night-garden-2947',
     title: 'Life at Night',
     category: 'Painting',
     imageSrc: 'https://picsum.photos/512/520',
@@ -46,7 +46,7 @@ export const artworks: Array<Artwork> = [
     height: 520,
   },
   {
-    slug: 'quiet-room',
+    slug: 'quiet-room-6132',
     title: 'Last Quiet Room',
     category: 'Mixed Media',
     imageSrc: 'https://picsum.photos/512/620',
@@ -55,7 +55,7 @@ export const artworks: Array<Artwork> = [
     height: 620,
   },
   {
-    slug: 'blue-study',
+    slug: 'blue-study-8503',
     title: 'Blue Study',
     category: 'Drawing',
     imageSrc: 'https://picsum.photos/512/580',
@@ -64,25 +64,25 @@ export const artworks: Array<Artwork> = [
     height: 580,
   },
   {
-    slug: 'night-garden',
+    slug: 'night-garden-3719',
     title: 'Second Night Garden',
     category: 'Painting',
     imageSrc: 'https://picsum.photos/512/680',
     alt: 'Placeholder image for Night Garden',
     width: 512,
+    height: 700,
+  },
+  {
+    slug: 'quiet-room-9046',
+    title: 'Quiet Room 47',
+    category: 'Mixed Media',
+    imageSrc: 'https://picsum.photos/512/680',
+    alt: 'Placeholder image for Quiet Room',
+    width: 512,
     height: 680,
   },
   {
-    slug: 'quiet-room',
-    title: 'Quiet Room',
-    category: 'Mixed Media',
-    imageSrc: 'https://picsum.photos/512/650',
-    alt: 'Placeholder image for Quiet Room',
-    width: 512,
-    height: 650,
-  },
-  {
-    slug: 'blue-study',
+    slug: 'blue-study-5281',
     title: 'Red Study',
     category: 'Drawing',
     imageSrc: 'https://picsum.photos/512/600',
@@ -91,7 +91,7 @@ export const artworks: Array<Artwork> = [
     height: 600,
   },
   {
-    slug: 'night-garden',
+    slug: 'night-garden-6634',
     title: 'Night Garden',
     category: 'Painting',
     imageSrc: 'https://picsum.photos/512/600',
@@ -100,7 +100,7 @@ export const artworks: Array<Artwork> = [
     height: 600,
   },
   {
-    slug: 'quiet-room',
+    slug: 'quiet-room-2178',
     title: 'Quiet Room',
     category: 'Mixed Media',
     imageSrc: 'https://picsum.photos/512/520',
@@ -109,7 +109,7 @@ export const artworks: Array<Artwork> = [
     height: 520,
   },
   {
-    slug: 'blue-study',
+    slug: 'blue-study-4492',
     title: 'Blue Study',
     category: 'Drawing',
     imageSrc: 'https://picsum.photos/512/600',
@@ -118,7 +118,7 @@ export const artworks: Array<Artwork> = [
     height: 600,
   },
   {
-    slug: 'night-garden',
+    slug: 'night-garden-7856',
     title: 'Night Garden',
     category: 'Painting',
     imageSrc: 'https://picsum.photos/512/580',
@@ -127,7 +127,7 @@ export const artworks: Array<Artwork> = [
     height: 580,
   },
   {
-    slug: 'quiet-room',
+    slug: 'quiet-room-3015',
     title: 'Quiet Room',
     category: 'Mixed Media',
     imageSrc: 'https://picsum.photos/512/520',
@@ -136,7 +136,7 @@ export const artworks: Array<Artwork> = [
     height: 520,
   },
   {
-    slug: 'blue-study',
+    slug: 'blue-study-9427',
     title: 'Pink Study',
     category: 'Drawing',
     imageSrc: 'https://picsum.photos/512/700',

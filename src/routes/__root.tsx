@@ -1,5 +1,5 @@
 import { TanStackDevtools } from '@tanstack/react-devtools';
-import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router';
+import { HeadContent, Link, Scripts, createRootRoute } from '@tanstack/react-router';
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools';
 
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -28,6 +28,7 @@ export const Route = createRootRoute({
     ],
   }),
   shellComponent: RootDocument,
+  notFoundComponent: NotFound,
 });
 
 const themeScript = `
@@ -69,5 +70,17 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <Scripts />
       </body>
     </html>
+  );
+}
+
+function NotFound() {
+  return (
+    <div className='flex flex-col items-center justify-center gap-16 h-screen'>
+      <h1 className='text-3xl font-bold'>404 - Not Found</h1>
+      <p className='text-muted-foreground text-lg'>The page you are looking for does not exist.</p>
+      <Link to='/' className='text-sky-600 hover:text-sky-500 transition-colors text-lg'>
+        Go to home page
+      </Link>
+    </div>
   );
 }

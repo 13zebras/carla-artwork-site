@@ -9,7 +9,7 @@ export function PortfolioCard({ artwork, priority = false }: PortfolioCardProps)
   return (
     <article className='mb-8 break-inside-avoid shadow-card'>
       <a
-        href={`/work/${artwork.slug}`}
+        href={`/artwork/${artwork.slug}`}
         aria-label={`View details for ${artwork.title}`}
         className='group relative block overflow-hidden bg-accent text-accent-foreground outline-none'
       >
