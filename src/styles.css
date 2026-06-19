@@ -32,7 +32,7 @@
   --card-shadow-color: var(--color-stone-600);
   --card-shadow: 0 10px 15px -3px var(--color-shadow-card), 0 4px 6px -4px var(--color-shadow-card);
 
-  --theme-dark-background: var(--color-black);
+  --theme-dark-background: oklch(10.7% 0.004 49.25);
   --theme-dark-foreground: var(--color-stone-50);
   --theme-dark-muted-foreground: var(--color-stone-200);
   --theme-dark-accent: var(--color-stone-900);
@@ -43,7 +43,7 @@
   --theme-dark-ring: var(--color-stone-600);
   --theme-dark-card-shadow-color: var(--color-stone-800);
   --theme-dark-card-shadow:
-    0 6px 10px -2px var(--color-shadow-card), 0 3px 5px -3px var(--color-shadow-card);
+    0 5px 10px -2px var(--color-shadow-card), 1px 2px 5px -1px var(--color-shadow-card);
 }
 
 .dark {
@@ -97,7 +97,7 @@ body {
 }
 
 .nav-menu-link {
-  @apply font-normal text-muted-foreground text-base xs:text-lg transition-colors;
+  @apply font-normal text-muted-foreground text-base xs:text-lg;
 }
 
 .nav-menu-link-color-hover {
