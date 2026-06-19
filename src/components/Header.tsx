@@ -22,7 +22,7 @@ export function Header() {
           className='block xs:hidden max-w-83.5 w-full h-auto'
         />
 
-        <nav className='flex justify-between xs:justify-center max-w-80 xs:max-w-full w-full xs:gap-10 lg:gap-8 lg:mt-3 nav-menu-link'>
+        <nav className='flex justify-between xs:justify-center lg:justify-start max-w-80 xs:max-w-full w-full xs:gap-10 lg:gap-6 lg:mt-3 nav-menu-link'>
           <ArtworkNavMenu />
           <a href='https://shopify.com' className='px-2 py-1 rounded-md nav-menu-link-color-hover'>
             Shop
