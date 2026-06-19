@@ -68,36 +68,36 @@ export function ThemeToggle() {
   }
 
   return (
-    <div className='absolute right-2 md:right-2 xl:right-6 top-2 md:top-2 z-50'>
-      <button
-        type='button'
-        aria-label='Toggle color theme'
-        onClick={toggleTheme}
-        className='relative inline-flex h-6 w-6 sm:h-8 sm:w-8 items-center justify-center rounded-full border-0 transition-colors dark:bg-yellow-400/20 hover:dark:bg-yellow-400/40 bg-sky-300/15 hover:bg-sky-300/30'
-      >
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span className='absolute inline-flex pointer-events-none dark:pointer-events-auto'>
-              <Sun
-                aria-hidden='true'
-                className='size-4 sm:size-4.5 text-yellow-500 hover:text-yellow-400 opacity-0 motion-safe:transition-opacity motion-safe:duration-200 dark:opacity-100'
-              />
-            </span>
-          </TooltipTrigger>
-          <TooltipContent side='left'>select light mode</TooltipContent>
-        </Tooltip>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span className='absolute inline-flex pointer-events-auto dark:pointer-events-none'>
-              <Moon
-                aria-hidden='true'
-                className='size-4 sm:size-4.5 text-sky-400 hover:text-sky-500 opacity-100 motion-safe:transition-opacity motion-safe:duration-200 dark:opacity-0'
-              />
-            </span>
-          </TooltipTrigger>
-          <TooltipContent side='left'>select dark mode</TooltipContent>
-        </Tooltip>
-      </button>
-    </div>
+    // <div className='absolute right-2 xs:right-3 sm:right-4 top-2 xs:top-3 z-50 transition duration-300 hover:scale-[1.2] focus-visible:scale-[1.2]'>
+    <button
+      type='button'
+      aria-label='Toggle color theme'
+      onClick={toggleTheme}
+      className='inline-flex h-6 w-6 sm:h-8 sm:w-8 items-center justify-center rounded-full border-0 dark:bg-yellow-400/20 hover:dark:bg-yellow-400/40 bg-sky-300/15 hover:bg-sky-300/25 cursor-pointer absolute right-2 xs:right-3 sm:right-4 top-2 xs:top-3 z-50 transition duration-300 hover:scale-[1.2] focus-visible:scale-[1.2] active:scale-[1.05]'
+    >
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className='absolute inline-flex pointer-events-none dark:pointer-events-auto'>
+            <Sun
+              aria-hidden='true'
+              className='size-4 sm:size-4.5 text-yellow-500 hover:text-yellow-400 opacity-0 motion-safe:transition-opacity motion-safe:duration-200 dark:opacity-100'
+            />
+          </span>
+        </TooltipTrigger>
+        <TooltipContent side='left'>select light mode</TooltipContent>
+      </Tooltip>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className='absolute inline-flex pointer-events-auto dark:pointer-events-none'>
+            <Moon
+              aria-hidden='true'
+              className='size-4 sm:size-4.5 text-sky-400 hover:text-sky-500 opacity-100 motion-safe:transition-opacity motion-safe:duration-200 dark:opacity-0'
+            />
+          </span>
+        </TooltipTrigger>
+        <TooltipContent side='left'>select dark mode</TooltipContent>
+      </Tooltip>
+    </button>
+    // </div>
   );
 }

@@ -7,6 +7,7 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-muted-foreground: var(--muted-foreground);
+  --color-bg-gradient: var(--bg-gradient);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-border: var(--border);
@@ -23,6 +24,7 @@
   --background: var(--color-taupe-100);
   --foreground: var(--color-stone-950);
   --muted-foreground: var(--color-stone-700);
+  --bg-gradient: var(--color-taupe-200);
   --accent: var(--color-stone-200);
   --accent-foreground: var(--color-stone-900);
   --border: var(--color-stone-200);
@@ -35,6 +37,7 @@
   --theme-dark-background: oklch(10.7% 0.004 49.25);
   --theme-dark-foreground: var(--color-stone-50);
   --theme-dark-muted-foreground: var(--color-stone-200);
+  --theme-dark-bg-gradient: var(--color-taupe-950);
   --theme-dark-accent: var(--color-stone-900);
   --theme-dark-accent-foreground: var(--color-stone-50);
   --theme-dark-border: var(--color-stone-800);
@@ -51,6 +54,7 @@
   --background: var(--theme-dark-background);
   --foreground: var(--theme-dark-foreground);
   --muted-foreground: var(--theme-dark-muted-foreground);
+  --bg-gradient: var(--theme-dark-bg-gradient);
   --accent: var(--theme-dark-accent);
   --accent-foreground: var(--theme-dark-accent-foreground);
   --border: var(--theme-dark-border);
@@ -67,6 +71,7 @@
     --background: var(--theme-dark-background);
     --foreground: var(--theme-dark-foreground);
     --muted-foreground: var(--theme-dark-muted-foreground);
+    --bg-gradient: var(--theme-dark-bg-gradient);
     --accent: var(--theme-dark-accent);
     --accent-foreground: var(--theme-dark-accent-foreground);
     --border: var(--theme-dark-border);
@@ -76,15 +81,6 @@
     --card-shadow-color: var(--theme-dark-card-shadow-color);
     --card-shadow: var(--theme-dark-card-shadow);
   }
-}
-
-html,
-body {
-  min-height: 100%;
-}
-
-body {
-  @apply m-0 bg-background text-foreground;
 }
 
 @media (prefers-reduced-motion: no-preference) {

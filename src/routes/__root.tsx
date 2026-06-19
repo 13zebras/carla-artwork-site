@@ -57,12 +57,12 @@ function RootComponent() {
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
-    <html lang='en'>
+    <html lang='en' className='min-h-full'>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <HeadContent />
       </head>
-      <body>
+      <body className='m-0 bg-background text-foreground min-h-full bg-linear-to-b from-bg-background to-bg-gradient'>
         <TooltipProvider>{children}</TooltipProvider>
         <TanStackDevtools
           config={{
