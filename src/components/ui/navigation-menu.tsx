@@ -70,7 +70,7 @@ function NavigationMenuTrigger({
     >
       {children}{' '}
       <ChevronDownIcon
-        className='relative top-[1px] ml-1 size-4 transition-transform duration-300 group-data-[state=open]:rotate-180'
+        className='relative top-[1px] ml-0 size-5 transition-transform duration-300 group-data-[state=open]:rotate-180'
         aria-hidden='true'
       />
     </NavigationMenuPrimitive.Trigger>
