@@ -1,147 +1,75 @@
+import { ARTWORK_CATEGORIES, type ArtworkCategory } from '@/data/artworkCategories';
+
 export type Artwork = {
   slug: string;
   title: string;
-  category: string;
+  category: ArtworkCategory;
+  description?: string;
   imageSrc: string;
   alt: string;
   width: number;
   height: number;
 };
 
-export const artworks: Array<Artwork> = [
-  {
-    slug: 'night-garden-4821',
-    title: 'Night Garden',
-    category: 'Painting',
-    imageSrc: 'https://picsum.photos/512/620',
-    alt: 'Placeholder image for Night Garden',
-    width: 512,
-    height: 620,
-  },
-  {
-    slug: 'quiet-room-7394',
-    title: 'Quiet Room',
-    category: 'Mixed Media',
-    imageSrc: 'https://picsum.photos/512/550',
-    alt: 'Placeholder image for Quiet Room',
-    width: 512,
-    height: 550,
-  },
-  {
-    slug: 'blue-study-1568',
-    title: 'Blue Study',
-    category: 'Drawing',
-    imageSrc: 'https://picsum.photos/512/760',
-    alt: 'Placeholder image for Blue Study',
-    width: 512,
-    height: 760,
-  },
-  {
-    slug: 'night-garden-2947',
-    title: 'Life at Night',
-    category: 'Painting',
-    imageSrc: 'https://picsum.photos/512/520',
-    alt: 'Placeholder image for Night Garden',
-    width: 512,
-    height: 520,
-  },
-  {
-    slug: 'quiet-room-6132',
-    title: 'Last Quiet Room',
-    category: 'Mixed Media',
-    imageSrc: 'https://picsum.photos/512/620',
-    alt: 'Placeholder image for Quiet Room',
-    width: 512,
-    height: 620,
-  },
-  {
-    slug: 'blue-study-8503',
-    title: 'Blue Study',
-    category: 'Drawing',
-    imageSrc: 'https://picsum.photos/512/580',
-    alt: 'Placeholder image for Blue Study',
-    width: 512,
-    height: 580,
-  },
-  {
-    slug: 'night-garden-3719',
-    title: 'Second Night Garden',
-    category: 'Painting',
-    imageSrc: 'https://picsum.photos/512/680',
-    alt: 'Placeholder image for Night Garden',
-    width: 512,
-    height: 700,
-  },
-  {
-    slug: 'quiet-room-9046',
-    title: 'Quiet Room 47',
-    category: 'Mixed Media',
-    imageSrc: 'https://picsum.photos/512/680',
-    alt: 'Placeholder image for Quiet Room',
-    width: 512,
-    height: 680,
-  },
-  {
-    slug: 'blue-study-5281',
-    title: 'Red Study',
-    category: 'Drawing',
-    imageSrc: 'https://picsum.photos/512/600',
-    alt: 'Placeholder image for Blue Study',
-    width: 512,
-    height: 600,
-  },
-  {
-    slug: 'night-garden-6634',
-    title: 'Night Garden',
-    category: 'Painting',
-    imageSrc: 'https://picsum.photos/512/600',
-    alt: 'Placeholder image for Night Garden',
-    width: 512,
-    height: 600,
-  },
-  {
-    slug: 'quiet-room-2178',
-    title: 'Quiet Room',
-    category: 'Mixed Media',
-    imageSrc: 'https://picsum.photos/512/520',
-    alt: 'Placeholder image for Quiet Room',
-    width: 512,
-    height: 520,
-  },
-  {
-    slug: 'blue-study-4492',
-    title: 'Blue Study',
-    category: 'Drawing',
-    imageSrc: 'https://picsum.photos/512/600',
-    alt: 'Placeholder image for Blue Study',
-    width: 512,
-    height: 600,
-  },
-  {
-    slug: 'night-garden-7856',
-    title: 'Night Garden',
-    category: 'Painting',
-    imageSrc: 'https://picsum.photos/512/580',
-    alt: 'Placeholder image for Night Garden',
-    width: 512,
-    height: 580,
-  },
-  {
-    slug: 'quiet-room-3015',
-    title: 'Quiet Room',
-    category: 'Mixed Media',
-    imageSrc: 'https://picsum.photos/512/520',
-    alt: 'Placeholder image for Quiet Room',
-    width: 512,
-    height: 520,
-  },
-  {
-    slug: 'blue-study-9427',
-    title: 'Pink Study',
-    category: 'Drawing',
-    imageSrc: 'https://picsum.photos/512/700',
-    alt: 'Placeholder image for Blue Study',
-    width: 512,
-    height: 700,
-  },
-];
+//
+
+export const artworks: Array<Artwork> = generateRandomArtworks(100);
+
+export function getArtworksByCategory(category: ArtworkCategory) {
+  return artworks.filter((artwork) => artwork.category === category);
+}
+
+function generateRandomArtworks(count: number): Array<Artwork> {
+  const width = 512;
+  const minHeight = 500;
+  const maxHeight = 780;
+  const categories = Object.keys(ARTWORK_CATEGORIES) as Array<ArtworkCategory>;
+  const titleWords = [
+    'Amber',
+    'Quiet',
+    'Garden',
+    'Blue',
+    'Wild',
+    'Paper',
+    'Bloom',
+    'Midnight',
+    'Golden',
+    'River',
+    'Field',
+    'Studio',
+    'Soft',
+    'Bright',
+    'Forest',
+    'Dream',
+    'Shadow',
+    'Meadow',
+    'Silver',
+    'Moss',
+    'Dawn',
+    'Velvet',
+    'Fern',
+    'Moon',
+    'Still',
+    'Rose',
+    'Mist',
+    'Hollow',
+  ];
+  const randomItem = <T>(items: Array<T>) => items[Math.floor(Math.random() * items.length)];
+  const randomHeight = () => Math.floor(Math.random() * (maxHeight - minHeight + 1)) + minHeight;
+  const randomTitle = () => Array.from({ length: 3 }, () => randomItem(titleWords)).join(' ');
+  const randomSlug = () => String(Math.floor(Math.random() * 1_000_000_000));
+
+  return Array.from({ length: Math.max(0, Math.floor(count)) }, () => {
+    const height = randomHeight();
+
+    return {
+      slug: randomSlug(),
+      title: randomTitle(),
+      category: randomItem(categories),
+      imageSrc: `https://picsum.photos/${width}/${height}`,
+      alt: 'Placeholder image',
+      width,
+      height,
+    };
+  });
+}

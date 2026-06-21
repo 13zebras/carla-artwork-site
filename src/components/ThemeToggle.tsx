@@ -58,8 +58,6 @@ export function ThemeToggle() {
 
   const currentTheme = getRootTheme() ?? theme;
 
-  console.info('%c>>> theme', 'color: red', theme, typeof theme);
-
   function toggleTheme() {
     const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
 
