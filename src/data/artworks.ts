@@ -6,6 +6,7 @@ export type Artwork = {
   category: ArtworkCategory;
   description?: string;
   imageSrc: string;
+  fallbackImageSrc: string;
   alt: string;
   width: number;
   height: number;
@@ -58,6 +59,11 @@ function generateRandomArtworks(count: number): Array<Artwork> {
   const randomHeight = () => Math.floor(Math.random() * (maxHeight - minHeight + 1)) + minHeight;
   const randomTitle = () => Array.from({ length: 3 }, () => randomItem(titleWords)).join(' ');
   const randomSlug = () => String(Math.floor(Math.random() * 1_000_000_000));
+  const randomHexColor = () => {
+    const max = 0x707070;
+    const value = Math.floor(Math.random() * (max + 1));
+    return value.toString(16).padStart(6, '0');
+  };
 
   return Array.from({ length: Math.max(0, Math.floor(count)) }, () => {
     const height = randomHeight();
@@ -67,6 +73,7 @@ function generateRandomArtworks(count: number): Array<Artwork> {
       title: randomTitle(),
       category: randomItem(categories),
       imageSrc: `https://picsum.photos/${width}/${height}`,
+      fallbackImageSrc: `https://dummyimage.com/${width}x${height}/${randomHexColor()}/fff.gif`,
       alt: 'Placeholder image',
       width,
       height,

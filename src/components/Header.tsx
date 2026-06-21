@@ -47,14 +47,20 @@ export function Header() {
           <ArtworkNavMenu />
           <a
             href='https://shopify.com'
-            className='px-1 xxs:px-2 py-1 rounded-md nav-menu-link-color-hover'
+            className='px-1 xxs:px-2 pt-1 pb-0 rounded-md nav-menu-link-color-hover'
           >
             Shop
           </a>
-          <Link to='/about' className='px-1 xxs:px-2 py-1 rounded-md nav-menu-link-color-hover'>
+          <Link
+            to='/about'
+            className='px-1 xxs:px-2 pt-1 pb-0 rounded-md nav-menu-link-color-hover'
+          >
             About
           </Link>
-          <Link to='/contact' className='px-1 xxs:px-2 py-1 rounded-md nav-menu-link-color-hover'>
+          <Link
+            to='/contact'
+            className='px-1 xxs:px-2 pt-1 pb-0 rounded-md nav-menu-link-color-hover'
+          >
             Contact
           </Link>
         </nav>
