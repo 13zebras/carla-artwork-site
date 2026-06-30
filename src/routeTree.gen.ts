@@ -9,14 +9,30 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as CategoryCategoryRouteImport } from './routes/category.$category'
+import { Route as AdminUploadRouteImport } from './routes/admin.upload'
+import { Route as AdminBulkRouteImport } from './routes/admin.bulk'
+import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ContactRoute = ContactRouteImport.update({
   id: '/contact',
   path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AboutRoute = AboutRouteImport.update({
@@ -29,53 +45,137 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
 const CategoryCategoryRoute = CategoryCategoryRouteImport.update({
   id: '/category/$category',
   path: '/category/$category',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminUploadRoute = AdminUploadRouteImport.update({
+  id: '/upload',
+  path: '/upload',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminBulkRoute = AdminBulkRouteImport.update({
+  id: '/bulk',
+  path: '/bulk',
+  getParentRoute: () => AdminRoute,
+} as any)
+const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
+  id: '/api/auth/$',
+  path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/admin': typeof AdminRouteWithChildren
   '/contact': typeof ContactRoute
+  '/login': typeof LoginRoute
+  '/admin/bulk': typeof AdminBulkRoute
+  '/admin/upload': typeof AdminUploadRoute
   '/category/$category': typeof CategoryCategoryRoute
+  '/admin/': typeof AdminIndexRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/contact': typeof ContactRoute
+  '/login': typeof LoginRoute
+  '/admin/bulk': typeof AdminBulkRoute
+  '/admin/upload': typeof AdminUploadRoute
   '/category/$category': typeof CategoryCategoryRoute
+  '/admin': typeof AdminIndexRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/admin': typeof AdminRouteWithChildren
   '/contact': typeof ContactRoute
+  '/login': typeof LoginRoute
+  '/admin/bulk': typeof AdminBulkRoute
+  '/admin/upload': typeof AdminUploadRoute
   '/category/$category': typeof CategoryCategoryRoute
+  '/admin/': typeof AdminIndexRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about' | '/contact' | '/category/$category'
+  fullPaths:
+    | '/'
+    | '/about'
+    | '/admin'
+    | '/contact'
+    | '/login'
+    | '/admin/bulk'
+    | '/admin/upload'
+    | '/category/$category'
+    | '/admin/'
+    | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/contact' | '/category/$category'
-  id: '__root__' | '/' | '/about' | '/contact' | '/category/$category'
+  to:
+    | '/'
+    | '/about'
+    | '/contact'
+    | '/login'
+    | '/admin/bulk'
+    | '/admin/upload'
+    | '/category/$category'
+    | '/admin'
+    | '/api/auth/$'
+  id:
+    | '__root__'
+    | '/'
+    | '/about'
+    | '/admin'
+    | '/contact'
+    | '/login'
+    | '/admin/bulk'
+    | '/admin/upload'
+    | '/category/$category'
+    | '/admin/'
+    | '/api/auth/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
+  AdminRoute: typeof AdminRouteWithChildren
   ContactRoute: typeof ContactRoute
+  LoginRoute: typeof LoginRoute
   CategoryCategoryRoute: typeof CategoryCategoryRoute
+  ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/contact': {
       id: '/contact'
       path: '/contact'
       fullPath: '/contact'
       preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/about': {
@@ -92,6 +192,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/category/$category': {
       id: '/category/$category'
       path: '/category/$category'
@@ -99,14 +206,52 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CategoryCategoryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/upload': {
+      id: '/admin/upload'
+      path: '/upload'
+      fullPath: '/admin/upload'
+      preLoaderRoute: typeof AdminUploadRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/bulk': {
+      id: '/admin/bulk'
+      path: '/bulk'
+      fullPath: '/admin/bulk'
+      preLoaderRoute: typeof AdminBulkRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/api/auth/$': {
+      id: '/api/auth/$'
+      path: '/api/auth/$'
+      fullPath: '/api/auth/$'
+      preLoaderRoute: typeof ApiAuthSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
+
+interface AdminRouteChildren {
+  AdminBulkRoute: typeof AdminBulkRoute
+  AdminUploadRoute: typeof AdminUploadRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminBulkRoute: AdminBulkRoute,
+  AdminUploadRoute: AdminUploadRoute,
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
+  AdminRoute: AdminRouteWithChildren,
   ContactRoute: ContactRoute,
+  LoginRoute: LoginRoute,
   CategoryCategoryRoute: CategoryCategoryRoute,
+  ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

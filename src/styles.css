@@ -32,87 +32,125 @@
 @theme inline {
   --font-hand-rendered: 'Hand_rendered Ink', sans-serif;
   --color-background: var(--background);
+  --color-secondary-background: var(--secondary-background);
   --color-foreground: var(--foreground);
   --color-muted-foreground: var(--muted-foreground);
   --color-bg-gradient: var(--bg-gradient);
   --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
   --color-accent-foreground: var(--accent-foreground);
   --color-border: var(--border);
+  --color-border-secondary: var(--border-secondary);
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover-border: var(--popover-border);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
   --color-ring: var(--ring);
   --color-shadow-card: var(--card-shadow-color);
   --shadow-card: var(--card-shadow);
   --breakpoint-xs: 35rem;
   --breakpoint-xxs: 28.75rem;
+
+  --color-destructive: var(--destructive);
+  --color-positive: var(--positive);
 }
 
 :root {
   color-scheme: light;
-  --background: var(--color-taupe-100);
-  --foreground: var(--color-stone-950);
-  --muted-foreground: var(--color-stone-700);
-  --bg-gradient: var(--color-taupe-200);
-  --accent: var(--color-stone-200);
-  --accent-foreground: var(--color-stone-900);
-  --border: var(--color-stone-200);
-  --popover: var(--color-stone-100);
-  --popover-foreground: var(--color-stone-900);
-  --popover-border: var(--color-stone-200);
-  --ring: var(--color-stone-400);
-  --card-shadow-color: var(--color-stone-600);
+  --background: var(--color-neutral-100);
+  --secondary-background: var(--color-neutral-200);
+  --foreground: var(--color-neutral-950);
+  --muted-foreground: var(--color-neutral-700);
+  --bg-gradient: var(--color-neutral-200);
+  --accent: var(--color-neutral-200);
+  --accent-2: var(--color-neutral-300);
+  --accent-foreground: var(--color-neutral-900);
+  --border: var(--color-neutral-600);
+  --border-secondary: var(--color-neutral-500);
+  --popover: var(--color-neutral-100);
+  --popover-foreground: var(--color-neutral-900);
+  --popover-border: var(--color-neutral-200);
+  --card: var(--color-neutral-200);
+  --card-foreground: var(--color-neutral-800);
+  --ring: var(--color-brand-300);
+  --card-shadow-color: var(--color-neutral-600);
   --card-shadow: 0 10px 15px -3px var(--color-shadow-card), 0 4px 6px -4px var(--color-shadow-card);
 
+  --destructive: var(--color-red-600);
+  --positive: var(--color-green-600);
+
   --theme-dark-background: oklch(10.7% 0.004 49.25);
-  --theme-dark-foreground: var(--color-stone-50);
-  --theme-dark-muted-foreground: var(--color-stone-200);
-  --theme-dark-bg-gradient: var(--color-taupe-950);
-  --theme-dark-accent: var(--color-stone-900);
-  --theme-dark-accent-foreground: var(--color-stone-50);
-  --theme-dark-border: var(--color-stone-800);
-  --theme-dark-popover: var(--color-stone-900);
-  --theme-dark-popover-foreground: var(--color-stone-100);
-  --theme-dark-popover-border: var(--color-stone-700);
-  --theme-dark-ring: var(--color-stone-600);
-  --theme-dark-card-shadow-color: var(--color-stone-800);
+  --theme-dark-secondary-background: var(--color-neutral-950);
+  --theme-dark-foreground: var(--color-neutral-50);
+  --theme-dark-muted-foreground: var(--color-neutral-200);
+  --theme-dark-bg-gradient: var(--color-neutral-950);
+  --theme-dark-accent: var(--color-neutral-900);
+  --theme-dark-accent-2: var(--color-neutral-800);
+  --theme-dark-accent-foreground: var(--color-neutral-50);
+  --theme-dark-border: var(--color-neutral-400);
+  --theme-dark-border-secondary: var(--color-neutral-500);
+  --theme-dark-popover: var(--color-neutral-900);
+  --theme-dark-popover-foreground: var(--color-neutral-100);
+  --theme-dark-popover-border: var(--color-neutral-700);
+  --theme-dark-card: var(--color-neutral-900);
+  --theme-dark-card-foreground: var(--color-neutral-200);
+  --theme-dark-ring: var(--color-brand-600);
+  --theme-dark-card-shadow-color: var(--color-neutral-800);
   --theme-dark-card-shadow:
     0 5px 10px -2px var(--color-shadow-card), 1px 2px 5px -1px var(--color-shadow-card);
+
+  /* --theme-dark-destructive: var(--color-red-500);
+  --theme-dark-positive: var(--color-green-500); */
 }
 
 .dark {
   color-scheme: dark;
   --background: var(--theme-dark-background);
+  --secondary-background: var(--theme-dark-secondary-background);
   --foreground: var(--theme-dark-foreground);
   --muted-foreground: var(--theme-dark-muted-foreground);
   --bg-gradient: var(--theme-dark-bg-gradient);
   --accent: var(--theme-dark-accent);
+  --accent-2: var(--theme-dark-accent-2);
   --accent-foreground: var(--theme-dark-accent-foreground);
   --border: var(--theme-dark-border);
+  --border-secondary: var(--theme-dark-border-secondary);
   --popover: var(--theme-dark-popover);
   --popover-foreground: var(--theme-dark-popover-foreground);
   --popover-border: var(--theme-dark-popover-border);
+  --card: var(--theme-dark-card);
+  --card-foreground: var(--theme-dark-card-foreground);
   --ring: var(--theme-dark-ring);
   --card-shadow-color: var(--theme-dark-card-shadow-color);
   --card-shadow: var(--theme-dark-card-shadow);
+
+  /* --color-destructive: var(--theme-dark-destructive);
+  --color-positive: var(--theme-dark-positive); */
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not(.light):not(.dark) {
     color-scheme: dark;
     --background: var(--theme-dark-background);
+    --secondary-background: var(--theme-dark-secondary-background);
     --foreground: var(--theme-dark-foreground);
     --muted-foreground: var(--theme-dark-muted-foreground);
     --bg-gradient: var(--theme-dark-bg-gradient);
     --accent: var(--theme-dark-accent);
+    --accent-2: var(--theme-dark-accent-2);
     --accent-foreground: var(--theme-dark-accent-foreground);
     --border: var(--theme-dark-border);
+    --border-secondary: var(--theme-dark-border-secondary);
     --popover: var(--theme-dark-popover);
     --popover-foreground: var(--theme-dark-popover-foreground);
     --popover-border: var(--theme-dark-popover-border);
     --ring: var(--theme-dark-ring);
     --card-shadow-color: var(--theme-dark-card-shadow-color);
     --card-shadow: var(--theme-dark-card-shadow);
+
+    /* --color-destructive: var(--theme-dark-destructive);
+    --color-positive: var(--theme-dark-positive); */
   }
 }
 
@@ -166,4 +204,23 @@
 
 .nav-menu-link-color-hover {
   @apply hover:text-foreground hover:bg-brand-200/60 active:text-foreground active:bg-brand-300/60 dark:hover:bg-brand-700/70 dark:active:bg-brand-700/60;
+}
+
+.dashboard-summary-card {
+  @apply w-42 xl:w-48 h-24 justify-center items-center gap-3 px-3 py-2 shrink-0 bg-card/70 shadow-sm;
+}
+
+.ph {
+  @apply placeholder:text-neutral-600 dark:placeholder:text-neutral-400 placeholder:italic;
+}
+
+.admin-info-button {
+  @apply w-20 border border-sky-500/55 bg-sky-500/50 hover:bg-sky-500/70 active:bg-sky-500/50 rounded-3xl text-foreground text-xs py-0.5 px-4 cursor-pointer;
+}
+
+.admin-edit-button {
+  @apply w-20 border border-green-500/55 bg-green-500/50 hover:bg-green-500/70 active:bg-green-500/50 rounded-3xl text-foreground  text-xs py-0.5 px-4 cursor-pointer;
+}
+.admin-delete-button {
+  @apply w-20 border border-red-500/55 bg-red-500/50 hover:bg-red-500/70 active:bg-red-500/50 rounded-3xl text-foreground  text-xs py-0.5 px-4 cursor-pointer;
 }

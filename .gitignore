@@ -3,6 +3,8 @@ node_modules
 dist
 dist-ssr
 *.local
+.env.local
+*.log
 .env
 .nitro
 .tanstack
@@ -11,3 +13,4 @@ dist-ssr
 .vinxi
 __unconfig*
 todos.json
+*.sqlite*

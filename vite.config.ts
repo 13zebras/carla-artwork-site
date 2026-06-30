@@ -3,11 +3,20 @@ import { devtools } from '@tanstack/devtools-vite';
 import { tanstackStart } from '@tanstack/react-start/plugin/vite';
 import viteReact from '@vitejs/plugin-react';
 import { nitro } from 'nitro/vite';
-import { defineConfig } from 'vite';
+import { loadEnv } from 'vite';
+import { defineConfig } from 'vitest/config';
 
-const config = defineConfig({
-  resolve: { tsconfigPaths: true },
-  plugins: [devtools(), tailwindcss(), tanstackStart(), viteReact(), nitro()],
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
+  for (const [key, value] of Object.entries(env)) {
+    process.env[key] ??= value;
+  }
+
+  return {
+    resolve: { tsconfigPaths: true },
+    test: {
+      setupFiles: ['./src/test/setup.ts'],
+    },
+    plugins: [devtools(), tailwindcss(), tanstackStart(), viteReact(), nitro()],
+  };
 });
-
-export default config;

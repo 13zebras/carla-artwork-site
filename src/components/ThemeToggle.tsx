@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { useLocalStorage } from 'usehooks-ts';
 
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
 
 type Theme = 'light' | 'dark';
 
@@ -45,7 +46,7 @@ function setRootTheme(theme: Theme) {
   document.documentElement.classList.add(theme);
 }
 
-export function ThemeToggle() {
+export function ThemeToggle({ className }: { className?: string }) {
   const [theme, setTheme] = useLocalStorage<Theme>(THEME_STORAGE_KEY, getInitialTheme, {
     initializeWithValue: true,
     serializer: (value) => value,
@@ -66,12 +67,14 @@ export function ThemeToggle() {
   }
 
   return (
-    // <div className='absolute right-2 xs:right-3 sm:right-4 top-2 xs:top-3 z-50 transition duration-300 hover:scale-[1.2] focus-visible:scale-[1.2]'>
     <button
       type='button'
       aria-label='Toggle color theme'
       onClick={toggleTheme}
-      className='inline-flex h-6 w-6 sm:h-8 sm:w-8 items-center justify-center rounded-full border-0 dark:bg-yellow-400/20 hover:dark:bg-yellow-400/40 bg-sky-300/15 hover:bg-sky-300/25 cursor-pointer absolute right-2 xs:right-3 sm:right-4 top-2 xs:top-3 z-50 transition duration-300 hover:scale-[1.2] focus-visible:scale-[1.2] active:scale-[1.05]'
+      className={cn(
+        'inline-flex h-6 w-6 sm:h-8 sm:w-8 items-center justify-center rounded-full border-0 dark:bg-yellow-400/20 hover:dark:bg-yellow-400/40 bg-sky-300/15 hover:bg-sky-300/25 cursor-pointer transition duration-300 hover:scale-[1.2] focus-visible:scale-[1.2] active:scale-[1.05]',
+        className,
+      )}
     >
       <Tooltip>
         <TooltipTrigger asChild>
@@ -96,6 +99,5 @@ export function ThemeToggle() {
         <TooltipContent side='left'>select dark mode</TooltipContent>
       </Tooltip>
     </button>
-    // </div>
   );
 }

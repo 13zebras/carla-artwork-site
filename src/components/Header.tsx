@@ -64,7 +64,7 @@ export function Header() {
             Contact
           </Link>
         </nav>
-        <ThemeToggle />
+        <ThemeToggle className='absolute right-2 xs:right-3 sm:right-4 top-2 xs:top-3 z-50' />
       </div>
     </header>
   );
