@@ -1,7 +1,5 @@
-import { mkdirSync } from 'node:fs';
-import { dirname } from 'node:path';
-
-import Database from 'better-sqlite3';
+import { Kysely, PostgresDialect, sql } from 'kysely';
+import pg from 'pg';
 
 import { artworkCategoryDescriptions } from '@/data/artworkCategories';
 
@@ -52,166 +50,162 @@ const CATEGORY_SEEDS = [
   },
 ] as const;
 
-let db: Database.Database | undefined;
-let schemaReady = false;
+type AppDatabase = Record<string, never>;
+
+let pool: pg.Pool | undefined;
+let db: Kysely<AppDatabase> | undefined;
+let schemaPromise: Promise<void> | undefined;
 
 function nowIso() {
   return new Date().toISOString();
 }
 
-function openDb() {
-  if (db) {
-    return db;
+export function getPool(): pg.Pool {
+  if (!pool) {
+    const { DATABASE_URL } = getServerEnv();
+    pool = new pg.Pool({ connectionString: DATABASE_URL });
   }
+  return pool;
+}
 
-  const { DATABASE_PATH } = getServerEnv();
-  mkdirSync(dirname(DATABASE_PATH), { recursive: true });
-  db = new Database(DATABASE_PATH);
-  db.pragma('journal_mode = WAL');
-  db.pragma('foreign_keys = ON');
+export function getKysely(): Kysely<AppDatabase> {
+  if (!db) {
+    db = new Kysely<AppDatabase>({ dialect: new PostgresDialect({ pool: getPool() }) });
+  }
   return db;
 }
 
-export function getDb() {
-  const database = openDb();
-  if (!schemaReady) {
-    initAppSchema(database);
+export function ensureSchema(): Promise<void> {
+  if (!schemaPromise) {
+    schemaPromise = initAppSchema();
   }
-  return database;
+  return schemaPromise;
 }
 
-export function closeDb() {
-  if (!db) {
-    return;
-  }
+export async function initAppSchema(): Promise<void> {
+  const database = getKysely();
 
-  db.close();
-  db = undefined;
-  schemaReady = false;
-}
+  await database.connection().execute(async (db) => {
+    await sql`
+      create table if not exists "user" (
+        id text primary key,
+        name text not null,
+        email text not null unique,
+        "emailVerified" boolean not null default false,
+        image text,
+        "createdAt" timestamptz not null default current_timestamp,
+        "updatedAt" timestamptz not null default current_timestamp
+      )
+    `.execute(db);
 
-export function initAppSchema(database = openDb()) {
-  if (schemaReady) {
-    return database;
-  }
+    await sql`
+      create table if not exists "session" (
+        id text primary key,
+        "expiresAt" timestamptz not null,
+        token text not null unique,
+        "createdAt" timestamptz not null default current_timestamp,
+        "updatedAt" timestamptz not null default current_timestamp,
+        "ipAddress" text,
+        "userAgent" text,
+        "userId" text not null references "user"(id) on delete cascade
+      )
+    `.execute(db);
 
-  database.exec(`
-    create table if not exists "user" (
-      id text primary key,
-      name text not null,
-      email text not null unique,
-      emailVerified integer not null,
-      image text,
-      createdAt text not null,
-      updatedAt text not null
+    await sql`
+      create table if not exists account (
+        id text primary key,
+        "accountId" text not null,
+        "providerId" text not null,
+        "userId" text not null references "user"(id) on delete cascade,
+        "accessToken" text,
+        "refreshToken" text,
+        "idToken" text,
+        "accessTokenExpiresAt" timestamptz,
+        "refreshTokenExpiresAt" timestamptz,
+        scope text,
+        password text,
+        "createdAt" timestamptz not null default current_timestamp,
+        "updatedAt" timestamptz not null default current_timestamp
+      )
+    `.execute(db);
+
+    await sql`
+      create table if not exists verification (
+        id text primary key,
+        identifier text not null,
+        value text not null,
+        "expiresAt" timestamptz not null,
+        "createdAt" timestamptz not null default current_timestamp,
+        "updatedAt" timestamptz not null default current_timestamp
+      )
+    `.execute(db);
+
+    await sql`create index if not exists "session_userId_idx" on "session"("userId")`.execute(db);
+    await sql`create index if not exists "account_userId_idx" on account("userId")`.execute(db);
+    await sql`create index if not exists "verification_identifier_idx" on verification(identifier)`.execute(
+      db,
     );
 
-    create table if not exists "session" (
-      id text primary key,
-      expiresAt text not null,
-      token text not null unique,
-      createdAt text not null,
-      updatedAt text not null,
-      ipAddress text,
-      userAgent text,
-      userId text not null references "user"(id) on delete cascade
+    await sql`
+      create table if not exists artwork_categories (
+        id text primary key,
+        slug text not null unique,
+        label text not null,
+        description text,
+        sort_order integer not null default 0,
+        status text not null default 'active' check (status in ('active','archived')),
+        created_at text not null,
+        updated_at text not null
+      )
+    `.execute(db);
+
+    await sql`
+      create table if not exists artworks (
+        id text primary key,
+        slug text not null unique,
+        title text not null,
+        category_id text not null references artwork_categories(id),
+        description text,
+        alt text not null,
+        original_filename text not null,
+        storage_path text not null unique,
+        cdn_url text not null,
+        content_type text not null,
+        width integer not null,
+        height integer not null,
+        size_bytes integer not null,
+        checksum_sha256 text not null,
+        sort_order integer not null default 0,
+        status text not null default 'draft' check (status in ('draft','published')),
+        created_at text not null,
+        updated_at text not null
+      )
+    `.execute(db);
+
+    await sql`create index if not exists "artwork_categories_status_sort_idx" on artwork_categories(status, sort_order, label)`.execute(
+      db,
     );
-
-    create table if not exists account (
-      id text primary key,
-      accountId text not null,
-      providerId text not null,
-      userId text not null references "user"(id) on delete cascade,
-      accessToken text,
-      refreshToken text,
-      idToken text,
-      accessTokenExpiresAt text,
-      refreshTokenExpiresAt text,
-      scope text,
-      password text,
-      createdAt text not null,
-      updatedAt text not null
+    await sql`create index if not exists "artworks_category_idx" on artworks(category_id)`.execute(db);
+    await sql`create index if not exists "artworks_status_sort_idx" on artworks(status, sort_order, created_at)`.execute(
+      db,
     );
-
-    create table if not exists verification (
-      id text primary key,
-      identifier text not null,
-      value text not null,
-      expiresAt text not null,
-      createdAt text not null,
-      updatedAt text not null
-    );
-
-    create index if not exists session_userId_idx on "session"(userId);
-    create index if not exists account_userId_idx on account(userId);
-    create index if not exists verification_identifier_idx on verification(identifier);
-
-    create table if not exists artwork_categories (
-      id text primary key,
-      slug text not null unique,
-      label text not null,
-      description text,
-      sort_order integer not null default 0,
-      status text not null default 'active' check (status in ('active','archived')),
-      created_at text not null,
-      updated_at text not null
-    );
-
-    create table if not exists artworks (
-      id text primary key,
-      slug text not null unique,
-      title text not null,
-      category_id text not null references artwork_categories(id),
-      description text,
-      alt text not null,
-      original_filename text not null,
-      storage_path text not null unique,
-      cdn_url text not null,
-      content_type text not null,
-      width integer not null,
-      height integer not null,
-      size_bytes integer not null,
-      checksum_sha256 text not null,
-      sort_order integer not null default 0,
-      status text not null default 'draft' check (status in ('draft','published')),
-      created_at text not null,
-      updated_at text not null
-    );
-
-    create index if not exists artwork_categories_status_sort_idx on artwork_categories(status, sort_order, label);
-    create index if not exists artworks_category_idx on artworks(category_id);
-    create index if not exists artworks_status_sort_idx on artworks(status, sort_order, created_at);
-  `);
-
-  const selectCategory = database.prepare('select id from artwork_categories where id = ? limit 1');
-  const insertCategory = database.prepare(`
-    insert into artwork_categories (
-      id,
-      slug,
-      label,
-      description,
-      sort_order,
-      status,
-      created_at,
-      updated_at
-    ) values (?, ?, ?, ?, ?, 'active', ?, ?)
-  `);
+  });
 
   const createdAt = nowIso();
   for (const category of CATEGORY_SEEDS) {
-    if (!selectCategory.get(category.id)) {
-      insertCategory.run(
-        category.id,
-        category.slug,
-        category.label,
-        category.description,
-        category.sort_order,
-        createdAt,
-        createdAt,
-      );
-    }
+    await sql`
+      insert into artwork_categories (id, slug, label, description, sort_order, status, created_at, updated_at)
+      values (${category.id}, ${category.slug}, ${category.label}, ${category.description ?? null}, ${category.sort_order}, 'active', ${createdAt}, ${createdAt})
+      on conflict (id) do nothing
+    `.execute(database);
   }
+}
 
-  schemaReady = true;
-  return database;
+export async function closeDb(): Promise<void> {
+  if (db) {
+    await db.destroy();
+    db = undefined;
+  }
+  pool = undefined;
+  schemaPromise = undefined;
 }

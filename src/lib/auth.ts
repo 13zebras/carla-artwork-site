@@ -3,14 +3,14 @@ import { magicLink } from 'better-auth/plugins/magic-link';
 import { tanstackStartCookies } from 'better-auth/tanstack-start';
 import { Resend } from 'resend';
 
-import { getDb } from './db.server';
+import { getKysely } from './db.server';
 import { getServerEnv } from './env.server';
 
 const env = getServerEnv();
 const resend = new Resend(env.RESEND_API_KEY);
 
 export const auth = betterAuth({
-  database: getDb(),
+  database: { db: getKysely(), type: 'postgres' },
   secret: env.BETTER_AUTH_SECRET,
   baseURL: env.BETTER_AUTH_URL,
   plugins: [

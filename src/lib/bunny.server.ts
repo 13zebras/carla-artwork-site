@@ -158,8 +158,12 @@ export async function listBunnyStorageFiles(prefix?: string): Promise<BunnyStora
   // (including archived ones, which may still hold uploaded files).
   const prefixes = prefix
     ? [normalizePrefix(prefix)]
-    : listCategories({ includeArchived: true }).map((category) => normalizePrefix(category.slug));
+    : (await listCategories({ includeArchived: true })).map((category) =>
+        normalizePrefix(category.slug),
+      );
 
-  const results = await Promise.all(prefixes.map((currentPrefix) => listPrefixRecursive(currentPrefix, env)));
+  const results = await Promise.all(
+    prefixes.map((currentPrefix) => listPrefixRecursive(currentPrefix, env)),
+  );
   return results.flat();
 }

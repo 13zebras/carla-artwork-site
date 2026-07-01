@@ -1,9 +1,10 @@
+import { sql } from 'kysely';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { buildBulkErrors, getUniqueArtworkSlug, parseCsvRows } from '@/lib/artwork-upload.helpers';
 import { buildBunnyCdnUrl } from '@/lib/bunny';
 import { addCategory, listCategories, resolveCategoryInput } from '@/lib/categories.server';
-import { getDb } from '@/lib/db.server';
+import { ensureSchema, getKysely } from '@/lib/db.server';
 
 const seededCategoryIds = [
   'illustration',
@@ -14,16 +15,16 @@ const seededCategoryIds = [
   'specialProjects',
 ];
 
-function resetDatabase() {
-  const db = getDb();
-  db.exec(`
-    delete from artworks;
-    delete from artwork_categories where id not in (${seededCategoryIds.map((id) => `'${id}'`).join(', ')});
-  `);
+async function resetDatabase() {
+  await ensureSchema();
+  await sql`truncate table artworks`.execute(getKysely());
+  await sql`delete from artwork_categories where id not in (${sql.join(
+    seededCategoryIds.map((id) => sql`${id}`),
+  )})`.execute(getKysely());
 }
 
-beforeEach(() => {
-  resetDatabase();
+beforeEach(async () => {
+  await resetDatabase();
 });
 
 describe('buildBunnyCdnUrl', () => {
@@ -38,29 +39,29 @@ describe('buildBunnyCdnUrl', () => {
 });
 
 describe('category storage', () => {
-  it('resolves seeded category ids, slugs, and labels', () => {
-    expect(resolveCategoryInput('fineArtCollage')?.id).toBe('fineArtCollage');
-    expect(resolveCategoryInput('fine-art-collage')?.id).toBe('fineArtCollage');
-    expect(resolveCategoryInput('Fine Art Collage')?.id).toBe('fineArtCollage');
+  it('resolves seeded category ids, slugs, and labels', async () => {
+    expect((await resolveCategoryInput('fineArtCollage'))?.id).toBe('fineArtCollage');
+    expect((await resolveCategoryInput('fine-art-collage'))?.id).toBe('fineArtCollage');
+    expect((await resolveCategoryInput('Fine Art Collage'))?.id).toBe('fineArtCollage');
   });
 
-  it('rejects duplicate category slugs and labels', () => {
-    addCategory({ label: 'Test Category', slug: 'test-category' });
+  it('rejects duplicate category slugs and labels', async () => {
+    await addCategory({ label: 'Test Category', slug: 'test-category' });
 
-    expect(() => addCategory({ label: 'Another Category', slug: 'test-category' })).toThrow(
+    await expect(addCategory({ label: 'Another Category', slug: 'test-category' })).rejects.toThrow(
       'Category slug already exists',
     );
-    expect(() => addCategory({ label: 'test category', slug: 'different-category' })).toThrow(
+    await expect(addCategory({ label: 'test category', slug: 'different-category' })).rejects.toThrow(
       'Category label already exists',
     );
   });
 
-  it('lists active categories in sort order', () => {
-    addCategory({ label: 'Zeta Category', slug: 'zeta-category', sortOrder: 70 });
-    addCategory({ label: 'Alpha Category', slug: 'alpha-category', sortOrder: 65 });
+  it('lists active categories in sort order', async () => {
+    await addCategory({ label: 'Zeta Category', slug: 'zeta-category', sortOrder: 70 });
+    await addCategory({ label: 'Alpha Category', slug: 'alpha-category', sortOrder: 65 });
 
     expect(
-      listCategories()
+      (await listCategories())
         .map((category) => category.slug)
         .slice(-2),
     ).toEqual(['alpha-category', 'zeta-category']);
@@ -68,18 +69,21 @@ describe('category storage', () => {
 });
 
 describe('csv and slug helpers', () => {
-  it('normalizes category ids from csv row values', () => {
+  it('normalizes category ids from csv row values', async () => {
     const rows = parseCsvRows(
       `filename,title,category\nfirst.jpg,First,fineArtCollage\nsecond.jpg,Second,fine-art-collage\nthird.jpg,Third,Fine Art Collage`,
     );
-    expect(rows.map((row) => resolveCategoryInput(String(row.category))?.id)).toEqual([
+    const resolved = await Promise.all(
+      rows.map((row) => resolveCategoryInput(String(row.category))),
+    );
+    expect(resolved.map((category) => category?.id)).toEqual([
       'fineArtCollage',
       'fineArtCollage',
       'fineArtCollage',
     ]);
   });
 
-  it('reports missing files and duplicate filenames before upload', () => {
+  it('reports missing files and duplicate filenames before upload', async () => {
     const rows = [
       {
         row: 2,
@@ -105,22 +109,22 @@ describe('csv and slug helpers', () => {
       },
     ] satisfies Parameters<typeof buildBulkErrors>[0];
 
-    const duplicateErrors = buildBulkErrors(rows, [
+    const duplicateErrors = await buildBulkErrors(rows, [
       new File(['x'], 'blue-bird.jpg', { type: 'image/jpeg' }),
     ]);
     expect(
       duplicateErrors.some((error) => error.message.includes('Duplicate filename blue-bird.jpg')),
     ).toBe(true);
 
-    const missingErrors = buildBulkErrors(rows.slice(0, 1), []);
+    const missingErrors = await buildBulkErrors(rows.slice(0, 1), []);
     expect(
       missingErrors.some((error) => error.message.includes('Missing uploaded file blue-bird.jpg')),
     ).toBe(true);
   });
 
-  it('appends numeric suffixes to conflicting slugs', () => {
-    expect(getUniqueArtworkSlug('blue-bird', new Set(['blue-bird']))).toBe('blue-bird-2');
-    expect(getUniqueArtworkSlug('blue-bird', new Set(['blue-bird', 'blue-bird-2']))).toBe(
+  it('appends numeric suffixes to conflicting slugs', async () => {
+    expect(await getUniqueArtworkSlug('blue-bird', new Set(['blue-bird']))).toBe('blue-bird-2');
+    expect(await getUniqueArtworkSlug('blue-bird', new Set(['blue-bird', 'blue-bird-2']))).toBe(
       'blue-bird-3',
     );
   });

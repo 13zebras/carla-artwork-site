@@ -1,6 +1,8 @@
 import { randomUUID } from 'node:crypto';
 
-import { getDb } from './db.server';
+import { sql } from 'kysely';
+
+import { getKysely } from './db.server';
 
 export type ArtworkCategoryRecord = {
   id: string;
@@ -67,68 +69,67 @@ function normalizeSortOrder(sortOrder: number | undefined) {
   return sortOrder;
 }
 
-export function listCategories({ includeArchived = false }: { includeArchived?: boolean } = {}) {
-  const db = getDb();
-  const rows = db
-    .prepare(
-      `select id, slug, label, description, sort_order, status, created_at, updated_at
-       from artwork_categories
-       ${includeArchived ? '' : "where status = 'active'"}
-       order by sort_order asc, label asc`,
-    )
-    .all() as CategoryRow[];
+export async function listCategories({ includeArchived = false }: { includeArchived?: boolean } = {}) {
+  const { rows } = await sql`
+    select id, slug, label, description, sort_order, status, created_at, updated_at
+    from artwork_categories
+    ${includeArchived ? sql`` : sql`where status = 'active'`}
+    order by sort_order asc, label asc
+  `.execute(getKysely());
 
-  return rows.map(toRecord);
+  return (rows as CategoryRow[]).map(toRecord);
 }
 
-export function resolveCategoryInput(input: string) {
+export async function resolveCategoryInput(input: string) {
   const value = input.trim();
   if (value.length === 0) {
     return undefined;
   }
 
-  const db = getDb();
-  const byId = db
-    .prepare(
-      'select id, slug, label, description, sort_order, status, created_at, updated_at from artwork_categories where id = ? limit 1',
-    )
-    .get(value) as CategoryRow | undefined;
-  if (byId) {
-    return toRecord(byId);
+  const db = getKysely();
+
+  const byId = await sql`
+    select id, slug, label, description, sort_order, status, created_at, updated_at
+    from artwork_categories where id = ${value} limit 1
+  `.execute(db);
+  const byIdRow = byId.rows[0] as CategoryRow | undefined;
+  if (byIdRow) {
+    return toRecord(byIdRow);
   }
 
   const lowerValue = value.toLowerCase();
-  const bySlug = db
-    .prepare(
-      'select id, slug, label, description, sort_order, status, created_at, updated_at from artwork_categories where lower(slug) = ? limit 1',
-    )
-    .get(lowerValue) as CategoryRow | undefined;
-  if (bySlug) {
-    return toRecord(bySlug);
+  const bySlug = await sql`
+    select id, slug, label, description, sort_order, status, created_at, updated_at
+    from artwork_categories where lower(slug) = ${lowerValue} limit 1
+  `.execute(db);
+  const bySlugRow = bySlug.rows[0] as CategoryRow | undefined;
+  if (bySlugRow) {
+    return toRecord(bySlugRow);
   }
 
-  const byLabel = db
-    .prepare(
-      'select id, slug, label, description, sort_order, status, created_at, updated_at from artwork_categories where lower(label) = ? limit 1',
-    )
-    .get(lowerValue) as CategoryRow | undefined;
-  return byLabel ? toRecord(byLabel) : undefined;
+  const byLabel = await sql`
+    select id, slug, label, description, sort_order, status, created_at, updated_at
+    from artwork_categories where lower(label) = ${lowerValue} limit 1
+  `.execute(db);
+  const byLabelRow = byLabel.rows[0] as CategoryRow | undefined;
+  return byLabelRow ? toRecord(byLabelRow) : undefined;
 }
 
-export function addCategory(input: {
+export async function addCategory(input: {
   label: string;
   slug?: string;
   description?: string;
   sortOrder?: number;
 }) {
-  const db = getDb();
+  const db = getKysely();
   const label = normalizeLabel(input.label);
   const description = input.description?.trim() || null;
   const sortOrder = normalizeSortOrder(input.sortOrder);
-  const createdAt = new Date().toISOString();
-  const existingRows = db
-    .prepare('select slug, lower(label) as normalized_label from artwork_categories')
-    .all() as Array<{ slug: string; normalized_label: string }>;
+
+  const existing = await sql`select slug, lower(label) as normalized_label from artwork_categories`.execute(
+    db,
+  );
+  const existingRows = existing.rows as Array<{ slug: string; normalized_label: string }>;
   const existingSlugs = new Set(existingRows.map((row) => row.slug));
   const normalizedLabels = new Set(existingRows.map((row) => row.normalized_label));
 
@@ -147,14 +148,12 @@ export function addCategory(input: {
 
   const slug = baseSlug;
 
-  const nextSortOrder =
-    sortOrder ??
-    ((
-      db.prepare('select max(sort_order) as maxSortOrder from artwork_categories').get() as
-        | { maxSortOrder: number | null }
-        | undefined
-    )?.maxSortOrder ?? 0) + 10;
-  const record = {
+  const maxRow = await sql`select max(sort_order) as "maxSortOrder" from artwork_categories`.execute(db);
+  const maxSortOrder = (maxRow.rows[0] as { maxSortOrder: number | null } | undefined)?.maxSortOrder ?? 0;
+  const nextSortOrder = sortOrder ?? maxSortOrder + 10;
+
+  const createdAt = new Date().toISOString();
+  const record: ArtworkCategoryRecord = {
     id: randomUUID(),
     slug,
     label,
@@ -165,8 +164,8 @@ export function addCategory(input: {
     updatedAt: createdAt,
   };
 
-  db.prepare(
-    `insert into artwork_categories (
+  await sql`
+    insert into artwork_categories (
       id,
       slug,
       label,
@@ -175,17 +174,17 @@ export function addCategory(input: {
       status,
       created_at,
       updated_at
-    ) values (?, ?, ?, ?, ?, ?, ?, ?)`,
-  ).run(
-    record.id,
-    record.slug,
-    record.label,
-    record.description,
-    record.sortOrder,
-    record.status,
-    record.createdAt,
-    record.updatedAt,
-  );
+    ) values (
+      ${record.id},
+      ${record.slug},
+      ${record.label},
+      ${record.description},
+      ${record.sortOrder},
+      ${record.status},
+      ${record.createdAt},
+      ${record.updatedAt}
+    )
+  `.execute(db);
 
   return record satisfies ArtworkCategoryRecord;
 }

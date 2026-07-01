@@ -1,5 +1,5 @@
 type ServerEnv = {
-  DATABASE_PATH: string;
+  DATABASE_URL: string;
   BETTER_AUTH_SECRET: string;
   BETTER_AUTH_URL: string;
   ADMIN_EMAIL: string;
@@ -38,12 +38,7 @@ export function getServerEnv(): ServerEnv {
   }
 
   const missing: string[] = [];
-  const databasePath = collectRequiredEnv(
-    'DATABASE_PATH',
-    requiredEnv('DATABASE_PATH') ??
-      (process.env.NODE_ENV === 'development' ? '.data/carla.sqlite' : undefined),
-    missing,
-  );
+  const databaseUrl = collectRequiredEnv('DATABASE_URL', requiredEnv('DATABASE_URL'), missing);
   const betterAuthSecret = collectRequiredEnv(
     'BETTER_AUTH_SECRET',
     requiredEnv('BETTER_AUTH_SECRET'),
@@ -87,7 +82,7 @@ export function getServerEnv(): ServerEnv {
   }
 
   cachedEnv = {
-    DATABASE_PATH: databasePath,
+    DATABASE_URL: databaseUrl,
     BETTER_AUTH_SECRET: betterAuthSecret,
     BETTER_AUTH_URL: normalizeOrigin(betterAuthUrlRaw),
     ADMIN_EMAIL: adminEmailRaw.toLowerCase(),

@@ -1,5 +1,4 @@
 import { Link } from '@tanstack/react-router';
-import { EyeIcon } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -23,11 +22,7 @@ type DatabaseRecordsTabProps = {
   dateFormatter: Intl.DateTimeFormat;
 };
 
-export function DatabaseRecordsTab({
-  dashboard,
-  storageByPath,
-  dateFormatter,
-}: DatabaseRecordsTabProps) {
+export function DatabaseRecordsTab({ dashboard, dateFormatter }: DatabaseRecordsTabProps) {
   return (
     <TabsContent value='records' className='mt-4 max-w-300 w-full mx-auto'>
       {dashboard.records.length === 0 ? (
@@ -78,7 +73,6 @@ export function DatabaseRecordsTab({
                     format: 'webp',
                   });
                   const previewUrl = buildBunnyCdnUrl(record.cdnUrl);
-                  // const hasStorageObject = storageByPath.has(record.storagePath);
                   const hasStorageObject = false;
                   const createdAt = new Date(record.createdAt);
                   const uploadedAt = Number.isNaN(createdAt.getTime())

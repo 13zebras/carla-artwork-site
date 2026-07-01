@@ -41,13 +41,13 @@ function normalizeFilename(value: string) {
   return path.basename(value.trim());
 }
 
-function collectCategoryOrError(
+async function collectCategoryOrError(
   input: string,
   row: number,
   filename: string | null,
   errors: BulkArtworkUploadError[],
 ) {
-  const category = resolveCategoryInput(input);
+  const category = await resolveCategoryInput(input);
   if (!category) {
     errors.push({ row, filename, message: `Unknown category: ${input}` });
     return undefined;
@@ -70,10 +70,10 @@ export function parseCsvRows(csvText: string): RawCsvRow[] {
   return rows.map((row, index) => ({ row: index + 2, ...row }));
 }
 
-export function getUniqueArtworkSlug(baseSlug: string, takenSlugs: Set<string>) {
+export async function getUniqueArtworkSlug(baseSlug: string, takenSlugs: Set<string>) {
   let candidate = baseSlug;
   let suffix = 2;
-  while (takenSlugs.has(candidate) || slugExists(candidate)) {
+  while (takenSlugs.has(candidate) || (await slugExists(candidate))) {
     candidate = `${baseSlug}-${suffix}`;
     suffix += 1;
   }
@@ -81,7 +81,7 @@ export function getUniqueArtworkSlug(baseSlug: string, takenSlugs: Set<string>) 
   return candidate;
 }
 
-export function buildBulkErrors(rows: ParsedCsvRow[], files: File[]) {
+export async function buildBulkErrors(rows: ParsedCsvRow[], files: File[]) {
   const errors: BulkArtworkUploadError[] = [];
   const filenameCounts = new Map<string, number>();
   for (const row of rows) {
@@ -113,7 +113,7 @@ export function buildBulkErrors(rows: ParsedCsvRow[], files: File[]) {
     if (row.sortOrder !== undefined && !Number.isInteger(row.sortOrder)) {
       errors.push({ row: row.row, filename, message: 'Sort order must be an integer' });
     }
-    if (!collectCategoryOrError(row.category, row.row, filename, errors)) {
+    if (!(await collectCategoryOrError(row.category, row.row, filename, errors))) {
       continue;
     }
   }

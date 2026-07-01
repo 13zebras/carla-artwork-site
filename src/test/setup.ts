@@ -1,12 +1,9 @@
-import { mkdirSync, rmSync } from 'node:fs';
-import { dirname } from 'node:path';
+import { afterAll, beforeAll } from 'vitest';
 
-import { afterAll } from 'vitest';
-
-import { closeDb } from '@/lib/db.server';
+import { closeDb, ensureSchema } from '@/lib/db.server';
 
 const envDefaults = {
-  DATABASE_PATH: '.data/test.sqlite',
+  DATABASE_URL: 'postgres://postgres:postgres@localhost:5432/carla_test',
   BETTER_AUTH_SECRET: 'test-secret-for-better-auth',
   BETTER_AUTH_URL: 'http://localhost:3000',
   ADMIN_EMAIL: 'admin@example.com',
@@ -24,10 +21,10 @@ for (const [key, value] of Object.entries(envDefaults)) {
   }
 }
 
-const databasePath = process.env.DATABASE_PATH ?? envDefaults.DATABASE_PATH;
-mkdirSync(dirname(databasePath), { recursive: true });
-rmSync(databasePath, { force: true });
+beforeAll(async () => {
+  await ensureSchema();
+});
 
-afterAll(() => {
-  closeDb();
+afterAll(async () => {
+  await closeDb();
 });

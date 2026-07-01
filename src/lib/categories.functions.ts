@@ -1,5 +1,7 @@
 import { createServerFn } from '@tanstack/react-start';
 
+import { ensureSchema } from './db.server';
+
 function parseSortOrder(value: FormDataEntryValue | null) {
   if (value == null || value.toString().trim() === '') {
     return undefined;
@@ -14,6 +16,7 @@ function parseSortOrder(value: FormDataEntryValue | null) {
 }
 
 export const listAdminCategories = createServerFn({ method: 'GET' }).handler(async () => {
+  await ensureSchema();
   const [{ requireAdminFromRequest }, { listCategories }] = await Promise.all([
     import('./auth.server'),
     import('./categories.server'),
@@ -31,6 +34,7 @@ export const createAdminCategory = createServerFn({ method: 'POST' })
     return data;
   })
   .handler(async ({ data }) => {
+    await ensureSchema();
     const [{ requireAdminFromRequest }, { addCategory }] = await Promise.all([
       import('./auth.server'),
       import('./categories.server'),

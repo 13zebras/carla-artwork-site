@@ -26,6 +26,7 @@ import {
   type ArtworkCategoryRecord,
   resolveCategoryInput,
 } from './categories.server';
+import { ensureSchema } from './db.server';
 import { getServerEnv } from './env.server';
 
 export type AdminDashboardData = {
@@ -195,13 +196,13 @@ export function parseCsvRows(csvText: string): RawCsvRow[] {
   return rows.map((row, index) => ({ row: index + 2, ...row }));
 }
 
-function collectCategoryOrError(
+async function collectCategoryOrError(
   input: string,
   row: number,
   filename: string | null,
   errors: BulkArtworkUploadError[],
 ) {
-  const category = resolveCategoryInput(input);
+  const category = await resolveCategoryInput(input);
   if (!category) {
     errors.push({ row, filename, message: `Unknown category: ${input}` });
     return undefined;
@@ -219,10 +220,10 @@ function getBaseSlug(title: string) {
   return slugify(firstThreeWords);
 }
 
-export function getUniqueArtworkSlug(baseSlug: string, takenSlugs: Set<string>) {
+export async function getUniqueArtworkSlug(baseSlug: string, takenSlugs: Set<string>) {
   let candidate = baseSlug;
   let suffix = 2;
-  while (takenSlugs.has(candidate) || slugExists(candidate)) {
+  while (takenSlugs.has(candidate) || (await slugExists(candidate))) {
     candidate = `${baseSlug}-${suffix}`;
     suffix += 1;
   }
@@ -252,7 +253,7 @@ async function prepareSingleArtwork(formData: FormData) {
     throw new Error('Title is required');
   }
 
-  const category = listCategories().find((entry) => entry.id === categoryId);
+  const category = (await listCategories()).find((entry) => entry.id === categoryId);
   if (!category) {
     throw new Error('Select an active category');
   }
@@ -263,8 +264,8 @@ async function prepareSingleArtwork(formData: FormData) {
     throw new Error('Unable to create a slug for this file');
   }
 
-  const takenSlugs = new Set(listArtworkRecords().map((record) => record.slug));
-  const slug = getUniqueArtworkSlug(baseSlug, takenSlugs);
+  const takenSlugs = new Set((await listArtworkRecords()).map((record) => record.slug));
+  const slug = await getUniqueArtworkSlug(baseSlug, takenSlugs);
   const storagePath = buildStoragePath(category.slug, slug, imageMeta.extension);
   const cdnUrl = buildBunnyCdnUrl(getServerEnv().BUNNY_CDN_BASE_URL + `/${storagePath}`);
   const categorySummary = {
@@ -326,11 +327,12 @@ function createArtworkRecord(input: {
 }
 
 export const listAdminDashboard = createServerFn({ method: 'GET' }).handler(async () => {
+  await ensureSchema();
   await requireAdminFromRequest();
   return {
-    records: listArtworkRecords(),
+    records: await listArtworkRecords(),
     storageFiles: await listBunnyStorageFiles(),
-    categories: listCategories(),
+    categories: await listCategories(),
   };
 });
 
@@ -342,6 +344,7 @@ export const uploadSingleArtwork = createServerFn({ method: 'POST' })
     return data;
   })
   .handler(async ({ data }) => {
+    await ensureSchema();
     const prepared = await prepareSingleArtwork(data);
     const record = createArtworkRecord({
       title: prepared.title,
@@ -365,7 +368,7 @@ export const uploadSingleArtwork = createServerFn({ method: 'POST' })
     });
 
     try {
-      return insertArtwork(record);
+      return await insertArtwork(record);
     } catch (error) {
       await deleteFromBunnyStorage(record.storagePath);
       throw error;
@@ -401,7 +404,7 @@ function validateCsvHeaders(rows: RawCsvRow[]) {
   }
 }
 
-export function buildBulkErrors(rows: ParsedCsvRow[], files: File[]) {
+export async function buildBulkErrors(rows: ParsedCsvRow[], files: File[]) {
   const errors: BulkArtworkUploadError[] = [];
   const filenameCounts = new Map<string, number>();
   for (const row of rows) {
@@ -430,7 +433,7 @@ export function buildBulkErrors(rows: ParsedCsvRow[], files: File[]) {
     if (row.sortOrder !== undefined && !Number.isInteger(row.sortOrder)) {
       errors.push({ row: row.row, filename, message: 'Sort order must be an integer' });
     }
-    if (!collectCategoryOrError(row.category, row.row, filename, errors)) {
+    if (!(await collectCategoryOrError(row.category, row.row, filename, errors))) {
       continue;
     }
   }
@@ -487,13 +490,13 @@ async function prepareBulkRows(formData: FormData): Promise<BulkPreparationResul
     status: row.status?.toString().trim() || undefined,
   }));
 
-  const errors = buildBulkErrors(rows, fileValues);
+  const errors = await buildBulkErrors(rows, fileValues);
 
   if (errors.length > 0) {
     return { errors };
   }
 
-  const existingSlugs = new Set(listArtworkRecords().map((record) => record.slug));
+  const existingSlugs = new Set((await listArtworkRecords()).map((record) => record.slug));
   const filesByName = new Map(fileValues.map((file) => [normalizeFilename(file.name), file]));
   const preparedRows: PreparedBulkRow[] = [];
 
@@ -506,7 +509,7 @@ async function prepareBulkRows(formData: FormData): Promise<BulkPreparationResul
       };
     }
 
-    const category = resolveCategoryInput(row.category);
+    const category = await resolveCategoryInput(row.category);
     if (!category) {
       return {
         errors: [{ row: row.row, filename, message: `Unknown category: ${row.category}` }],
@@ -532,7 +535,7 @@ async function prepareBulkRows(formData: FormData): Promise<BulkPreparationResul
       };
     }
 
-    const slug = getUniqueArtworkSlug(baseSlug, existingSlugs);
+    const slug = await getUniqueArtworkSlug(baseSlug, existingSlugs);
     const storagePath = buildStoragePath(category.slug, slug, imageMeta.extension);
     const cdnUrl = buildBunnyCdnUrl(`${getServerEnv().BUNNY_CDN_BASE_URL}/${storagePath}`);
     const categorySummary = {
@@ -572,6 +575,7 @@ export const uploadBulkArtworks = createServerFn({ method: 'POST' })
     return data;
   })
   .handler(async ({ data }): Promise<BulkArtworkUploadResult> => {
+    await ensureSchema();
     const prepared = await prepareBulkRows(data);
     if ('errors' in prepared) {
       return { ok: false, errors: prepared.errors };
@@ -628,7 +632,7 @@ export const uploadBulkArtworks = createServerFn({ method: 'POST' })
     }
 
     try {
-      bulkInsertArtworks(records);
+      await bulkInsertArtworks(records);
       return { ok: true, insertedCount: records.length, records };
     } catch (error) {
       const cleanupResults = await Promise.allSettled(
