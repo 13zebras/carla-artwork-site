@@ -178,6 +178,23 @@ export async function getArtworkByStoragePath(storagePath: string) {
   return row ? mapRow(row) : undefined;
 }
 
+export async function getArtworkById(id: string) {
+  const { rows } = await sql`
+    select ${SELECT_COLUMNS}
+    from artworks
+    inner join artwork_categories on artwork_categories.id = artworks.category_id
+    where artworks.id = ${id}
+    limit 1
+  `.execute(getKysely());
+
+  const row = rows[0] as ArtworkRow | undefined;
+  return row ? mapRow(row) : undefined;
+}
+
+export async function deleteArtworkById(id: string) {
+  await sql`delete from artworks where id = ${id}`.execute(getKysely());
+}
+
 export async function slugExists(slug: string) {
   const { rows } = await sql`select 1 from artworks where slug = ${slug} limit 1`.execute(
     getKysely(),

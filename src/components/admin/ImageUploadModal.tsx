@@ -1,9 +1,16 @@
-import { Link, createFileRoute } from '@tanstack/react-router';
-import { useState, type FormEvent } from 'react';
+import { useRouter } from '@tanstack/react-router';
+import { useState, type SubmitEvent } from 'react';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -16,7 +23,9 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { uploadSingleArtwork } from '@/lib/artwork-upload.functions';
 import { buildBunnyCdnUrl } from '@/lib/bunny';
-import { listAdminCategories } from '@/lib/categories.functions';
+import type { ArtworkCategoryRecord } from '@/lib/categories.server';
+
+import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 
 type UploadSuccess = {
   title: string;
@@ -24,19 +33,13 @@ type UploadSuccess = {
   cdnUrl: string;
 };
 
-export const Route = createFileRoute('/admin/upload')({
-  loader: async () => {
-    const categories = await listAdminCategories();
+type ImageUploadModalProps = {
+  categories: ArtworkCategoryRecord[];
+};
 
-    return {
-      categories: categories.filter((category) => category.status === 'active'),
-    };
-  },
-  component: AdminUploadRoute,
-});
-
-function AdminUploadRoute() {
-  const { categories } = Route.useLoaderData();
+export function ImageUploadModal({ categories }: ImageUploadModalProps) {
+  const router = useRouter();
+  const activeCategories = categories.filter((category) => category.status === 'active');
   const [categoryId, setCategoryId] = useState('');
   const [status, setStatus] = useState<'draft' | 'published'>('draft');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -47,7 +50,7 @@ function AdminUploadRoute() {
     ? buildBunnyCdnUrl(success.cdnUrl, { width: 320, format: 'webp' })
     : null;
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     setErrorMessage(null);
     setSuccess(null);
@@ -66,6 +69,7 @@ function AdminUploadRoute() {
 
     try {
       const record = await uploadSingleArtwork({ data: formData });
+      await router.invalidate();
 
       form.reset();
       setCategoryId('');
@@ -83,28 +87,40 @@ function AdminUploadRoute() {
   }
 
   return (
-    <div className='mx-auto flex w-full max-w-3xl flex-col gap-6'>
-      <Card>
-        <CardHeader>
-          <CardTitle>Single upload</CardTitle>
-          <CardDescription>Upload one artwork and store its metadata in SQLite.</CardDescription>
-        </CardHeader>
-      </Card>
+    <Dialog>
+      <DialogTrigger>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant='positive' className='w-32'>
+              Upload Image
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side='top'>Upload a single image</TooltipContent>
+        </Tooltip>
+      </DialogTrigger>
+      <DialogContent className='min-h-180 opacity-95 p-12'>
+        <DialogHeader>
+          <DialogTitle>Single upload</DialogTitle>
+          <DialogDescription>
+            Upload one artwork and store its metadata in SQLite.
+          </DialogDescription>
+        </DialogHeader>
 
-      {errorMessage ? (
-        <Alert variant='destructive'>
-          <AlertTitle>Upload failed</AlertTitle>
-          <AlertDescription>{errorMessage}</AlertDescription>
-        </Alert>
-      ) : null}
+        {errorMessage && (
+          <Alert variant='destructive'>
+            <AlertTitle>Upload failed</AlertTitle>
+            <AlertDescription>{errorMessage}</AlertDescription>
+          </Alert>
+        )}
 
-      {success ? (
-        <Card className='border-emerald-500/30 bg-emerald-500/5'>
-          <CardHeader>
-            <CardTitle>Upload successful</CardTitle>
-            <CardDescription>{success.title}</CardDescription>
-          </CardHeader>
-          <CardContent className='space-y-4'>
+        {success && (
+          <div className='space-y-4 rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-6'>
+            <div className='space-y-1.5'>
+              <h3 className='text-2xl font-semibold leading-none tracking-tight'>
+                Upload successful
+              </h3>
+              <p className='text-sm text-muted-foreground'>{success.title}</p>
+            </div>
             <dl className='grid gap-3 text-sm'>
               <div className='grid gap-1'>
                 <dt className='text-muted-foreground'>Storage path</dt>
@@ -124,25 +140,21 @@ function AdminUploadRoute() {
                 </dd>
               </div>
             </dl>
-            <Button asChild>
-              <Link to='/admin'>Back to dashboard</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      ) : null}
+          </div>
+        )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Artwork details</CardTitle>
-          <CardDescription>
-            {categories.length > 0
-              ? `${categories.length} active categor${categories.length === 1 ? 'y' : 'ies'} available.`
-              : 'No active categories are available yet.'}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {categories.length === 0 ? (
-            <Alert variant='destructive' className='mb-6'>
+        <section className='space-y-6'>
+          <div className='space-y-1.5'>
+            <h3 className='text-2xl font-semibold leading-none tracking-tight'>Artwork details</h3>
+            <p className='text-sm text-muted-foreground'>
+              {activeCategories.length > 0
+                ? `${activeCategories.length} active categor${activeCategories.length === 1 ? 'y' : 'ies'} available.`
+                : 'No active categories are available yet.'}
+            </p>
+          </div>
+
+          {activeCategories.length === 0 ? (
+            <Alert variant='destructive'>
               <AlertTitle>No active categories</AlertTitle>
               <AlertDescription>
                 Add a category from the dashboard before uploading.
@@ -162,6 +174,7 @@ function AdminUploadRoute() {
                 type='file'
                 accept='image/jpeg,image/png,image/webp'
                 required
+                className='p-0 border-0 file:cursor-pointer file:border-0 file:bg-accent-c/80 hover:file:bg-accent-c active:file:bg-accent-c/70  file:text-sm file:rounded-md file:px-3 file:mr-3'
               />
             </div>
 
@@ -175,13 +188,13 @@ function AdminUploadRoute() {
               <Select
                 value={categoryId}
                 onValueChange={setCategoryId}
-                disabled={categories.length === 0}
+                disabled={activeCategories.length === 0}
               >
                 <SelectTrigger id='category_id'>
                   <SelectValue placeholder='Select a category' />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories.map((category) => (
+                  {activeCategories.map((category) => (
                     <SelectItem key={category.id} value={category.id}>
                       {category.label}
                     </SelectItem>
@@ -232,16 +245,13 @@ function AdminUploadRoute() {
             </div>
 
             <div className='flex flex-wrap items-center gap-3'>
-              <Button type='submit' disabled={isSubmitting || categories.length === 0}>
+              <Button type='submit' disabled={isSubmitting || activeCategories.length === 0}>
                 {isSubmitting ? 'Uploading…' : 'Upload artwork'}
-              </Button>
-              <Button asChild variant='outline'>
-                <Link to='/admin'>Back to dashboard</Link>
               </Button>
             </div>
           </form>
-        </CardContent>
-      </Card>
-    </div>
+        </section>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -1,7 +1,9 @@
 import { sql } from 'kysely';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { buildBulkErrors, getUniqueArtworkSlug, parseCsvRows } from '@/lib/artwork-upload.helpers';
+import { deleteArtworkWithStorage } from '@/lib/artwork-upload.server';
+import { getArtworkById, insertArtwork, type ArtworkRecord } from '@/lib/artworks.server';
 import { buildBunnyCdnUrl } from '@/lib/bunny';
 import { addCategory, listCategories, resolveCategoryInput } from '@/lib/categories.server';
 import { ensureSchema, getKysely } from '@/lib/db.server';
@@ -27,6 +29,46 @@ beforeEach(async () => {
   await resetDatabase();
 });
 
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
+function createTestArtwork(overrides: Partial<ArtworkRecord> = {}) {
+  const timestamp = new Date('2026-01-01T00:00:00.000Z').toISOString();
+  return {
+    id: 'test-artwork-id',
+    slug: 'test-artwork',
+    title: 'Test Artwork',
+    categoryId: 'fineArtCollage',
+    category: {
+      id: 'fineArtCollage',
+      slug: 'fine-art-collage',
+      label: 'Fine Art Collage',
+    },
+    description: 'A test artwork.',
+    alt: 'Test artwork alt text',
+    originalFilename: 'test-artwork.jpg',
+    storagePath: 'fine-art-collage/test-artwork.jpg',
+    cdnUrl: 'https://carla.b-cdn.net/fine-art-collage/test-artwork.jpg',
+    contentType: 'image/jpeg',
+    width: 800,
+    height: 600,
+    sizeBytes: 12345,
+    checksumSha256: 'ABC123',
+    sortOrder: 0,
+    status: 'published',
+    createdAt: timestamp,
+    updatedAt: timestamp,
+    ...overrides,
+  } satisfies ArtworkRecord;
+}
+
+function stubBunnyDelete(status: number) {
+  const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(new Response(null, { status }));
+  vi.stubGlobal('fetch', fetchMock);
+  return fetchMock;
+}
+
 describe('buildBunnyCdnUrl', () => {
   it('appends optimization params once', () => {
     expect(
@@ -35,6 +77,56 @@ describe('buildBunnyCdnUrl', () => {
         format: 'webp',
       }),
     ).toBe('https://carla.b-cdn.net/artworks/2026/test.jpg?width=800&format=webp');
+  });
+});
+
+describe('artwork deletion', () => {
+  it('deletes Bunny storage before deleting the database record', async () => {
+    const record = createTestArtwork();
+    await insertArtwork(record);
+    const fetchMock = stubBunnyDelete(204);
+
+    await expect(deleteArtworkWithStorage(record.id)).resolves.toMatchObject({ id: record.id });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://127.0.0.1:3999/test-zone/fine-art-collage/test-artwork.jpg',
+      expect.objectContaining({ method: 'DELETE' }),
+    );
+    await expect(getArtworkById(record.id)).resolves.toBeUndefined();
+  });
+
+  it('deletes the database record when Bunny storage is already missing', async () => {
+    const record = createTestArtwork();
+    await insertArtwork(record);
+    stubBunnyDelete(404);
+
+    await deleteArtworkWithStorage(record.id);
+
+    await expect(getArtworkById(record.id)).resolves.toBeUndefined();
+  });
+
+  it('keeps the database record when Bunny storage deletion fails', async () => {
+    const record = createTestArtwork();
+    await insertArtwork(record);
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(new Response('Bunny failed', { status: 500 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(deleteArtworkWithStorage(record.id)).rejects.toThrow(
+      'Bunny storage delete failed with 500',
+    );
+
+    await expect(getArtworkById(record.id)).resolves.toMatchObject({ id: record.id });
+  });
+
+  it('reports missing artwork ids without calling Bunny storage', async () => {
+    const fetchMock = vi.fn<typeof fetch>();
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(deleteArtworkWithStorage('missing-artwork-id')).rejects.toThrow('Artwork not found');
+
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });
 

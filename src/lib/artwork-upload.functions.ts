@@ -23,6 +23,22 @@ export const listAdminDashboard = createServerFn({ method: 'GET' }).handler(asyn
   return loadAdminDashboard();
 });
 
+export const deleteArtwork = createServerFn({ method: 'POST' })
+  .validator((data) => {
+    const id =
+      data && typeof data === 'object' && 'id' in data && typeof data.id === 'string'
+        ? data.id.trim()
+        : '';
+    if (id.length === 0) {
+      throw new Error('Artwork id is required');
+    }
+    return { id };
+  })
+  .handler(async ({ data }) => {
+    const { deleteArtwork: runDeleteArtwork } = await import('./artwork-upload.server');
+    return runDeleteArtwork({ data });
+  });
+
 export const uploadSingleArtwork = createServerFn({ method: 'POST' })
   .validator((data) => {
     if (!(data instanceof FormData)) {

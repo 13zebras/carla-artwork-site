@@ -7,6 +7,8 @@ import { imageSize } from 'image-size';
 
 import {
   bulkInsertArtworks,
+  deleteArtworkById,
+  getArtworkById,
   insertArtwork,
   listArtworkRecords,
   slugExists,
@@ -335,6 +337,36 @@ export const listAdminDashboard = createServerFn({ method: 'GET' }).handler(asyn
     categories: await listCategories(),
   };
 });
+
+export async function deleteArtworkWithStorage(id: string) {
+  await ensureSchema();
+
+  const record = await getArtworkById(id);
+  if (!record) {
+    throw new Error('Artwork not found');
+  }
+
+  await deleteFromBunnyStorage(record.storagePath);
+  await deleteArtworkById(record.id);
+
+  return record;
+}
+
+export const deleteArtwork = createServerFn({ method: 'POST' })
+  .validator((data) => {
+    const id =
+      data && typeof data === 'object' && 'id' in data && typeof data.id === 'string'
+        ? data.id.trim()
+        : '';
+    if (id.length === 0) {
+      throw new Error('Artwork id is required');
+    }
+    return { id };
+  })
+  .handler(async ({ data }) => {
+    await requireAdminFromRequest();
+    return deleteArtworkWithStorage(data.id);
+  });
 
 export const uploadSingleArtwork = createServerFn({ method: 'POST' })
   .validator((data) => {

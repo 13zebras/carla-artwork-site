@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @plugin '@tailwindcss/typography';
+@plugin 'tailwindcss-animate';
 
 @font-face {
   font-family: 'Hand_rendered Ink';
@@ -38,6 +39,7 @@
   --color-bg-gradient: var(--bg-gradient);
   --color-accent: var(--accent);
   --color-accent-2: var(--accent-2);
+  --color-accent-c: var(--accent-c);
   --color-accent-foreground: var(--accent-foreground);
   --color-border: var(--border);
   --color-border-secondary: var(--border-secondary);
@@ -54,6 +56,7 @@
 
   --color-destructive: var(--destructive);
   --color-positive: var(--positive);
+  --color-information: var(--information);
 }
 
 :root {
@@ -65,6 +68,7 @@
   --bg-gradient: var(--color-neutral-200);
   --accent: var(--color-neutral-200);
   --accent-2: var(--color-neutral-300);
+  --accent-c: var(--color-sky-400);
   --accent-foreground: var(--color-neutral-900);
   --border: var(--color-neutral-600);
   --border-secondary: var(--color-neutral-500);
@@ -79,6 +83,7 @@
 
   --destructive: var(--color-red-600);
   --positive: var(--color-green-600);
+  --information: var(--color-sky-600);
 
   --theme-dark-background: oklch(10.7% 0.004 49.25);
   --theme-dark-secondary-background: var(--color-neutral-950);
@@ -87,6 +92,7 @@
   --theme-dark-bg-gradient: var(--color-neutral-950);
   --theme-dark-accent: var(--color-neutral-900);
   --theme-dark-accent-2: var(--color-neutral-800);
+  --theme-dark-accent-c: var(--color-sky-600);
   --theme-dark-accent-foreground: var(--color-neutral-50);
   --theme-dark-border: var(--color-neutral-400);
   --theme-dark-border-secondary: var(--color-neutral-500);
@@ -99,9 +105,6 @@
   --theme-dark-card-shadow-color: var(--color-neutral-800);
   --theme-dark-card-shadow:
     0 5px 10px -2px var(--color-shadow-card), 1px 2px 5px -1px var(--color-shadow-card);
-
-  /* --theme-dark-destructive: var(--color-red-500);
-  --theme-dark-positive: var(--color-green-500); */
 }
 
 .dark {
@@ -113,6 +116,7 @@
   --bg-gradient: var(--theme-dark-bg-gradient);
   --accent: var(--theme-dark-accent);
   --accent-2: var(--theme-dark-accent-2);
+  --accent-c: var(--theme-dark-accent-c);
   --accent-foreground: var(--theme-dark-accent-foreground);
   --border: var(--theme-dark-border);
   --border-secondary: var(--theme-dark-border-secondary);
@@ -124,9 +128,6 @@
   --ring: var(--theme-dark-ring);
   --card-shadow-color: var(--theme-dark-card-shadow-color);
   --card-shadow: var(--theme-dark-card-shadow);
-
-  /* --color-destructive: var(--theme-dark-destructive);
-  --color-positive: var(--theme-dark-positive); */
 }
 
 @media (prefers-color-scheme: dark) {
@@ -139,6 +140,7 @@
     --bg-gradient: var(--theme-dark-bg-gradient);
     --accent: var(--theme-dark-accent);
     --accent-2: var(--theme-dark-accent-2);
+    --accent-c: var(--theme-dark-accent-c);
     --accent-foreground: var(--theme-dark-accent-foreground);
     --border: var(--theme-dark-border);
     --border-secondary: var(--theme-dark-border-secondary);
@@ -148,9 +150,6 @@
     --ring: var(--theme-dark-ring);
     --card-shadow-color: var(--theme-dark-card-shadow-color);
     --card-shadow: var(--theme-dark-card-shadow);
-
-    /* --color-destructive: var(--theme-dark-destructive);
-    --color-positive: var(--theme-dark-positive); */
   }
 }
 
@@ -207,20 +206,25 @@
 }
 
 .dashboard-summary-card {
-  @apply w-42 xl:w-48 h-24 justify-center items-center gap-3 px-3 py-2 shrink-0 bg-card/70 shadow-sm;
+  @apply w-30 xl:w-36 h-24 justify-center items-center gap-3 px-3 py-2 shrink-0 bg-card/70 shadow-sm;
 }
 
 .ph {
   @apply placeholder:text-neutral-600 dark:placeholder:text-neutral-400 placeholder:italic;
 }
 
+.admin-button {
+  @apply w-18 border rounded-3xl text-foreground text-xs py-0.5 px-4 cursor-pointer;
+}
+
 .admin-info-button {
-  @apply w-20 border border-sky-500/55 bg-sky-500/50 hover:bg-sky-500/70 active:bg-sky-500/50 rounded-3xl text-foreground text-xs py-0.5 px-4 cursor-pointer;
+  @apply border-sky-600/75 bg-sky-600/60 hover:bg-sky-600/80 active:bg-sky-600/70;
 }
 
 .admin-edit-button {
-  @apply w-20 border border-green-500/55 bg-green-500/50 hover:bg-green-500/70 active:bg-green-500/50 rounded-3xl text-foreground  text-xs py-0.5 px-4 cursor-pointer;
+  @apply border-green-600/65 bg-green-600/50 hover:bg-green-600/80 active:bg-green-600/50;
 }
+
 .admin-delete-button {
-  @apply w-20 border border-red-500/55 bg-red-500/50 hover:bg-red-500/70 active:bg-red-500/50 rounded-3xl text-foreground  text-xs py-0.5 px-4 cursor-pointer;
+  @apply border-red-600/70 bg-red-600/50 hover:bg-red-600/70 active:bg-red-500/60;
 }

@@ -19,10 +19,10 @@ import { TabsContent } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { createAdminCategory } from '@/lib/categories.functions';
 import type { ArtworkCategoryRecord } from '@/lib/categories.server';
+import { dateFormatter } from '@/lib/utils';
 
 type CategoriesTabProps = {
   categories: ArtworkCategoryRecord[];
-  dateFormatter: Intl.DateTimeFormat;
 };
 
 function formatDate(dateFormatter: Intl.DateTimeFormat, value: string) {
@@ -30,7 +30,7 @@ function formatDate(dateFormatter: Intl.DateTimeFormat, value: string) {
   return Number.isNaN(date.getTime()) ? '-' : dateFormatter.format(date);
 }
 
-export function CategoriesTab({ categories, dateFormatter }: CategoriesTabProps) {
+export function CategoriesTab({ categories }: CategoriesTabProps) {
   const router = useRouter();
   const [categoryPending, setCategoryPending] = useState(false);
   const [categoryError, setCategoryError] = useState<string | null>(null);
@@ -55,11 +55,11 @@ export function CategoriesTab({ categories, dateFormatter }: CategoriesTabProps)
             ) : (
               <Table className='min-w-230 w-full'>
                 <TableHeader>
-                  <TableRow>
+                  <TableRow className='whitespace-normal h-14'>
                     <TableHead className='min-w-46 max-w-52'>Category Name / Slug</TableHead>
                     <TableHead className='min-w-0 max-w-100'>Description</TableHead>
-                    <TableHead className='w-22'>Sort Order</TableHead>
-                    <TableHead className='w-20'>Status</TableHead>
+                    <TableHead className='w-12 whitespace-normal'>Sort Order</TableHead>
+                    <TableHead className='w-18'>Status</TableHead>
                     <TableHead className='min-w-30 xl:max-[1400px]:w-45'>Created</TableHead>
                     <TableHead className='min-w-30 xl:max-[1400px]:w-45'>Updated</TableHead>
                     <TableHead className='w-30'>Actions</TableHead>
@@ -88,7 +88,18 @@ export function CategoriesTab({ categories, dateFormatter }: CategoriesTabProps)
                         </Badge>
                       </TableCell>
                       <TableCell className='font-mono text-xs whitespace-normal'>
-                        {formatDate(dateFormatter, category.createdAt)}
+                        <p className='block pb-4'>
+                          Created:
+                          <span className='ml-2'>
+                            {formatDate(dateFormatter, category.createdAt)}
+                          </span>
+                        </p>
+                        <p className=''>
+                          Updated:
+                          <span className='font-mono'>
+                            {formatDate(dateFormatter, category.updatedAt)}
+                          </span>
+                        </p>
                       </TableCell>
                       <TableCell className='font-mono text-xs whitespace-normal'>
                         {formatDate(dateFormatter, category.updatedAt)}
