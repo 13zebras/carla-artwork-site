@@ -91,7 +91,7 @@ export function ImageUploadModal({ categories }: ImageUploadModalProps) {
       <DialogTrigger>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant='positive' className='w-32'>
+            <Button variant='positive' className='w-32 cursor-pointer'>
               Upload Image
             </Button>
           </TooltipTrigger>

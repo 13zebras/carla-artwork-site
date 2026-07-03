@@ -61,9 +61,10 @@ export function BunnyStorageTab({
               <TableHeader>
                 <TableRow>
                   <TableHead>Storage Path</TableHead>
-                  <TableHead>Matched Record / Slug / Status</TableHead>
+                  <TableHead>Matched Database Record</TableHead>
+                  <TableHead className='w-24'>Status</TableHead>
                   <TableHead>Size</TableHead>
-                  <TableHead className='w-54'>Modified</TableHead>
+                  <TableHead className='w-52'>Modified</TableHead>
                   {/* <TableHead className='w-30'>Actions</TableHead> */}
                 </TableRow>
               </TableHeader>
@@ -100,18 +101,22 @@ export function BunnyStorageTab({
                       </TableCell>
                       <TableCell className='whitespace-normal'>
                         {record ? (
-                          <div className='flex items-center gap-4'>
-                            <div className='space-y-1'>
-                              <p className='font-medium leading-tight pb-1'>{record.title}</p>
-                              <p className='text-xs text-muted-foreground font-mono'>
-                                {record.slug}
-                              </p>
-                            </div>
+                          <div className='flex items-center gap-4 justify-between'>
+                            <p className='font-medium leading-tight pb-1'>{record.title}</p>
+                          </div>
+                        ) : (
+                          <div className='flex items-center gap-4 justify-between'>
+                            <span className='text-sm text-muted-foreground'>—</span>
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell className='whitespace-normal'>
+                        {record ? (
+                          <div className='flex items-center gap-4 justify-center'>
                             <Badge variant='positive'>Tracked</Badge>
                           </div>
                         ) : (
-                          <div className='flex items-center gap-4'>
-                            <span className='text-sm text-muted-foreground'>—</span>
+                          <div className='flex items-center gap-4 justify-center'>
                             <Badge variant='destructive'>Untracked</Badge>
                           </div>
                         )}

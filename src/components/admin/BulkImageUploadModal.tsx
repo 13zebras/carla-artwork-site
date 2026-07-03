@@ -156,7 +156,7 @@ export function BulkImageUploadModal({ categories }: BulkImageUploadModalProps) 
       <DialogTrigger>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant='information' className='w-32'>
+            <Button variant='information' className='w-32 cursor-pointer'>
               Bulk Upload
             </Button>
           </TooltipTrigger>

@@ -53,7 +53,7 @@ export function DatabaseRecordsTab({
         </Card>
       ) : (
         // Table to display the artwork records
-        <Card className='overflow-hidden rounded-sm pt-4 pb-0 border-b-0 max-w-275'>
+        <Card className='overflow-hidden rounded-sm pt-4 pb-0 border-b-0 max-w-300'>
           <CardHeader className='flex justify-between items-center gap-8'>
             <div>
               <CardTitle className='text-2xl font-semibold pb-1'>
@@ -75,9 +75,9 @@ export function DatabaseRecordsTab({
                   <TableHead className='w-32 text-center'>Preview</TableHead>
                   <TableHead className='text-center'>Title / Storage Path</TableHead>
                   <TableHead className='text-center'>Category</TableHead>
-                  <TableHead className='w-26 text-center'>Status</TableHead>
+                  <TableHead className='w-26 lg:w-29 xl:w-32 text-center'>Status</TableHead>
                   {/* <TableHead className='w-28'>Storage</TableHead> */}
-                  <TableHead className='w-26 text-center'>Actions</TableHead>
+                  <TableHead className='w-26 lg:w-29 xl:w-32 text-center'>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -89,11 +89,6 @@ export function DatabaseRecordsTab({
                   });
                   const previewUrl = buildBunnyCdnUrl(record.cdnUrl);
                   const hasStorageObject = storageByPath.has(record.storagePath);
-                  // const createdAt = new Date(record.createdAt);
-                  // const uploadedAt = Number.isNaN(createdAt.getTime())
-                  //   ? '—'
-                  //   : dateFormatter.format(createdAt);
-                  // record.status = 'published';
                   return (
                     <>
                       <TableRow key={record.id}>

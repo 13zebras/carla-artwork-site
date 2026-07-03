@@ -8,6 +8,7 @@ import { DatabaseRecordsTab } from '@/components/admin/DatabaseRecordsTab';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { listAdminDashboard } from '@/lib/artwork-upload.functions';
 import { authClient } from '@/lib/auth-client';
 import { getSession, requireAdmin } from '@/lib/auth.functions';
@@ -56,43 +57,31 @@ function AdminLayout() {
   return (
     <main className='min-h-screen bg-secondary-background'>
       <header className='fixed z-10 bg-accent-2/80 w-full px-12 pt-6 pb-4'>
-        <div className='max-w-384 mx-auto flex flex-col items-center md:flex-row md:items-center md:justify-between gap-4 md:gap-12 xl:gap-16'>
+        <div className='max-w-300 mx-auto flex items-center flex-row justify-between md:gap-12 xl:gap-16'>
           <div className='flex items-center gap-8 xl:gap-16'>
             <h1 className='text-3xl xl:text-3xl font-semibold'>Artwork Admin Dashboard</h1>
             {/* <p className='text-base xl:text-lg'>carlastine.com</p> */}
           </div>
           <nav className='flex flex-wrap items-center gap-3 xl:gap-4'>
-            {/* <Button
-              asChild
-              variant='ghost'
-              className='hidden lg:block text-base hover:text-brand-500'
-            >
-              <Link to='/admin'>Dashboard</Link>
-            </Button>
-            <Button
-              asChild
-              variant='ghost'
-              className='hidden lg:block text-base hover:text-brand-500'
-            >
-              <Link to='/admin/upload'>Single Upload</Link>
-            </Button>
-            <Button
-              asChild
-              variant='ghost'
-              className='hidden lg:block text-base hover:text-brand-500'
-            >
-              <Link to='/admin/bulk'>Bulk Upload</Link>
-            </Button> */}
-            <Button asChild variant='ghost' className='text-base group hover:text-brand-500'>
-              <Link to='/' target='_blank'>
-                Site{' '}
-                <ExternalLink className='size-4 text-accent-foreground group-hover:text-brand-500' />
-              </Link>
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  asChild
+                  variant='ghost'
+                  className='text-base group dark:hover:bg-neutral-700/80 dark:active:opacity-85 transition duration-300 hover:scale-[1.07] focus-visible:scale-[1.07] active:scale-[1]'
+                >
+                  <Link to='/' target='_blank'>
+                    <ExternalLink className='size-5.25 text-brand-500/90 group-hover:text-brand-500' />
+                  </Link>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side='bottom'>Open website in new tab</TooltipContent>
+            </Tooltip>
             <ThemeToggle className='' />
             <Button
-              className='ml-2 border-brand-500 text-base hover:bg-brand-200 dark:hover:bg-brand-800 cursor-pointer bg-transparent'
-              variant='outline'
+              className='ml-2 border-brand-500 rounded-lg text-sm hover:bg-brand-200 dark:hover:bg-brand-800 cursor-pointer bg-transparent'
+              variant='ghost'
+              size='sm'
               onClick={async () => {
                 await authClient.signOut();
                 navigate({ to: '/login', search: { redirect: '/admin' } });
@@ -113,7 +102,7 @@ function AdminLayout() {
           />
 
           <Tabs defaultValue='records' className='w-full min-w-0'>
-            <div className='flex flex-wrap items-center justify-between gap-4 max-w-400 w-full mx-auto'>
+            <div className='flex flex-wrap items-center justify-between gap-4 max-w-300 w-full mx-auto'>
               {/* <div className='space-y-2'>
                 <h2 className='text-3xl font-semibold tracking-tight'>Library inventory</h2>
                 <p className='text-base text-muted-foreground'>

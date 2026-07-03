@@ -85,7 +85,7 @@ export function ThemeToggle({ className }: { className?: string }) {
             />
           </span>
         </TooltipTrigger>
-        <TooltipContent side='left'>select light mode</TooltipContent>
+        <TooltipContent side='bottom'>Select light mode</TooltipContent>
       </Tooltip>
       <Tooltip>
         <TooltipTrigger asChild>
@@ -96,7 +96,7 @@ export function ThemeToggle({ className }: { className?: string }) {
             />
           </span>
         </TooltipTrigger>
-        <TooltipContent side='left'>select dark mode</TooltipContent>
+        <TooltipContent side='bottom'>Select dark mode</TooltipContent>
       </Tooltip>
     </button>
   );

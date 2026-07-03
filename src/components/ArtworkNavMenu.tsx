@@ -11,7 +11,7 @@ import {
 import { artworkCategoryLinks } from '@/data/artworkCategories';
 
 const activeCategoryLinkClassName =
-  'inline text-muted-foreground/60 pointer-events-none cursor-default transition-colors hover:bg-transparent hover:text-muted-foreground/60 focus:bg-transparent focus:text-muted-foreground/60 dark:hover:bg-transparent';
+  'font-hand-rendered inline text-muted-foreground/60 pointer-events-none cursor-default transition-colors hover:bg-transparent hover:text-muted-foreground/60 focus:bg-transparent focus:text-muted-foreground/60 dark:hover:bg-transparent';
 
 export function ArtworkNavMenu() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
@@ -20,7 +20,7 @@ export function ArtworkNavMenu() {
     <NavigationMenu viewport={false}>
       <NavigationMenuList className='gap-0'>
         <NavigationMenuItem>
-          <NavigationMenuTrigger className='nav-menu-link nav-menu-link-color-hover h-auto bg-transparent px-1 xxs:px-2 pt-1 pb-0 hover:bg-transparent hover:text-foreground focus:bg-transparent focus:text-foreground data-[state=open]:bg-transparent data-[state=open]:text-foreground data-[state=open]:hover:bg-transparent data-[state=open]:focus:bg-transparent'>
+          <NavigationMenuTrigger className='nav-menu-link h-auto focus:bg-transparent focus:text-foreground data-[state=open]:bg-transparent data-[state=open]:text-foreground data-[state=open]:hover:bg-transparent data-[state=open]:focus:bg-transparent'>
             Artwork
           </NavigationMenuTrigger>
           <NavigationMenuContent className='left-1/4 -translate-x-1/8 group-data-[viewport=false]/navigation-menu:rounded-xs group-data-[viewport=false]/navigation-menu:border border-popover-border group-data-[viewport=false]/navigation-menu:shadow-xl shadow-shadow-card z-50 max-w-75 w-max'>
@@ -40,7 +40,7 @@ export function ArtworkNavMenu() {
                         <Link
                           to={to}
                           params={params}
-                          className='pt-1 pb-0 text-muted-foreground transition-colors nav-menu-link-color-hover'
+                          className='text-muted-foreground transition-colors nav-menu-link'
                         >
                           {label}
                         </Link>

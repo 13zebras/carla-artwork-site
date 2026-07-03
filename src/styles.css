@@ -83,7 +83,7 @@
 
   --destructive: var(--color-red-600);
   --positive: var(--color-green-600);
-  --information: var(--color-sky-600);
+  --information: var(--color-blue-600);
 
   --theme-dark-background: oklch(10.7% 0.004 49.25);
   --theme-dark-secondary-background: var(--color-neutral-950);
@@ -198,11 +198,7 @@
 }
 
 .nav-menu-link {
-  @apply font-hand-rendered text-muted-foreground text-sm xs:text-base;
-}
-
-.nav-menu-link-color-hover {
-  @apply hover:text-foreground hover:bg-brand-200/60 active:text-foreground active:bg-brand-300/60 dark:hover:bg-brand-700/70 dark:active:bg-brand-700/60;
+  @apply font-hand-rendered text-muted-foreground text-sm xs:text-base px-1 xxs:px-2 pt-1 pb-1 rounded-md hover:text-foreground hover:bg-brand-200/60 active:text-foreground active:bg-brand-300/60 dark:hover:bg-brand-700/80 dark:active:bg-brand-700/70;
 }
 
 .dashboard-summary-card {
@@ -214,17 +210,17 @@
 }
 
 .admin-button {
-  @apply w-18 border rounded-3xl text-foreground text-xs py-0.5 px-4 cursor-pointer;
+  @apply w-17 border rounded-md text-white text-xs py-0.5 px-4 cursor-pointer;
 }
 
 .admin-info-button {
-  @apply border-sky-600/75 bg-sky-600/60 hover:bg-sky-600/80 active:bg-sky-600/70;
+  @apply border-sky-700/75 bg-sky-700/70 hover:bg-sky-700/90 active:bg-sky-700/70;
 }
 
 .admin-edit-button {
-  @apply border-green-600/65 bg-green-600/50 hover:bg-green-600/80 active:bg-green-600/50;
+  @apply border-yellow-600/75 bg-yellow-600/70 hover:bg-yellow-600/85 active:bg-yellow-600/70;
 }
 
 .admin-delete-button {
-  @apply border-red-600/70 bg-red-600/50 hover:bg-red-600/70 active:bg-red-500/60;
+  @apply border-red-700/75 bg-red-700/60 hover:bg-red-700/75 active:bg-red-700/60;
 }

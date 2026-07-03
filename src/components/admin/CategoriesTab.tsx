@@ -106,8 +106,8 @@ export function CategoriesTab({ categories }: CategoriesTabProps) {
                       </TableCell>
                       <TableCell>
                         <div className='flex flex-col justify-center items-center gap-3'>
-                          <button className='admin-edit-button'>Edit</button>
-                          <button className='admin-delete-button'>Delete</button>
+                          <button className='admin-button admin-edit-button'>Edit</button>
+                          <button className='admin-button admin-delete-button'>Delete</button>
                         </div>
                       </TableCell>
                     </TableRow>
