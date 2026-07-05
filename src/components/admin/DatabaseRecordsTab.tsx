@@ -1,3 +1,5 @@
+import { useState } from 'react';
+
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -10,61 +12,96 @@ import {
 } from '@/components/ui/table';
 import { TabsContent } from '@/components/ui/tabs';
 import type { AdminDashboard } from '@/lib/artwork-upload.functions';
+import type { ArtworkRecord } from '@/lib/artworks.server';
 import { buildBunnyCdnUrl } from '@/lib/bunny';
 import type { BunnyStorageFile } from '@/lib/bunny.server';
 import type { ArtworkCategoryRecord } from '@/lib/categories.server';
 // import { dateFormatter } from '@/lib/utils';
 
 import { ArtworkDeleteModal } from './ArtworkDeleteModal';
-import { ArtworkInfoModal } from './ArtworkInfoModal';
+import { ArtworkEditModal } from './ArtworkEditModal';
+import { ArtworkInfoDrawer } from './ArtworkInfoDrawer';
 import { BulkImageUploadModal } from './BulkImageUploadModal';
+import { DatabaseActions } from './DatabaseActions';
 import { ImageUploadModal } from './ImageUploadModal';
 
 type DatabaseRecordsTabProps = {
   dashboard: AdminDashboard;
   categories: ArtworkCategoryRecord[];
   storageByPath: Map<string, BunnyStorageFile>;
+  untrackedFiles: BunnyStorageFile[];
 };
 
 export function DatabaseRecordsTab({
   dashboard,
   categories,
   storageByPath,
+  untrackedFiles,
 }: DatabaseRecordsTabProps) {
+  const [infoRecord, setInfoRecord] = useState<ArtworkRecord | null>(null);
+  const [isInfoOpen, setIsInfoOpen] = useState(false);
+  const [deleteRecord, setDeleteRecord] = useState<ArtworkRecord | null>(null);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [editRecord, setEditRecord] = useState<ArtworkRecord | null>(null);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+
+  function openInfo(record: ArtworkRecord) {
+    setInfoRecord(record);
+    setIsInfoOpen(true);
+  }
+
+  function openDelete(record: ArtworkRecord) {
+    setDeleteRecord(record);
+    setIsDeleteOpen(true);
+  }
+
+  function openEdit(record: ArtworkRecord) {
+    setEditRecord(record);
+    setIsEditOpen(true);
+  }
+
+  function handleEditOpenChange(nextOpen: boolean) {
+    setIsEditOpen(nextOpen);
+    if (!nextOpen) {
+      setEditRecord(null);
+    }
+  }
+
   return (
-    <TabsContent value='records' className='mt-4 max-w-300 w-full mx-auto'>
+    <TabsContent value='records' className='mx-auto mt-4 w-full max-w-300'>
       {dashboard.records.length === 0 ? (
-        <Card className='rounded-sm p-8'>
-          <CardContent className='flex items-center justify-between gap-6'>
-            <div className='flex flex-col items-start justify-start gap-6'>
-              <h2 className='text-2xl font-bold'>Empty Image Database</h2>
-              <h3 className='text-lg font-semibold'>No uploaded artworks saved in the database.</h3>
+        // EMPTY DATABASE STATE
+        <Card className='p-8 rounded-sm'>
+          <CardContent className='flex justify-between items-center gap-6'>
+            <div className='flex flex-col justify-start items-start gap-6'>
+              <h2 className='font-bold text-2xl'>Empty Image Database</h2>
+              <h3 className='font-semibold text-lg'>No uploaded artworks saved in the database.</h3>
             </div>
-            <div className='flex flex-col items-start justify-between gap-6'>
-              <h4 className='max-w-sm text-lg text-muted-foreground'>
+            <div className='flex flex-col justify-between items-start gap-6'>
+              <h4 className='max-w-sm text-muted-foreground text-lg'>
                 Add images to save in the database.
               </h4>
               <div className='flex gap-4'>
-                <ImageUploadModal categories={categories} />
+                <ImageUploadModal categories={categories} untrackedFiles={untrackedFiles} />
                 <BulkImageUploadModal categories={categories} />
               </div>
             </div>
           </CardContent>
         </Card>
       ) : (
-        // Table to display the artwork records
-        <Card className='overflow-hidden rounded-sm pt-4 pb-0 border-b-0 max-w-300'>
+        // TABLE OF DATABASE RECORDS
+        <Card className='pt-4 pb-0 border-b-0 rounded-sm w-full max-w-300 overflow-hidden'>
           <CardHeader className='flex justify-between items-center gap-8'>
             <div>
-              <CardTitle className='text-2xl font-semibold pb-1'>
+              <CardTitle className='pb-1 font-semibold text-2xl'>
                 Database Artwork Records
               </CardTitle>
               <CardDescription>
                 Full data for each image in the database with Bunny storage previews
               </CardDescription>
             </div>
-            <div className='flex gap-4'>
-              <ImageUploadModal categories={categories} />
+            <div className='flex gap-4 w-68'>
+              <ImageUploadModal categories={categories} untrackedFiles={untrackedFiles} />
               <BulkImageUploadModal categories={categories} />
             </div>
           </CardHeader>
@@ -76,7 +113,7 @@ export function DatabaseRecordsTab({
                   <TableHead className='text-center'>Title / Storage Path</TableHead>
                   <TableHead className='text-center'>Category</TableHead>
                   <TableHead className='w-26 lg:w-29 xl:w-32 text-center'>Status</TableHead>
-                  {/* <TableHead className='w-28'>Storage</TableHead> */}
+
                   <TableHead className='w-26 lg:w-29 xl:w-32 text-center'>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -87,86 +124,68 @@ export function DatabaseRecordsTab({
                     height: 100,
                     format: 'webp',
                   });
-                  const previewUrl = buildBunnyCdnUrl(record.cdnUrl);
                   const hasStorageObject = storageByPath.has(record.storagePath);
                   return (
-                    <>
-                      <TableRow key={record.id}>
-                        <TableCell className='text-center'>
-                          <a
-                            href={previewUrl}
-                            rel='noreferrer'
-                            target='_blank'
-                            className='inline-flex max-h-25 max-w-25 items-center justify-center overflow-hidden bg-muted/20'
+                    <TableRow
+                      key={record.id}
+                      tabIndex={0}
+                      className='focus-visible:bg-muted/40 focus-visible:outline-none cursor-pointer'
+                      onClick={() => openInfo(record)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          openInfo(record);
+                        }
+                      }}
+                    >
+                      <TableCell className='text-center'>
+                        <img
+                          alt={record.alt}
+                          className='inline-flex justify-center items-center bg-muted/20 max-w-25 max-h-25 object-contain overflow-hidden'
+                          decoding='async'
+                          loading='lazy'
+                          src={thumbnailUrl}
+                        />
+                      </TableCell>
+                      <TableCell className='whitespace-normal'>
+                        <p className='pb-3 font-medium text-lg leading-tight'>{record.title}</p>
+                        <p className='pb-2 font-mono text-muted-foreground text-xs'>
+                          {record.storagePath}
+                        </p>
+                      </TableCell>
+
+                      <TableCell className='whitespace-normal'>
+                        <p className='font-medium'>{record.category.label}</p>
+                      </TableCell>
+                      <TableCell>
+                        <div className='flex flex-col items-center gap-4'>
+                          <Badge
+                            className='w-20'
+                            variant={record.status === 'published' ? 'info' : 'outline'}
                           >
-                            <img
-                              alt={record.alt}
-                              className='max-h-25 max-w-25 object-contain'
-                              decoding='async'
-                              loading='lazy'
-                              src={thumbnailUrl}
-                            />
-                          </a>
-                        </TableCell>
-                        <TableCell className='whitespace-normal'>
-                          <p className='text-lg font-medium leading-tight pb-3'>{record.title}</p>
-                          <p className='text-xs font-mono text-muted-foreground pb-2'>
-                            {record.storagePath}
-                          </p>
-                          {/* <p className='text-xs font-mono text-muted-foreground'>
-                            Uploaded: {uploadedAt}
-                          </p> */}
-                        </TableCell>
-
-                        <TableCell className='whitespace-normal'>
-                          <p className='font-medium'>{record.category.label}</p>
-                        </TableCell>
-                        <TableCell>
-                          <div className='flex flex-col items-center gap-4'>
-                            <Badge
-                              className='w-20'
-                              variant={record.status === 'published' ? 'default' : 'outline'}
-                            >
-                              {record.status.charAt(0).toUpperCase() + record.status.slice(1)}
-                            </Badge>
-                            <Badge
-                              className='w-20'
-                              variant={hasStorageObject ? 'default' : 'outline'}
-                            >
-                              {hasStorageObject ? 'Tracked' : 'Missing'}
-                            </Badge>
-                          </div>
-                        </TableCell>
-
-                        {/* <TableCell>
-                          <Badge variant={hasStorageObject ? 'positive' : 'destructive'}>
+                            {record.status.charAt(0).toUpperCase() + record.status.slice(1)}
+                          </Badge>
+                          <Badge
+                            className='w-20'
+                            variant={hasStorageObject ? 'positive' : 'destructive'}
+                          >
                             {hasStorageObject ? 'Tracked' : 'Missing'}
                           </Badge>
-                        </TableCell> */}
-                        <TableCell className='text-center'>
-                          {/* <DatabaseActions record={record} /> */}
-                          <div className='flex flex-col justify-center items-center gap-2'>
-                            <ArtworkInfoModal record={record} />
+                        </div>
+                      </TableCell>
 
-                            <button className='admin-button admin-edit-button'>Edit</button>
-                            <ArtworkDeleteModal record={record} />
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                      {/* <TableRow key={`${record.id}-secondary`}> */}
-                      {/* <TableCell colSpan={2} className='whitespace-normal'>
-                          <p className='text-xs font-mono text-muted-foreground'>
-                            {record.storagePath}
-                          </p>
-                        </TableCell> */}
-
-                      {/* <TableCell colSpan={2}>
-                          <p className='text-xs font-mono text-muted-foreground'>
-                            Uploaded: {uploadedAt}
-                          </p>
-                        </TableCell> */}
-                      {/* </TableRow> */}
-                    </>
+                      <TableCell
+                        className='text-center cursor-default'
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <DatabaseActions
+                          record={record}
+                          onInfo={openInfo}
+                          onEdit={openEdit}
+                          onDelete={openDelete}
+                        />
+                      </TableCell>
+                    </TableRow>
                   );
                 })}
               </TableBody>
@@ -174,6 +193,19 @@ export function DatabaseRecordsTab({
           </CardContent>
         </Card>
       )}
+
+      <ArtworkInfoDrawer record={infoRecord} open={isInfoOpen} onOpenChange={setIsInfoOpen} />
+      <ArtworkEditModal
+        record={editRecord}
+        categories={categories}
+        open={isEditOpen}
+        onOpenChange={handleEditOpenChange}
+      />
+      <ArtworkDeleteModal
+        record={deleteRecord}
+        open={isDeleteOpen}
+        onOpenChange={setIsDeleteOpen}
+      />
     </TabsContent>
   );
 }

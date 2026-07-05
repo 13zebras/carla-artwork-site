@@ -9,9 +9,11 @@ import {
   bulkInsertArtworks,
   deleteArtworkById,
   getArtworkById,
+  getArtworkByStoragePath,
   insertArtwork,
   listArtworkRecords,
   slugExists,
+  updateArtworkMetadata,
   type ArtworkRecord,
   type ArtworkStatus,
 } from './artworks.server';
@@ -19,6 +21,7 @@ import { requireAdminFromRequest } from './auth.server';
 import { buildBunnyCdnUrl } from './bunny';
 import {
   deleteFromBunnyStorage,
+  downloadFromBunnyStorage,
   listBunnyStorageFiles,
   uploadToBunnyStorage,
   type BunnyStorageFile,
@@ -140,6 +143,31 @@ function parseSortOrder(value: FormDataEntryValue | string | undefined | null, f
   return parsed;
 }
 
+function extensionFromContentType(contentType: string): ImageMeta['extension'] | null {
+  const extensionByMime: Record<string, ImageMeta['extension']> = {
+    'image/jpeg': 'jpg',
+    'image/png': 'png',
+    'image/webp': 'webp',
+  };
+  return extensionByMime[contentType] ?? null;
+}
+
+export function contentTypeFromExtension(
+  name: string,
+): 'image/jpeg' | 'image/png' | 'image/webp' | null {
+  switch (path.extname(name).toLowerCase()) {
+    case '.jpg':
+    case '.jpeg':
+      return 'image/jpeg';
+    case '.png':
+      return 'image/png';
+    case '.webp':
+      return 'image/webp';
+    default:
+      return null;
+  }
+}
+
 function getImageMeta(file: File): ImageMeta {
   if (file.size === 0) {
     throw new Error(`File ${file.name} is empty`);
@@ -149,12 +177,7 @@ function getImageMeta(file: File): ImageMeta {
   }
 
   const contentType = file.type || '';
-  const extensionByMime: Record<string, ImageMeta['extension']> = {
-    'image/jpeg': 'jpg',
-    'image/png': 'png',
-    'image/webp': 'webp',
-  };
-  const extension = extensionByMime[contentType];
+  const extension = extensionFromContentType(contentType);
   if (!extension) {
     throw new Error(`File ${file.name} must be a JPEG, PNG, or WebP image`);
   }
@@ -162,29 +185,45 @@ function getImageMeta(file: File): ImageMeta {
   return { width: 0, height: 0, checksumSha256: '', contentType, sizeBytes: file.size, extension };
 }
 
-async function readImageMeta(file: File) {
-  const meta = getImageMeta(file);
-  const buffer = Buffer.from(await file.arrayBuffer());
+export function readImageMetaFromBuffer(
+  buffer: Buffer,
+  opts: { contentType: string; name: string },
+): ImageMeta {
+  if (buffer.length === 0) {
+    throw new Error(`File ${opts.name} is empty`);
+  }
+  const extension = extensionFromContentType(opts.contentType);
+  if (!extension) {
+    throw new Error(`File ${opts.name} must be a JPEG, PNG, or WebP image`);
+  }
   const dimensions = imageSize(buffer);
   if (typeof dimensions.width !== 'number' || typeof dimensions.height !== 'number') {
-    throw new Error(`Could not read dimensions for ${file.name}`);
+    throw new Error(`Could not read dimensions for ${opts.name}`);
   }
 
   return {
     width: dimensions.width,
     height: dimensions.height,
     checksumSha256: createHash('sha256').update(buffer).digest('hex').toUpperCase(),
-    contentType: meta.contentType,
+    contentType: opts.contentType,
     sizeBytes: buffer.byteLength,
-    extension: meta.extension,
-    file,
+    extension,
   };
 }
 
-function buildStoragePath(categorySlug: string, slug: string, extension: 'jpg' | 'png' | 'webp') {
-  const normalizedCategorySlug = categorySlug.replace(/^\/+|\/+$/g, '');
+async function readImageMeta(file: File) {
+  const meta = getImageMeta(file);
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const imageMeta = readImageMetaFromBuffer(buffer, {
+    contentType: meta.contentType,
+    name: file.name,
+  });
+  return { ...imageMeta, file };
+}
+
+export function buildStoragePath(slug: string, extension: 'jpg' | 'png' | 'webp') {
   const shortId = randomUUID().replaceAll('-', '').slice(0, 8);
-  return `${normalizedCategorySlug}/${slug}-${shortId}.${extension}`;
+  return `artworks/${slug}-${shortId}.${extension}`;
 }
 
 export function parseCsvRows(csvText: string): RawCsvRow[] {
@@ -268,7 +307,7 @@ async function prepareSingleArtwork(formData: FormData) {
 
   const takenSlugs = new Set((await listArtworkRecords()).map((record) => record.slug));
   const slug = await getUniqueArtworkSlug(baseSlug, takenSlugs);
-  const storagePath = buildStoragePath(category.slug, slug, imageMeta.extension);
+  const storagePath = buildStoragePath(slug, imageMeta.extension);
   const cdnUrl = buildBunnyCdnUrl(getServerEnv().BUNNY_CDN_BASE_URL + `/${storagePath}`);
   const categorySummary = {
     id: category.id,
@@ -405,6 +444,174 @@ export const uploadSingleArtwork = createServerFn({ method: 'POST' })
       await deleteFromBunnyStorage(record.storagePath);
       throw error;
     }
+  });
+
+export async function prepareExistingArtworkRecord(input: {
+  storagePath: string;
+  title: string;
+  categoryId: string;
+  alt: string | null;
+  description: string | null;
+  sortOrder: number;
+  status: ArtworkStatus;
+}): Promise<ArtworkRecord> {
+  const contentType = contentTypeFromExtension(input.storagePath);
+  if (!contentType) {
+    throw new Error('Only JPEG, PNG, or WebP images can be linked');
+  }
+
+  const category = (await listCategories()).find((entry) => entry.id === input.categoryId);
+  if (!category) {
+    throw new Error('Select an active category');
+  }
+  if (category.status !== 'active') {
+    throw new Error('Selected category is archived');
+  }
+
+  if (await getArtworkByStoragePath(input.storagePath)) {
+    throw new Error('This storage path is already linked to a record');
+  }
+
+  const { buffer } = await downloadFromBunnyStorage(input.storagePath);
+  const imageMeta = readImageMetaFromBuffer(buffer, { contentType, name: input.storagePath });
+
+  const baseSlug = getBaseSlug(input.title);
+  if (!baseSlug) {
+    throw new Error('Unable to create a slug for this file');
+  }
+  const takenSlugs = new Set((await listArtworkRecords()).map((record) => record.slug));
+  const slug = await getUniqueArtworkSlug(baseSlug, takenSlugs);
+  const cdnUrl = buildBunnyCdnUrl(`${getServerEnv().BUNNY_CDN_BASE_URL}/${input.storagePath}`);
+
+  return createArtworkRecord({
+    title: input.title,
+    category: { id: category.id, slug: category.slug, label: category.label },
+    slug,
+    storagePath: input.storagePath,
+    cdnUrl,
+    imageMeta,
+    description: input.description,
+    alt: input.alt ?? input.title,
+    originalFilename: path.basename(input.storagePath),
+    sortOrder: input.sortOrder,
+    status: input.status,
+  });
+}
+
+function parseRegisterExistingInput(data: unknown) {
+  if (!data || typeof data !== 'object') {
+    throw new Error('Invalid request');
+  }
+  const obj = data as Record<string, unknown>;
+  const storagePath = typeof obj.storagePath === 'string' ? obj.storagePath.trim() : '';
+  const title = typeof obj.title === 'string' ? obj.title.trim() : '';
+  const categoryId = typeof obj.categoryId === 'string' ? obj.categoryId.trim() : '';
+  const altRaw = typeof obj.alt === 'string' ? obj.alt.trim() : '';
+  const descriptionRaw = typeof obj.description === 'string' ? obj.description.trim() : '';
+  const sortOrderValue =
+    obj.sortOrder === undefined || obj.sortOrder === null || obj.sortOrder === ''
+      ? 0
+      : Number(obj.sortOrder);
+
+  if (storagePath.length === 0) {
+    throw new Error('Storage path is required');
+  }
+  if (title.length === 0) {
+    throw new Error('Title is required');
+  }
+  if (categoryId.length === 0) {
+    throw new Error('Category is required');
+  }
+  if (!Number.isInteger(sortOrderValue)) {
+    throw new Error('Artwork sort order must be an integer');
+  }
+
+  return {
+    storagePath,
+    title,
+    categoryId,
+    alt: altRaw || null,
+    description: descriptionRaw || null,
+    sortOrder: sortOrderValue,
+    status: normalizeStatus(typeof obj.status === 'string' ? obj.status : undefined),
+  };
+}
+
+export const registerExistingArtwork = createServerFn({ method: 'POST' })
+  .validator((data) => parseRegisterExistingInput(data))
+  .handler(async ({ data }) => {
+    await requireAdminFromRequest();
+    await ensureSchema();
+    const record = await prepareExistingArtworkRecord(data);
+    return insertArtwork(record);
+  });
+
+function parseUpdateArtworkInput(data: unknown) {
+  if (!data || typeof data !== 'object') {
+    throw new Error('Invalid request');
+  }
+
+  const obj = data as Record<string, unknown>;
+  const id = typeof obj.id === 'string' ? obj.id.trim() : '';
+  const title = typeof obj.title === 'string' ? obj.title.trim() : '';
+  const categoryId = typeof obj.categoryId === 'string' ? obj.categoryId.trim() : '';
+  const altRaw = typeof obj.alt === 'string' ? obj.alt.trim() : '';
+  const descriptionRaw = typeof obj.description === 'string' ? obj.description.trim() : '';
+  const sortOrderValue =
+    obj.sortOrder === undefined || obj.sortOrder === null || obj.sortOrder === ''
+      ? 0
+      : Number(obj.sortOrder);
+
+  if (id.length === 0) {
+    throw new Error('Artwork id is required');
+  }
+  if (title.length === 0) {
+    throw new Error('Title is required');
+  }
+  if (categoryId.length === 0) {
+    throw new Error('Category is required');
+  }
+  if (!Number.isInteger(sortOrderValue)) {
+    throw new Error('Artwork sort order must be an integer');
+  }
+
+  return {
+    id,
+    title,
+    categoryId,
+    alt: altRaw || title,
+    description: descriptionRaw || null,
+    sortOrder: sortOrderValue,
+    status: normalizeStatus(typeof obj.status === 'string' ? obj.status : undefined),
+  };
+}
+
+export async function updateArtworkRecord(input: ReturnType<typeof parseUpdateArtworkInput>) {
+  await ensureSchema();
+
+  const existing = await getArtworkById(input.id);
+  if (!existing) {
+    throw new Error('Artwork not found');
+  }
+
+  const category = (await listCategories({ includeArchived: true })).find(
+    (entry) => entry.id === input.categoryId,
+  );
+  if (!category) {
+    throw new Error('Select a valid category');
+  }
+  if (category.status !== 'active' && category.id !== existing.categoryId) {
+    throw new Error('Selected category is archived');
+  }
+
+  return updateArtworkMetadata(input);
+}
+
+export const updateArtwork = createServerFn({ method: 'POST' })
+  .validator((data) => parseUpdateArtworkInput(data))
+  .handler(async ({ data }) => {
+    await requireAdminFromRequest();
+    return updateArtworkRecord(data);
   });
 
 function parseBulkRows(formData: FormData) {
@@ -568,7 +775,7 @@ async function prepareBulkRows(formData: FormData): Promise<BulkPreparationResul
     }
 
     const slug = await getUniqueArtworkSlug(baseSlug, existingSlugs);
-    const storagePath = buildStoragePath(category.slug, slug, imageMeta.extension);
+    const storagePath = buildStoragePath(slug, imageMeta.extension);
     const cdnUrl = buildBunnyCdnUrl(`${getServerEnv().BUNNY_CDN_BASE_URL}/${storagePath}`);
     const categorySummary = {
       id: category.id,

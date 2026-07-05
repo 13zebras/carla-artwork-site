@@ -205,7 +205,7 @@ export function CategoriesTab({ categories }: CategoriesTabProps) {
                   name='description'
                   placeholder='Description of the category to be used on the category page.'
                   rows={6}
-                  className='ph border-border-secondary min-h-20'
+                  className='ph border-border-2nd min-h-20'
                 />
               </div>
 

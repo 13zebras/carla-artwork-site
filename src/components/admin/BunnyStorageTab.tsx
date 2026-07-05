@@ -11,6 +11,7 @@ import {
 import { TabsContent } from '@/components/ui/tabs';
 import type { AdminDashboard } from '@/lib/artwork-upload.functions';
 import type { ArtworkRecord } from '@/lib/artworks.server';
+import type { BunnyStorageFile } from '@/lib/bunny.server';
 import type { ArtworkCategoryRecord } from '@/lib/categories.server';
 import { dateFormatter } from '@/lib/utils';
 
@@ -21,35 +22,60 @@ type BunnyStorageTabProps = {
   dashboard: AdminDashboard;
   recordByStoragePath: Map<string, ArtworkRecord>;
   categories: ArtworkCategoryRecord[];
+  untrackedFiles: BunnyStorageFile[];
 };
+
+function formatSizeLabel(sizeBytes: BunnyStorageFile['sizeBytes']) {
+  if (sizeBytes === null) {
+    return '—';
+  }
+
+  if (sizeBytes < 1024) {
+    return `${sizeBytes} B`;
+  }
+
+  const units = ['KB', 'MB', 'GB', 'TB'];
+  let size = sizeBytes / 1024;
+  let unitIndex = 0;
+
+  while (size >= 1024 && unitIndex < units.length - 1) {
+    size /= 1024;
+    unitIndex += 1;
+  }
+
+  const fractionDigits = size >= 10 ? 0 : 1;
+
+  return `${size.toFixed(fractionDigits)} ${units[unitIndex]}`;
+}
 
 export function BunnyStorageTab({
   dashboard,
   recordByStoragePath,
   categories,
+  untrackedFiles,
 }: BunnyStorageTabProps) {
   return (
-    <TabsContent value='storage' className='mt-4 max-w-300 w-full mx-auto'>
+    <TabsContent value='storage' className='mx-auto mt-4 w-full max-w-300'>
       {dashboard.storageFiles.length === 0 ? (
-        <Card className='rounded-sm p-8'>
-          <CardContent className='flex items-center justify-between gap-6'>
-            <div className='flex flex-col items-start justify-start gap-6'>
-              <h2 className='text-2xl font-bold'>Bunny Image Storage Is Empty</h2>
-              <h3 className='text-lg font-semibold'>o artworks have been uploaded to Bunny CDN.</h3>
+        <Card className='p-8 rounded-sm'>
+          <CardContent className='flex justify-between items-center gap-6'>
+            <div className='flex flex-col justify-start items-start gap-6'>
+              <h2 className='font-bold text-2xl'>Bunny Image Storage Is Empty</h2>
+              <h3 className='font-semibold text-lg'>o artworks have been uploaded to Bunny CDN.</h3>
             </div>
-            <div className='flex flex-col items-start justify-between gap-6'>
-              <h4 className='max-w-sm text-lg text-muted-foreground'>
+            <div className='flex flex-col justify-between items-start gap-6'>
+              <h4 className='max-w-sm text-muted-foreground text-lg'>
                 Add images to save in the database.
               </h4>
               <div className='flex gap-4'>
-                <ImageUploadModal categories={categories} />
+                <ImageUploadModal categories={categories} untrackedFiles={untrackedFiles} />
                 <BulkImageUploadModal categories={categories} />
               </div>
             </div>
           </CardContent>
         </Card>
       ) : (
-        <Card className='overflow-hidden rounded-sm pt-4 pb-0 border-b-0'>
+        <Card className='pt-4 pb-0 border-b-0 rounded-sm overflow-hidden'>
           <CardHeader>
             <CardTitle className='text-xl'>Bunny Storage Image Files</CardTitle>
             <CardDescription>
@@ -62,10 +88,9 @@ export function BunnyStorageTab({
                 <TableRow>
                   <TableHead>Storage Path</TableHead>
                   <TableHead>Matched Database Record</TableHead>
-                  <TableHead className='w-24'>Status</TableHead>
+                  <TableHead className='w-26'>Status</TableHead>
                   <TableHead>Size</TableHead>
-                  <TableHead className='w-52'>Modified</TableHead>
-                  {/* <TableHead className='w-30'>Actions</TableHead> */}
+                  <TableHead className='w-48'>Modified</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -76,59 +101,32 @@ export function BunnyStorageTab({
                     modified && !Number.isNaN(modified.getTime())
                       ? dateFormatter.format(modified)
                       : '—';
-                  const sizeLabel =
-                    file.sizeBytes === null
-                      ? '—'
-                      : file.sizeBytes < 1024
-                        ? `${file.sizeBytes} B`
-                        : (() => {
-                            const units = ['KB', 'MB', 'GB', 'TB'];
-                            let size = file.sizeBytes / 1024;
-                            let unitIndex = 0;
-
-                            while (size >= 1024 && unitIndex < units.length - 1) {
-                              size /= 1024;
-                              unitIndex += 1;
-                            }
-
-                            return `${size.toFixed(size >= 10 ? 0 : 1)} ${units[unitIndex]}`;
-                          })();
+                  const sizeLabel = formatSizeLabel(file.sizeBytes);
 
                   return (
                     <TableRow key={file.path}>
-                      <TableCell className='whitespace-normal font-mono text-xs'>
+                      <TableCell className='font-mono text-xs whitespace-normal'>
                         {file.path}
                       </TableCell>
                       <TableCell className='whitespace-normal'>
-                        {record ? (
-                          <div className='flex items-center gap-4 justify-between'>
-                            <p className='font-medium leading-tight pb-1'>{record.title}</p>
-                          </div>
-                        ) : (
-                          <div className='flex items-center gap-4 justify-between'>
-                            <span className='text-sm text-muted-foreground'>—</span>
-                          </div>
-                        )}
+                        <div className='flex justify-between items-center'>
+                          {record ? (
+                            <p className='pb-1 font-medium leading-tight'>{record.title}</p>
+                          ) : (
+                            <span className='text-muted-foreground text-sm'>—</span>
+                          )}
+                        </div>
                       </TableCell>
+
                       <TableCell className='whitespace-normal'>
-                        {record ? (
-                          <div className='flex items-center gap-4 justify-center'>
-                            <Badge variant='positive'>Tracked</Badge>
-                          </div>
-                        ) : (
-                          <div className='flex items-center gap-4 justify-center'>
-                            <Badge variant='destructive'>Untracked</Badge>
-                          </div>
-                        )}
+                        <div className='flex justify-center items-center'>
+                          <Badge variant={record ? 'positive' : 'destructive'} className='w-21'>
+                            {record ? 'DB Record' : 'Not in DB'}
+                          </Badge>
+                        </div>
                       </TableCell>
                       <TableCell>{sizeLabel}</TableCell>
-                      <TableCell className='font-mono'>{modifiedAt}</TableCell>
-                      {/* <TableCell>
-                        <div className='flex flex-col justify-center items-center gap-3'>
-                          <button className='admin-edit-button'>Edit</button>
-                          <button className='admin-delete-button'>Delete</button>
-                        </div>
-                      </TableCell> */}
+                      <TableCell className='font-normal'>{modifiedAt}</TableCell>
                     </TableRow>
                   );
                 })}

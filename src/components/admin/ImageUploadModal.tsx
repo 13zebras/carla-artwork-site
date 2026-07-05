@@ -21,8 +21,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { uploadSingleArtwork } from '@/lib/artwork-upload.functions';
+import { registerExistingArtwork, uploadSingleArtwork } from '@/lib/artwork-upload.functions';
 import { buildBunnyCdnUrl } from '@/lib/bunny';
+import type { BunnyStorageFile } from '@/lib/bunny.server';
 import type { ArtworkCategoryRecord } from '@/lib/categories.server';
 
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
@@ -35,12 +36,15 @@ type UploadSuccess = {
 
 type ImageUploadModalProps = {
   categories: ArtworkCategoryRecord[];
+  untrackedFiles?: BunnyStorageFile[];
 };
 
-export function ImageUploadModal({ categories }: ImageUploadModalProps) {
+export function ImageUploadModal({ categories, untrackedFiles = [] }: ImageUploadModalProps) {
   const router = useRouter();
   const activeCategories = categories.filter((category) => category.status === 'active');
+  const [mode, setMode] = useState<'upload' | 'link'>('upload');
   const [categoryId, setCategoryId] = useState('');
+  const [storagePath, setStoragePath] = useState('');
   const [status, setStatus] = useState<'draft' | 'published'>('draft');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -60,6 +64,11 @@ export function ImageUploadModal({ categories }: ImageUploadModalProps) {
       return;
     }
 
+    if (mode === 'link' && !storagePath) {
+      setErrorMessage('Select an existing Bunny image to link.');
+      return;
+    }
+
     const form = event.currentTarget;
     const formData = new FormData(form);
     formData.set('category_id', categoryId);
@@ -68,12 +77,27 @@ export function ImageUploadModal({ categories }: ImageUploadModalProps) {
     setIsSubmitting(true);
 
     try {
-      const record = await uploadSingleArtwork({ data: formData });
+      const record =
+        mode === 'link'
+          ? await registerExistingArtwork({
+              data: {
+                storagePath,
+                title: String(formData.get('title') ?? ''),
+                categoryId,
+                alt: String(formData.get('alt') ?? '').trim(),
+                description: String(formData.get('description') ?? '').trim(),
+                sortOrder: Number(formData.get('sort_order') ?? 0),
+                status,
+              },
+            })
+          : await uploadSingleArtwork({ data: formData });
+
       await router.invalidate();
 
       form.reset();
       setCategoryId('');
       setStatus('draft');
+      setStoragePath('');
       setSuccess({
         title: record.title,
         storagePath: record.storagePath,
@@ -98,7 +122,7 @@ export function ImageUploadModal({ categories }: ImageUploadModalProps) {
           <TooltipContent side='top'>Upload a single image</TooltipContent>
         </Tooltip>
       </DialogTrigger>
-      <DialogContent className='min-h-180 opacity-95 p-12'>
+      <DialogContent className='max-w-2xl min-h-180 opacity-95 p-12 border-border-2nd'>
         <DialogHeader>
           <DialogTitle>Single upload</DialogTitle>
           <DialogDescription>
@@ -167,16 +191,90 @@ export function ImageUploadModal({ categories }: ImageUploadModalProps) {
             <input type='hidden' name='status' value={status} />
 
             <div className='grid gap-2'>
-              <Label htmlFor='file'>File</Label>
-              <Input
-                id='file'
-                name='file'
-                type='file'
-                accept='image/jpeg,image/png,image/webp'
-                required
-                className='p-0 border-0 file:cursor-pointer file:border-0 file:bg-accent-c/80 hover:file:bg-accent-c active:file:bg-accent-c/70  file:text-sm file:rounded-md file:px-3 file:mr-3'
-              />
+              <Label>Source</Label>
+              <div className='flex gap-6'>
+                <div className='flex items-center gap-2'>
+                  <input
+                    type='radio'
+                    id='source-upload'
+                    name='source-mode'
+                    value='upload'
+                    checked={mode === 'upload'}
+                    onChange={() => setMode('upload')}
+                    aria-label='Upload new file'
+                    className='size-4 cursor-pointer accent-yellow-500'
+                  />
+                  <Label htmlFor='source-upload' className='cursor-pointer font-normal'>
+                    Upload new file
+                  </Label>
+                </div>
+                <div
+                  className='flex items-center gap-2'
+                  title={
+                    untrackedFiles.length === 0
+                      ? 'No untracked Bunny images available'
+                      : 'Link an image already in Bunny storage'
+                  }
+                >
+                  <input
+                    type='radio'
+                    id='source-link'
+                    name='source-mode'
+                    value='link'
+                    checked={mode === 'link'}
+                    onChange={() => setMode('link')}
+                    disabled={untrackedFiles.length === 0}
+                    aria-label='Link existing Bunny image'
+                    className='size-4 cursor-pointer accent-yellow-500 disabled:cursor-not-allowed'
+                  />
+                  <Label
+                    htmlFor='source-link'
+                    className={
+                      untrackedFiles.length === 0
+                        ? 'cursor-not-allowed font-normal text-muted-foreground'
+                        : 'cursor-pointer font-normal'
+                    }
+                  >
+                    Link existing Bunny image
+                  </Label>
+                </div>
+              </div>
+              {mode === 'link' && untrackedFiles.length === 0 ? (
+                <p className='text-sm text-muted-foreground'>
+                  No untracked Bunny images are available to link.
+                </p>
+              ) : null}
             </div>
+
+            {mode === 'upload' ? (
+              <div className='grid gap-2'>
+                <Label htmlFor='file'>File</Label>
+                <Input
+                  id='file'
+                  name='file'
+                  type='file'
+                  accept='image/jpeg,image/png,image/webp'
+                  required
+                  className='p-0 border-0 file:cursor-pointer file:border-0 file:bg-accent-c/80 hover:file:bg-accent-c active:file:bg-accent-c/70  file:text-sm file:rounded-md file:px-3 file:mr-3'
+                />
+              </div>
+            ) : (
+              <div className='grid gap-2'>
+                <Label htmlFor='storage_path'>Existing Bunny image</Label>
+                <Select value={storagePath} onValueChange={setStoragePath}>
+                  <SelectTrigger id='storage_path'>
+                    <SelectValue placeholder='Select an untracked Bunny image' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {untrackedFiles.map((file) => (
+                      <SelectItem key={file.path} value={file.path}>
+                        {file.path}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             <div className='grid gap-2'>
               <Label htmlFor='title'>Title</Label>
@@ -246,7 +344,13 @@ export function ImageUploadModal({ categories }: ImageUploadModalProps) {
 
             <div className='flex flex-wrap items-center gap-3'>
               <Button type='submit' disabled={isSubmitting || activeCategories.length === 0}>
-                {isSubmitting ? 'Uploading…' : 'Upload artwork'}
+                {isSubmitting
+                  ? mode === 'link'
+                    ? 'Linking…'
+                    : 'Uploading…'
+                  : mode === 'link'
+                    ? 'Link artwork'
+                    : 'Upload artwork'}
               </Button>
             </div>
           </form>

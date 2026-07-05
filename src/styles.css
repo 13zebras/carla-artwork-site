@@ -33,7 +33,7 @@
 @theme inline {
   --font-hand-rendered: 'Hand_rendered Ink', sans-serif;
   --color-background: var(--background);
-  --color-secondary-background: var(--secondary-background);
+  --color-background-2nd: var(--background-2nd);
   --color-foreground: var(--foreground);
   --color-muted-foreground: var(--muted-foreground);
   --color-bg-gradient: var(--bg-gradient);
@@ -42,7 +42,7 @@
   --color-accent-c: var(--accent-c);
   --color-accent-foreground: var(--accent-foreground);
   --color-border: var(--border);
-  --color-border-secondary: var(--border-secondary);
+  --color-border-2nd: var(--border-2nd);
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover-border: var(--popover-border);
@@ -62,7 +62,7 @@
 :root {
   color-scheme: light;
   --background: var(--color-neutral-100);
-  --secondary-background: var(--color-neutral-200);
+  --background-2nd: var(--color-neutral-200);
   --foreground: var(--color-neutral-950);
   --muted-foreground: var(--color-neutral-700);
   --bg-gradient: var(--color-neutral-200);
@@ -71,7 +71,7 @@
   --accent-c: var(--color-sky-400);
   --accent-foreground: var(--color-neutral-900);
   --border: var(--color-neutral-600);
-  --border-secondary: var(--color-neutral-500);
+  --border-2nd: var(--color-neutral-400);
   --popover: var(--color-neutral-100);
   --popover-foreground: var(--color-neutral-900);
   --popover-border: var(--color-neutral-200);
@@ -86,7 +86,7 @@
   --information: var(--color-blue-600);
 
   --theme-dark-background: oklch(10.7% 0.004 49.25);
-  --theme-dark-secondary-background: var(--color-neutral-950);
+  --theme-dark-background-2nd: var(--color-neutral-950);
   --theme-dark-foreground: var(--color-neutral-50);
   --theme-dark-muted-foreground: var(--color-neutral-200);
   --theme-dark-bg-gradient: var(--color-neutral-950);
@@ -95,10 +95,10 @@
   --theme-dark-accent-c: var(--color-sky-600);
   --theme-dark-accent-foreground: var(--color-neutral-50);
   --theme-dark-border: var(--color-neutral-400);
-  --theme-dark-border-secondary: var(--color-neutral-500);
-  --theme-dark-popover: var(--color-neutral-900);
+  --theme-dark-border-2nd: var(--color-neutral-600);
+  --theme-dark-popover: var(--color-neutral-800);
   --theme-dark-popover-foreground: var(--color-neutral-100);
-  --theme-dark-popover-border: var(--color-neutral-700);
+  --theme-dark-popover-border: var(--color-neutral-600);
   --theme-dark-card: var(--color-neutral-900);
   --theme-dark-card-foreground: var(--color-neutral-200);
   --theme-dark-ring: var(--color-brand-600);
@@ -110,7 +110,7 @@
 .dark {
   color-scheme: dark;
   --background: var(--theme-dark-background);
-  --secondary-background: var(--theme-dark-secondary-background);
+  --background-2nd: var(--theme-dark-background-2nd);
   --foreground: var(--theme-dark-foreground);
   --muted-foreground: var(--theme-dark-muted-foreground);
   --bg-gradient: var(--theme-dark-bg-gradient);
@@ -119,7 +119,7 @@
   --accent-c: var(--theme-dark-accent-c);
   --accent-foreground: var(--theme-dark-accent-foreground);
   --border: var(--theme-dark-border);
-  --border-secondary: var(--theme-dark-border-secondary);
+  --border-2nd: var(--theme-dark-border-2nd);
   --popover: var(--theme-dark-popover);
   --popover-foreground: var(--theme-dark-popover-foreground);
   --popover-border: var(--theme-dark-popover-border);
@@ -134,7 +134,7 @@
   :root:not(.light):not(.dark) {
     color-scheme: dark;
     --background: var(--theme-dark-background);
-    --secondary-background: var(--theme-dark-secondary-background);
+    --background-2nd: var(--theme-dark-background-2nd);
     --foreground: var(--theme-dark-foreground);
     --muted-foreground: var(--theme-dark-muted-foreground);
     --bg-gradient: var(--theme-dark-bg-gradient);
@@ -143,7 +143,7 @@
     --accent-c: var(--theme-dark-accent-c);
     --accent-foreground: var(--theme-dark-accent-foreground);
     --border: var(--theme-dark-border);
-    --border-secondary: var(--theme-dark-border-secondary);
+    --border-2nd: var(--theme-dark-border-2nd);
     --popover: var(--theme-dark-popover);
     --popover-foreground: var(--theme-dark-popover-foreground);
     --popover-border: var(--theme-dark-popover-border);

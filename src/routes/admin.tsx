@@ -55,7 +55,7 @@ function AdminLayout() {
   );
 
   return (
-    <main className='min-h-screen bg-secondary-background'>
+    <main className='min-h-screen bg-background-2nd'>
       <header className='fixed z-10 bg-accent-2/80 w-full px-12 pt-6 pb-4'>
         <div className='max-w-300 mx-auto flex items-center flex-row justify-between md:gap-12 xl:gap-16'>
           <div className='flex items-center gap-8 xl:gap-16'>
@@ -71,7 +71,7 @@ function AdminLayout() {
                   className='text-base group dark:hover:bg-neutral-700/80 dark:active:opacity-85 transition duration-300 hover:scale-[1.07] focus-visible:scale-[1.07] active:scale-[1]'
                 >
                   <Link to='/' target='_blank'>
-                    <ExternalLink className='size-5.25 text-brand-500/90 group-hover:text-brand-500' />
+                    <ExternalLink className='size-5.25 text-brand-600 dark:text-brand-500/90 group-hover:text-brand-500' />
                   </Link>
                 </Button>
               </TooltipTrigger>
@@ -126,12 +126,14 @@ function AdminLayout() {
               dashboard={dashboard}
               categories={categories}
               storageByPath={storageByPath}
+              untrackedFiles={untrackedFiles}
             />
 
             <BunnyStorageTab
               dashboard={dashboard}
               recordByStoragePath={recordByStoragePath}
               categories={categories}
+              untrackedFiles={untrackedFiles}
             />
 
             <CategoriesTab categories={categories} />

@@ -1,166 +1,201 @@
-import { ChevronDownIcon } from "lucide-react";
-import { NavigationMenu as NavigationMenuPrimitive } from "radix-ui";
-import * as React from "react";
+import { NavigationMenu as NavigationMenuPrimitive } from "@base-ui/react/navigation-menu"
+import { cva } from "class-variance-authority"
+import { ChevronDownIcon } from "lucide-react"
+import * as React from "react"
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils"
 
 function NavigationMenu({
-	className,
-	children,
-	viewport = true,
-	...props
-}: React.ComponentProps<typeof NavigationMenuPrimitive.Root> & {
-	viewport?: boolean;
-}) {
-	return (
-		<NavigationMenuPrimitive.Root
-			data-slot="navigation-menu"
-			data-viewport={viewport}
-			className={cn(
-				"group/navigation-menu relative flex max-w-max flex-1 items-center justify-center",
-				className,
-			)}
-			{...props}
-		>
-			{children}
-			{viewport && <NavigationMenuViewport />}
-		</NavigationMenuPrimitive.Root>
-	);
+  align = "start",
+  className,
+  children,
+  viewport = true,
+  ...props
+}: NavigationMenuPrimitive.Root.Props &
+  Pick<NavigationMenuPrimitive.Positioner.Props, "align"> & {
+    viewport?: boolean
+  }) {
+  return (
+    <NavigationMenuPrimitive.Root
+      data-slot="navigation-menu"
+      data-viewport={viewport}
+      className={cn(
+        "group/navigation-menu relative flex max-w-max flex-1 items-center justify-center",
+        className
+      )}
+      {...props}
+    >
+      {children}
+      <NavigationMenuPositioner align={align} />
+    </NavigationMenuPrimitive.Root>
+  )
 }
 
 function NavigationMenuList({
-	className,
-	...props
-}: React.ComponentProps<typeof NavigationMenuPrimitive.List>) {
-	return (
-		<NavigationMenuPrimitive.List
-			data-slot="navigation-menu-list"
-			className={cn(
-				"group flex flex-1 list-none items-center justify-center gap-1",
-				className,
-			)}
-			{...props}
-		/>
-	);
+  className,
+  ...props
+}: React.ComponentPropsWithRef<typeof NavigationMenuPrimitive.List>) {
+  return (
+    <NavigationMenuPrimitive.List
+      data-slot="navigation-menu-list"
+      className={cn(
+        "group flex flex-1 list-none items-center justify-center gap-0",
+        className
+      )}
+      {...props}
+    />
+  )
 }
 
 function NavigationMenuItem({
-	className,
-	...props
-}: React.ComponentProps<typeof NavigationMenuPrimitive.Item>) {
-	return (
-		<NavigationMenuPrimitive.Item
-			data-slot="navigation-menu-item"
-			className={cn("relative", className)}
-			{...props}
-		/>
-	);
+  className,
+  ...props
+}: React.ComponentPropsWithRef<typeof NavigationMenuPrimitive.Item>) {
+  return (
+    <NavigationMenuPrimitive.Item
+      data-slot="navigation-menu-item"
+      className={cn("relative", className)}
+      {...props}
+    />
+  )
 }
 
-const navigationMenuTriggerStyle =
-	"group inline-flex h-9 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-[state=open]:bg-accent/50 data-[state=open]:text-accent-foreground data-[state=open]:hover:bg-accent data-[state=open]:focus:bg-accent";
+const navigationMenuTriggerStyle = cva(
+  "group/navigation-menu-trigger inline-flex h-9 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-popup-open:bg-accent/50 data-popup-open:text-accent-foreground data-popup-open:hover:bg-accent data-popup-open:focus:bg-accent data-open:bg-accent/50 data-open:text-accent-foreground data-open:hover:bg-accent data-open:focus:bg-accent data-[state=open]:bg-accent/50 data-[state=open]:text-accent-foreground data-[state=open]:hover:bg-accent data-[state=open]:focus:bg-accent"
+)
 
 function NavigationMenuTrigger({
-	className,
-	children,
-	...props
-}: React.ComponentProps<typeof NavigationMenuPrimitive.Trigger>) {
-	return (
-		<NavigationMenuPrimitive.Trigger
-			data-slot="navigation-menu-trigger"
-			className={cn(navigationMenuTriggerStyle, "group", className)}
-			{...props}
-		>
-			{children}{" "}
-			<ChevronDownIcon
-				className="relative top-px ml-0 size-5 transition-transform duration-300 group-data-[state=open]:rotate-180"
-				aria-hidden="true"
-			/>
-		</NavigationMenuPrimitive.Trigger>
-	);
+  className,
+  children,
+  render,
+  ...props
+}: NavigationMenuPrimitive.Trigger.Props) {
+  return (
+    <NavigationMenuPrimitive.Trigger
+      data-slot="navigation-menu-trigger"
+      className={cn(navigationMenuTriggerStyle(), "group", className)}
+      render={
+        render ??
+        ((triggerProps, state) => (
+          <button {...triggerProps} data-state={state.open ? "open" : "closed"} />
+        ))
+      }
+      {...props}
+    >
+      {children}{" "}
+      <ChevronDownIcon
+        className="relative top-px ml-0 size-5 transition-transform duration-300 group-data-popup-open/navigation-menu-trigger:rotate-180 group-data-open/navigation-menu-trigger:rotate-180 group-data-[state=open]:rotate-180"
+        aria-hidden="true"
+      />
+    </NavigationMenuPrimitive.Trigger>
+  )
 }
 
 function NavigationMenuContent({
-	className,
-	...props
-}: React.ComponentProps<typeof NavigationMenuPrimitive.Content>) {
-	return (
-		<NavigationMenuPrimitive.Content
-			data-slot="navigation-menu-content"
-			className={cn(
-				"absolute top-0 left-0 p-2 pr-2.5 data-[motion=from-end]:slide-in-from-right-52 data-[motion=from-start]:slide-in-from-left-52 data-[motion=to-end]:slide-out-to-right-52 data-[motion=to-start]:slide-out-to-left-52 data-[motion^=from-]:animate-in data-[motion^=from-]:fade-in data-[motion^=to-]:animate-out data-[motion^=to-]:fade-out w-auto",
-				"group-data-[viewport=false]/navigation-menu:top-full group-data-[viewport=false]/navigation-menu:mt-1.5 group-data-[viewport=false]/navigation-menu:overflow-hidden group-data-[viewport=false]/navigation-menu:rounded-md group-data-[viewport=false]/navigation-menu:border group-data-[viewport=false]/navigation-menu:bg-popover group-data-[viewport=false]/navigation-menu:text-popover-foreground group-data-[viewport=false]/navigation-menu:shadow group-data-[viewport=false]/navigation-menu:duration-200 **:data-[slot=navigation-menu-link]:focus:ring-0 **:data-[slot=navigation-menu-link]:focus:outline-none group-data-[viewport=false]/navigation-menu:data-[state=closed]:animate-out group-data-[viewport=false]/navigation-menu:data-[state=closed]:fade-out-0 group-data-[viewport=false]/navigation-menu:data-[state=closed]:zoom-out-95 group-data-[viewport=false]/navigation-menu:data-[state=open]:animate-in group-data-[viewport=false]/navigation-menu:data-[state=open]:fade-in-0 group-data-[viewport=false]/navigation-menu:data-[state=open]:zoom-in-95",
-				className,
-			)}
-			{...props}
-		/>
-	);
+  className,
+  render,
+  ...props
+}: NavigationMenuPrimitive.Content.Props) {
+  return (
+    <NavigationMenuPrimitive.Content
+      data-slot="navigation-menu-content"
+      className={cn(
+        "data-ending-style:data-activation-direction=left:translate-x-[50%] data-ending-style:data-activation-direction=right:translate-x-[-50%] data-starting-style:data-activation-direction=left:translate-x-[-50%] data-starting-style:data-activation-direction=right:translate-x-[50%] h-full w-auto p-2 pr-2.5 transition-[opacity,transform,translate] duration-[0.35s] ease-[cubic-bezier(0.22,1,0.36,1)] data-ending-style:opacity-0 data-starting-style:opacity-0 data-[motion=from-end]:slide-in-from-right-52 data-[motion=from-start]:slide-in-from-left-52 data-[motion=to-end]:slide-out-to-right-52 data-[motion=to-start]:slide-out-to-left-52 data-[motion^=from-]:animate-in data-[motion^=from-]:fade-in data-[motion^=to-]:animate-out data-[motion^=to-]:fade-out",
+        "group-data-[viewport=false]/navigation-menu:mt-1.5 group-data-[viewport=false]/navigation-menu:overflow-hidden group-data-[viewport=false]/navigation-menu:rounded-md group-data-[viewport=false]/navigation-menu:border group-data-[viewport=false]/navigation-menu:bg-popover group-data-[viewport=false]/navigation-menu:text-popover-foreground group-data-[viewport=false]/navigation-menu:shadow group-data-[viewport=false]/navigation-menu:duration-200 **:data-[slot=navigation-menu-link]:focus:ring-0 **:data-[slot=navigation-menu-link]:focus:outline-none group-data-[viewport=false]/navigation-menu:data-open:animate-in group-data-[viewport=false]/navigation-menu:data-open:fade-in-0 group-data-[viewport=false]/navigation-menu:data-open:zoom-in-95 group-data-[viewport=false]/navigation-menu:data-closed:animate-out group-data-[viewport=false]/navigation-menu:data-closed:fade-out-0 group-data-[viewport=false]/navigation-menu:data-closed:zoom-out-95 group-data-[viewport=false]/navigation-menu:data-[state=open]:animate-in group-data-[viewport=false]/navigation-menu:data-[state=open]:fade-in-0 group-data-[viewport=false]/navigation-menu:data-[state=open]:zoom-in-95 group-data-[viewport=false]/navigation-menu:data-[state=closed]:animate-out group-data-[viewport=false]/navigation-menu:data-[state=closed]:fade-out-0 group-data-[viewport=false]/navigation-menu:data-[state=closed]:zoom-out-95",
+        className
+      )}
+      render={
+        render ??
+        ((contentProps, state) => (
+          <div {...contentProps} data-state={state.open ? "open" : "closed"} />
+        ))
+      }
+      {...props}
+    />
+  )
 }
 
-function NavigationMenuViewport({
-	className,
-	...props
-}: React.ComponentProps<typeof NavigationMenuPrimitive.Viewport>) {
-	return (
-		<div
-			className={cn(
-				"absolute top-full left-0 isolate z-50 flex justify-center",
-			)}
-		>
-			<NavigationMenuPrimitive.Viewport
-				data-slot="navigation-menu-viewport"
-				className={cn(
-					"origin-top-center relative mt-1.5 h-(--radix-navigation-menu-viewport-height) w-full overflow-hidden rounded-md border bg-popover text-popover-foreground shadow data-[state=closed]:animate-out data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:zoom-in-90 md:w-(--radix-navigation-menu-viewport-width)",
-					className,
-				)}
-				{...props}
-			/>
-		</div>
-	);
+function NavigationMenuPositioner({
+  className,
+  side = "bottom",
+  sideOffset = 8,
+  align = "start",
+  alignOffset = 0,
+  ...props
+}: NavigationMenuPrimitive.Positioner.Props) {
+  return (
+    <NavigationMenuPrimitive.Portal>
+      <NavigationMenuPrimitive.Positioner
+        side={side}
+        sideOffset={sideOffset}
+        align={align}
+        alignOffset={alignOffset}
+        className={cn(
+          "isolate z-50 h-(--positioner-height) w-(--positioner-width) max-w-(--available-width) transition-[top,left,right,bottom] duration-[0.35s] ease-[cubic-bezier(0.22,1,0.36,1)] data-instant:transition-none data-[side=bottom]:before:top-[-10px] data-[side=bottom]:before:right-0 data-[side=bottom]:before:left-0",
+          className
+        )}
+        {...props}
+      >
+        <NavigationMenuPrimitive.Popup className="data-[ending-style]:easing-[ease] xs:w-(--popup-width) relative h-(--popup-height) w-(--popup-width) origin-(--transform-origin) rounded-lg bg-popover text-popover-foreground shadow ring-1 ring-foreground/10 transition-[opacity,transform,width,height,scale,translate] duration-[0.35s] ease-[cubic-bezier(0.22,1,0.36,1)] outline-none data-ending-style:scale-90 data-ending-style:opacity-0 data-ending-style:duration-150 data-starting-style:scale-90 data-starting-style:opacity-0">
+          <NavigationMenuPrimitive.Viewport className="relative size-full overflow-hidden" />
+        </NavigationMenuPrimitive.Popup>
+      </NavigationMenuPrimitive.Positioner>
+    </NavigationMenuPrimitive.Portal>
+  )
 }
 
 function NavigationMenuLink({
-	className,
-	...props
-}: React.ComponentProps<typeof NavigationMenuPrimitive.Link>) {
-	return (
-		<NavigationMenuPrimitive.Link
-			data-slot="navigation-menu-link"
-			className={cn(
-				"flex flex-col gap-1 rounded-md px-2 py-1 text-base transition-all outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1 data-[active=true]:bg-accent/50 data-[active=true]:text-accent-foreground data-[active=true]:hover:bg-accent data-[active=true]:focus:bg-accent [&_svg:not([class*='size-'])]:size-4 [&_svg:not([class*='text-'])]:text-muted-foreground",
-				className,
-			)}
-			{...props}
-		/>
-	);
+  asChild = false,
+  children,
+  className,
+  render,
+  ...props
+}: NavigationMenuPrimitive.Link.Props & {
+  asChild?: boolean
+}) {
+  const child = asChild && React.isValidElement(children) ? children : undefined
+
+  return (
+    <NavigationMenuPrimitive.Link
+      data-slot="navigation-menu-link"
+      className={cn(
+        "flex flex-col gap-1 rounded-md px-2 py-1 text-base transition-all outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1 data-active:bg-accent/50 data-active:text-accent-foreground data-active:hover:bg-accent data-active:focus:bg-accent [&_svg:not([class*='size-'])]:size-4 [&_svg:not([class*='text-'])]:text-muted-foreground",
+        className
+      )}
+      render={render ?? child}
+      {...props}
+    >
+      {child ? undefined : children}
+    </NavigationMenuPrimitive.Link>
+  )
 }
 
 function NavigationMenuIndicator({
-	className,
-	...props
-}: React.ComponentProps<typeof NavigationMenuPrimitive.Indicator>) {
-	return (
-		<NavigationMenuPrimitive.Indicator
-			data-slot="navigation-menu-indicator"
-			className={cn(
-				"top-full z-1 flex h-1.5 items-end justify-center overflow-hidden data-[state=hidden]:animate-out data-[state=hidden]:fade-out data-[state=visible]:animate-in data-[state=visible]:fade-in",
-				className,
-			)}
-			{...props}
-		>
-			<div className="relative top-[60%] h-2 w-2 rotate-45 rounded-tl-sm bg-border shadow-md" />
-		</NavigationMenuPrimitive.Indicator>
-	);
+  className,
+  ...props
+}: React.ComponentPropsWithRef<typeof NavigationMenuPrimitive.Icon>) {
+  return (
+    <NavigationMenuPrimitive.Icon
+      data-slot="navigation-menu-indicator"
+      className={cn(
+        "top-full z-1 flex h-1.5 items-end justify-center overflow-hidden data-[state=hidden]:animate-out data-[state=hidden]:fade-out data-[state=visible]:animate-in data-[state=visible]:fade-in",
+        className
+      )}
+      {...props}
+    >
+      <div className="relative top-[60%] h-2 w-2 rotate-45 rounded-tl-sm bg-border shadow-md" />
+    </NavigationMenuPrimitive.Icon>
+  )
 }
 
 export {
-	NavigationMenu,
-	NavigationMenuList,
-	NavigationMenuItem,
-	NavigationMenuContent,
-	NavigationMenuTrigger,
-	NavigationMenuLink,
-	NavigationMenuIndicator,
-	NavigationMenuViewport,
-	navigationMenuTriggerStyle,
-};
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuIndicator,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  navigationMenuTriggerStyle,
+  NavigationMenuPositioner,
+}

@@ -195,6 +195,40 @@ export async function deleteArtworkById(id: string) {
   await sql`delete from artworks where id = ${id}`.execute(getKysely());
 }
 
+export type ArtworkMetadataUpdate = {
+  id: string;
+  title: string;
+  categoryId: string;
+  description: string | null;
+  alt: string;
+  sortOrder: number;
+  status: ArtworkStatus;
+};
+
+export async function updateArtworkMetadata(input: ArtworkMetadataUpdate) {
+  const updatedAt = new Date().toISOString();
+
+  await sql`
+    update artworks
+    set
+      title = ${input.title},
+      category_id = ${input.categoryId},
+      description = ${input.description},
+      alt = ${input.alt},
+      sort_order = ${input.sortOrder},
+      status = ${input.status},
+      updated_at = ${updatedAt}
+    where id = ${input.id}
+  `.execute(getKysely());
+
+  const record = await getArtworkById(input.id);
+  if (!record) {
+    throw new Error('Artwork not found');
+  }
+
+  return record;
+}
+
 export async function slugExists(slug: string) {
   const { rows } = await sql`select 1 from artworks where slug = ${slug} limit 1`.execute(
     getKysely(),

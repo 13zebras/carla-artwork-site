@@ -1,9 +1,22 @@
+import { createHash } from 'node:crypto';
+
 import { sql } from 'kysely';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { buildBulkErrors, getUniqueArtworkSlug, parseCsvRows } from '@/lib/artwork-upload.helpers';
-import { deleteArtworkWithStorage } from '@/lib/artwork-upload.server';
-import { getArtworkById, insertArtwork, type ArtworkRecord } from '@/lib/artworks.server';
+import {
+  buildStoragePath,
+  contentTypeFromExtension,
+  deleteArtworkWithStorage,
+  prepareExistingArtworkRecord,
+  readImageMetaFromBuffer,
+} from '@/lib/artwork-upload.server';
+import {
+  getArtworkById,
+  insertArtwork,
+  updateArtworkMetadata,
+  type ArtworkRecord,
+} from '@/lib/artworks.server';
 import { buildBunnyCdnUrl } from '@/lib/bunny';
 import { addCategory, listCategories, resolveCategoryInput } from '@/lib/categories.server';
 import { ensureSchema, getKysely } from '@/lib/db.server';
@@ -48,8 +61,8 @@ function createTestArtwork(overrides: Partial<ArtworkRecord> = {}) {
     description: 'A test artwork.',
     alt: 'Test artwork alt text',
     originalFilename: 'test-artwork.jpg',
-    storagePath: 'fine-art-collage/test-artwork.jpg',
-    cdnUrl: 'https://carla.b-cdn.net/fine-art-collage/test-artwork.jpg',
+    storagePath: 'artworks/test-artwork.jpg',
+    cdnUrl: 'https://carla.b-cdn.net/artworks/test-artwork.jpg',
     contentType: 'image/jpeg',
     width: 800,
     height: 600,
@@ -89,7 +102,7 @@ describe('artwork deletion', () => {
     await expect(deleteArtworkWithStorage(record.id)).resolves.toMatchObject({ id: record.id });
 
     expect(fetchMock).toHaveBeenCalledWith(
-      'http://127.0.0.1:3999/test-zone/fine-art-collage/test-artwork.jpg',
+      'http://127.0.0.1:3999/test-zone/artworks/test-artwork.jpg',
       expect.objectContaining({ method: 'DELETE' }),
     );
     await expect(getArtworkById(record.id)).resolves.toBeUndefined();
@@ -127,6 +140,63 @@ describe('artwork deletion', () => {
     await expect(deleteArtworkWithStorage('missing-artwork-id')).rejects.toThrow('Artwork not found');
 
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('artwork metadata updates', () => {
+  it('updates editable fields without moving or renaming the Bunny object', async () => {
+    const record = createTestArtwork();
+    await insertArtwork(record);
+
+    const updated = await updateArtworkMetadata({
+      id: record.id,
+      title: 'Updated Artwork',
+      categoryId: 'botanicalIllustration',
+      description: null,
+      alt: 'Updated alt text',
+      sortOrder: 42,
+      status: 'draft',
+    });
+
+    expect(updated).toMatchObject({
+      id: record.id,
+      title: 'Updated Artwork',
+      categoryId: 'botanicalIllustration',
+      category: {
+        id: 'botanicalIllustration',
+        slug: 'botanical-illustration',
+        label: 'Botanical Illustration',
+      },
+      description: null,
+      alt: 'Updated alt text',
+      sortOrder: 42,
+      status: 'draft',
+      slug: record.slug,
+      originalFilename: record.originalFilename,
+      storagePath: record.storagePath,
+      cdnUrl: record.cdnUrl,
+      contentType: record.contentType,
+      width: record.width,
+      height: record.height,
+      sizeBytes: record.sizeBytes,
+      checksumSha256: record.checksumSha256,
+      createdAt: record.createdAt,
+    });
+    expect(updated.updatedAt).not.toBe(record.updatedAt);
+  });
+
+  it('reports missing artwork ids when updating metadata', async () => {
+    await expect(
+      updateArtworkMetadata({
+        id: 'missing-artwork-id',
+        title: 'Missing',
+        categoryId: 'illustration',
+        description: null,
+        alt: 'Missing',
+        sortOrder: 0,
+        status: 'draft',
+      }),
+    ).rejects.toThrow('Artwork not found');
   });
 });
 
@@ -219,5 +289,128 @@ describe('csv and slug helpers', () => {
     expect(await getUniqueArtworkSlug('blue-bird', new Set(['blue-bird', 'blue-bird-2']))).toBe(
       'blue-bird-3',
     );
+  });
+});
+
+const ONE_PIXEL_PNG = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
+  'base64',
+);
+
+describe('artwork storage paths', () => {
+  it('stores new uploads under the artworks prefix', () => {
+    const storagePath = buildStoragePath('blue-bird', 'webp');
+
+    expect(storagePath).toMatch(/^artworks\/blue-bird-[a-f0-9]{8}\.webp$/);
+  });
+});
+
+describe('linking existing Bunny images', () => {
+  it('maps file extensions to content types', () => {
+    expect(contentTypeFromExtension('photo.jpg')).toBe('image/jpeg');
+    expect(contentTypeFromExtension('photo.JPEG')).toBe('image/jpeg');
+    expect(contentTypeFromExtension('photo.png')).toBe('image/png');
+    expect(contentTypeFromExtension('photo.webp')).toBe('image/webp');
+    expect(contentTypeFromExtension('photo.gif')).toBeNull();
+    expect(contentTypeFromExtension('photo')).toBeNull();
+  });
+
+  it('reads dimensions and checksum from an image buffer', () => {
+    const meta = readImageMetaFromBuffer(ONE_PIXEL_PNG, {
+      contentType: 'image/png',
+      name: 'pixel.png',
+    });
+    expect(meta).toMatchObject({
+      width: 1,
+      height: 1,
+      contentType: 'image/png',
+      sizeBytes: ONE_PIXEL_PNG.length,
+      extension: 'png',
+    });
+    expect(meta.checksumSha256).toBe(
+      createHash('sha256').update(ONE_PIXEL_PNG).digest('hex').toUpperCase(),
+    );
+  });
+
+  it('builds a record from an existing Bunny object without uploading', async () => {
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(
+        new Response(ONE_PIXEL_PNG, { status: 200, headers: { 'content-type': 'image/png' } }),
+      );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const record = await prepareExistingArtworkRecord({
+      storagePath: 'artworks/blue-bird.png',
+      title: 'Blue Bird',
+      categoryId: 'illustration',
+      alt: null,
+      description: null,
+      sortOrder: 0,
+      status: 'draft',
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://127.0.0.1:3999/test-zone/artworks/blue-bird.png',
+      expect.objectContaining({ method: 'GET' }),
+    );
+    expect(record).toMatchObject({
+      storagePath: 'artworks/blue-bird.png',
+      cdnUrl: 'https://carla.b-cdn.net/artworks/blue-bird.png',
+      originalFilename: 'blue-bird.png',
+      contentType: 'image/png',
+      width: 1,
+      height: 1,
+      sizeBytes: ONE_PIXEL_PNG.length,
+      slug: 'blue-bird',
+      alt: 'Blue Bird',
+    });
+    expect(record.checksumSha256).toBe(
+      createHash('sha256').update(ONE_PIXEL_PNG).digest('hex').toUpperCase(),
+    );
+  });
+
+  it('rejects an already-tracked storage path', async () => {
+    await insertArtwork(
+      createTestArtwork({
+        storagePath: 'artworks/taken.png',
+        cdnUrl: 'https://carla.b-cdn.net/artworks/taken.png',
+      }),
+    );
+    const fetchMock = vi.fn<typeof fetch>();
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(
+      prepareExistingArtworkRecord({
+        storagePath: 'artworks/taken.png',
+        title: 'Taken',
+        categoryId: 'illustration',
+        alt: null,
+        description: null,
+        sortOrder: 0,
+        status: 'draft',
+      }),
+    ).rejects.toThrow('already linked');
+
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('rejects unsupported file extensions without fetching', async () => {
+    const fetchMock = vi.fn<typeof fetch>();
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(
+      prepareExistingArtworkRecord({
+        storagePath: 'artworks/photo.gif',
+        title: 'Gif',
+        categoryId: 'illustration',
+        alt: null,
+        description: null,
+        sortOrder: 0,
+        status: 'draft',
+      }),
+    ).rejects.toThrow('Only JPEG, PNG, or WebP images can be linked');
+
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });

@@ -1,4 +1,3 @@
-import { listCategories } from './categories.server';
 import { getServerEnv } from './env.server';
 
 export type BunnyStorageFile = {
@@ -105,6 +104,32 @@ export async function deleteFromBunnyStorage(storagePath: string) {
   }
 }
 
+export async function downloadFromBunnyStorage(storagePath: string): Promise<{
+  buffer: Buffer;
+  contentType: string | null;
+}> {
+  const response = await fetch(getStorageUrl(storagePath), {
+    method: 'GET',
+    headers: {
+      AccessKey: getServerEnv().BUNNY_STORAGE_PASSWORD,
+    },
+  });
+
+  if (response.status === 404) {
+    throw new Error(`Bunny storage file not found: ${storagePath}`);
+  }
+  if (!response.ok) {
+    throw new Error(
+      `Bunny storage download failed with ${response.status}: ${await response.text()}`,
+    );
+  }
+
+  return {
+    buffer: Buffer.from(await response.arrayBuffer()),
+    contentType: response.headers.get('content-type'),
+  };
+}
+
 async function fetchDirectory(prefix: string, env: ReturnType<typeof getServerEnv>): Promise<BunnyStorageFile[]> {
   const response = await fetch(
     `${env.BUNNY_STORAGE_ENDPOINT}/${env.BUNNY_STORAGE_ZONE}/${prefix}`,
@@ -153,14 +178,7 @@ function normalizePrefix(value: string) {
 
 export async function listBunnyStorageFiles(prefix?: string): Promise<BunnyStorageFile[]> {
   const env = getServerEnv();
-
-  // Without an explicit prefix, list every category directory from the database
-  // (including archived ones, which may still hold uploaded files).
-  const prefixes = prefix
-    ? [normalizePrefix(prefix)]
-    : (await listCategories({ includeArchived: true })).map((category) =>
-        normalizePrefix(category.slug),
-      );
+  const prefixes = prefix ? [normalizePrefix(prefix)] : [normalizePrefix('artworks')];
 
   const results = await Promise.all(
     prefixes.map((currentPrefix) => listPrefixRecursive(currentPrefix, env)),

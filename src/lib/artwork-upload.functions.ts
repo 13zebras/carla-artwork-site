@@ -62,3 +62,49 @@ export const uploadBulkArtworks = createServerFn({ method: 'POST' })
     const { uploadBulkArtworks: runUploadBulkArtworks } = await import('./artwork-upload.server');
     return runUploadBulkArtworks({ data });
   });
+
+export const registerExistingArtwork = createServerFn({ method: 'POST' })
+  .validator(
+    (data: {
+      storagePath: string;
+      title: string;
+      categoryId: string;
+      alt?: string | null;
+      description?: string | null;
+      sortOrder?: number | string;
+      status?: string;
+    }) => {
+      if (!data || typeof data !== 'object') {
+        throw new Error('Invalid request');
+      }
+      return data;
+    },
+  )
+  .handler(async ({ data }) => {
+    const { registerExistingArtwork: runRegisterExistingArtwork } = await import(
+      './artwork-upload.server'
+    );
+    return runRegisterExistingArtwork({ data });
+  });
+
+export const updateArtwork = createServerFn({ method: 'POST' })
+  .validator(
+    (data: {
+      id: string;
+      title: string;
+      categoryId: string;
+      alt?: string | null;
+      description?: string | null;
+      sortOrder?: number | string;
+      status?: string;
+    }) => {
+      if (!data || typeof data !== 'object') {
+        throw new Error('Invalid request');
+      }
+      return data;
+    },
+  )
+  .handler(async ({ data }) => {
+    const { updateArtwork: runUpdateArtwork } = await import('./artwork-upload.server');
+    return runUpdateArtwork({ data });
+  });
