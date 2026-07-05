@@ -9,7 +9,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -26,8 +25,6 @@ import { buildBunnyCdnUrl } from '@/lib/bunny';
 import type { BunnyStorageFile } from '@/lib/bunny.server';
 import type { ArtworkCategoryRecord } from '@/lib/categories.server';
 
-import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
-
 type UploadSuccess = {
   title: string;
   storagePath: string;
@@ -37,9 +34,32 @@ type UploadSuccess = {
 type ImageUploadModalProps = {
   categories: ArtworkCategoryRecord[];
   untrackedFiles?: BunnyStorageFile[];
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 };
 
-export function ImageUploadModal({ categories, untrackedFiles = [] }: ImageUploadModalProps) {
+function getSubmitLabel(isSubmitting: boolean, mode: 'upload' | 'link') {
+  if (isSubmitting) {
+    if (mode === 'link') {
+      return 'Linking…';
+    }
+
+    return 'Uploading…';
+  }
+
+  if (mode === 'link') {
+    return 'Link artwork';
+  }
+
+  return 'Upload artwork';
+}
+
+export function ImageUploadModal({
+  categories,
+  untrackedFiles = [],
+  open,
+  onOpenChange,
+}: ImageUploadModalProps) {
   const router = useRouter();
   const activeCategories = categories.filter((category) => category.status === 'active');
   const [mode, setMode] = useState<'upload' | 'link'>('upload');
@@ -111,17 +131,7 @@ export function ImageUploadModal({ categories, untrackedFiles = [] }: ImageUploa
   }
 
   return (
-    <Dialog>
-      <DialogTrigger>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button variant='positive' className='w-32 cursor-pointer'>
-              Upload Image
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side='top'>Upload a single image</TooltipContent>
-        </Tooltip>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='max-w-2xl min-h-180 opacity-95 p-12 border-border-2nd'>
         <DialogHeader>
           <DialogTitle>Single upload</DialogTitle>
@@ -344,13 +354,7 @@ export function ImageUploadModal({ categories, untrackedFiles = [] }: ImageUploa
 
             <div className='flex flex-wrap items-center gap-3'>
               <Button type='submit' disabled={isSubmitting || activeCategories.length === 0}>
-                {isSubmitting
-                  ? mode === 'link'
-                    ? 'Linking…'
-                    : 'Uploading…'
-                  : mode === 'link'
-                    ? 'Link artwork'
-                    : 'Upload artwork'}
+                {getSubmitLabel(isSubmitting, mode)}
               </Button>
             </div>
           </form>

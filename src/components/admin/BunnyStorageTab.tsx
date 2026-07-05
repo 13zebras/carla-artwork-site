@@ -1,4 +1,7 @@
+import { useState } from 'react';
+
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
@@ -9,6 +12,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { TabsContent } from '@/components/ui/tabs';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { AdminDashboard } from '@/lib/artwork-upload.functions';
 import type { ArtworkRecord } from '@/lib/artworks.server';
 import type { BunnyStorageFile } from '@/lib/bunny.server';
@@ -24,6 +28,36 @@ type BunnyStorageTabProps = {
   categories: ArtworkCategoryRecord[];
   untrackedFiles: BunnyStorageFile[];
 };
+
+type UploadActionButtonsProps = {
+  onImageUpload: () => void;
+  onBulkImageUpload: () => void;
+};
+
+function UploadActionButtons({ onImageUpload, onBulkImageUpload }: UploadActionButtonsProps) {
+  return (
+    <>
+      <Tooltip>
+        <TooltipTrigger
+          render={<Button variant='positive' className='w-32 cursor-pointer' />}
+          onClick={onImageUpload}
+        >
+          Upload Image
+        </TooltipTrigger>
+        <TooltipContent side='top'>Upload a single image</TooltipContent>
+      </Tooltip>
+      <Tooltip>
+        <TooltipTrigger
+          render={<Button variant='information' className='w-32 cursor-pointer' />}
+          onClick={onBulkImageUpload}
+        >
+          Bulk Upload
+        </TooltipTrigger>
+        <TooltipContent side='top'>Upload several images at once</TooltipContent>
+      </Tooltip>
+    </>
+  );
+}
 
 function formatSizeLabel(sizeBytes: BunnyStorageFile['sizeBytes']) {
   if (sizeBytes === null) {
@@ -54,6 +88,17 @@ export function BunnyStorageTab({
   categories,
   untrackedFiles,
 }: BunnyStorageTabProps) {
+  const [isImageUploadOpen, setIsImageUploadOpen] = useState(false);
+  const [isBulkImageUploadOpen, setIsBulkImageUploadOpen] = useState(false);
+
+  function openImageUpload() {
+    setIsImageUploadOpen(true);
+  }
+
+  function openBulkImageUpload() {
+    setIsBulkImageUploadOpen(true);
+  }
+
   return (
     <TabsContent value='storage' className='mx-auto mt-4 w-full max-w-300'>
       {dashboard.storageFiles.length === 0 ? (
@@ -68,8 +113,10 @@ export function BunnyStorageTab({
                 Add images to save in the database.
               </h4>
               <div className='flex gap-4'>
-                <ImageUploadModal categories={categories} untrackedFiles={untrackedFiles} />
-                <BulkImageUploadModal categories={categories} />
+                <UploadActionButtons
+                  onImageUpload={openImageUpload}
+                  onBulkImageUpload={openBulkImageUpload}
+                />
               </div>
             </div>
           </CardContent>
@@ -135,6 +182,18 @@ export function BunnyStorageTab({
           </CardContent>
         </Card>
       )}
+
+      <ImageUploadModal
+        categories={categories}
+        untrackedFiles={untrackedFiles}
+        open={isImageUploadOpen}
+        onOpenChange={setIsImageUploadOpen}
+      />
+      <BulkImageUploadModal
+        categories={categories}
+        open={isBulkImageUploadOpen}
+        onOpenChange={setIsBulkImageUploadOpen}
+      />
     </TabsContent>
   );
 }

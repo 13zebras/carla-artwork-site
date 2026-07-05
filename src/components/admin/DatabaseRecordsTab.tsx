@@ -16,27 +16,22 @@ import type { ArtworkRecord } from '@/lib/artworks.server';
 import { buildBunnyCdnUrl } from '@/lib/bunny';
 import type { BunnyStorageFile } from '@/lib/bunny.server';
 import type { ArtworkCategoryRecord } from '@/lib/categories.server';
-// import { dateFormatter } from '@/lib/utils';
 
 import { ArtworkDeleteModal } from './ArtworkDeleteModal';
 import { ArtworkEditModal } from './ArtworkEditModal';
 import { ArtworkInfoDrawer } from './ArtworkInfoDrawer';
-import { BulkImageUploadModal } from './BulkImageUploadModal';
 import { DatabaseActions } from './DatabaseActions';
-import { ImageUploadModal } from './ImageUploadModal';
 
 type DatabaseRecordsTabProps = {
   dashboard: AdminDashboard;
   categories: ArtworkCategoryRecord[];
   storageByPath: Map<string, BunnyStorageFile>;
-  untrackedFiles: BunnyStorageFile[];
 };
 
 export function DatabaseRecordsTab({
   dashboard,
   categories,
   storageByPath,
-  untrackedFiles,
 }: DatabaseRecordsTabProps) {
   const [infoRecord, setInfoRecord] = useState<ArtworkRecord | null>(null);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
@@ -71,39 +66,20 @@ export function DatabaseRecordsTab({
     <TabsContent value='records' className='mx-auto mt-4 w-full max-w-300'>
       {dashboard.records.length === 0 ? (
         // EMPTY DATABASE STATE
-        <Card className='p-8 rounded-sm'>
-          <CardContent className='flex justify-between items-center gap-6'>
-            <div className='flex flex-col justify-start items-start gap-6'>
-              <h2 className='font-bold text-2xl'>Empty Image Database</h2>
-              <h3 className='font-semibold text-lg'>No uploaded artworks saved in the database.</h3>
-            </div>
-            <div className='flex flex-col justify-between items-start gap-6'>
-              <h4 className='max-w-sm text-muted-foreground text-lg'>
-                Add images to save in the database.
-              </h4>
-              <div className='flex gap-4'>
-                <ImageUploadModal categories={categories} untrackedFiles={untrackedFiles} />
-                <BulkImageUploadModal categories={categories} />
-              </div>
-            </div>
+        <Card className='p-8 rounded-sm h-44'>
+          <CardContent className='flex flex-col justify-center items-start gap-8 h-full'>
+            <h2 className='font-bold text-2xl'>Empty Image Database</h2>
+            <h3 className='font-semibold text-lg'>No uploaded artworks saved in the database.</h3>
           </CardContent>
         </Card>
       ) : (
         // TABLE OF DATABASE RECORDS
         <Card className='pt-4 pb-0 border-b-0 rounded-sm w-full max-w-300 overflow-hidden'>
-          <CardHeader className='flex justify-between items-center gap-8'>
-            <div>
-              <CardTitle className='pb-1 font-semibold text-2xl'>
-                Database Artwork Records
-              </CardTitle>
-              <CardDescription>
-                Full data for each image in the database with Bunny storage previews
-              </CardDescription>
-            </div>
-            <div className='flex gap-4 w-68'>
-              <ImageUploadModal categories={categories} untrackedFiles={untrackedFiles} />
-              <BulkImageUploadModal categories={categories} />
-            </div>
+          <CardHeader className='flex flex-col gap-2'>
+            <CardTitle className='pb-1 font-semibold text-2xl'>Database Artwork Records</CardTitle>
+            <CardDescription className='text-base'>
+              Full data for each image in the database with Bunny storage previews
+            </CardDescription>
           </CardHeader>
           <CardContent className='p-0'>
             <Table className=''>

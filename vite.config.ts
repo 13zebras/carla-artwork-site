@@ -17,6 +17,15 @@ export default defineConfig(({ mode }) => {
     test: {
       setupFiles: ['./src/test/setup.ts'],
     },
-    plugins: [devtools(), tailwindcss(), tanstackStart(), viteReact(), nitro()],
+    plugins: [
+      devtools({
+        enhancedLogs: { enabled: false },
+        consolePiping: { enabled: false },
+      }),
+      tailwindcss(),
+      tanstackStart(),
+      viteReact(),
+      nitro(),
+    ],
   };
 });

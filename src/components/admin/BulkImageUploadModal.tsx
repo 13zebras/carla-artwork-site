@@ -10,7 +10,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -29,8 +28,6 @@ import {
 } from '@/lib/artwork-upload.functions';
 import type { ArtworkRecord } from '@/lib/artworks.server';
 import type { ArtworkCategoryRecord } from '@/lib/categories.server';
-
-import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 
 const sampleCsv = `filename,title,category,alt,description,slug,sort_order,status
 blue-bird.jpg,Blue Bird,illustration,Blue bird illustration,,blue-bird,0,draft`;
@@ -119,9 +116,15 @@ function RecordsTable({ records }: { records: ArtworkRecord[] }) {
 
 type BulkImageUploadModalProps = {
   categories: ArtworkCategoryRecord[];
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 };
 
-export function BulkImageUploadModal({ categories }: BulkImageUploadModalProps) {
+export function BulkImageUploadModal({
+  categories,
+  open,
+  onOpenChange,
+}: BulkImageUploadModalProps) {
   const router = useRouter();
   const activeCategories = categories.filter((category) => category.status === 'active');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -152,17 +155,7 @@ export function BulkImageUploadModal({ categories }: BulkImageUploadModalProps) 
   const hasSuccess = result?.ok === true;
 
   return (
-    <Dialog>
-      <DialogTrigger>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button variant='information' className='w-32 cursor-pointer'>
-              Bulk Upload
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side='top'>Upload several images at once</TooltipContent>
-        </Tooltip>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='min-h-150'>
         <DialogHeader>
           <DialogTitle>Bulk upload artworks</DialogTitle>

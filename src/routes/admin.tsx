@@ -1,10 +1,14 @@
 import { Link, createFileRoute, redirect, useNavigate } from '@tanstack/react-router';
 import { ExternalLink } from 'lucide-react';
+import { useState } from 'react';
 
+import { BulkImageUploadModal } from '@/components/admin/BulkImageUploadModal';
 import { BunnyStorageTab } from '@/components/admin/BunnyStorageTab';
 import { CategoriesTab } from '@/components/admin/CategoriesTab';
 import { DashboardSummary } from '@/components/admin/DashboardSummary';
 import { DatabaseRecordsTab } from '@/components/admin/DatabaseRecordsTab';
+import { ImageUploadModal } from '@/components/admin/ImageUploadModal';
+import { UploadActionButtons } from '@/components/admin/UploadActionButtons';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -43,6 +47,9 @@ function AdminLayout() {
 
   const { dashboard, categories } = Route.useLoaderData();
 
+  const [isImageUploadOpen, setIsImageUploadOpen] = useState(false);
+  const [isBulkImageUploadOpen, setIsBulkImageUploadOpen] = useState(false);
+
   const recordByStoragePath = new Map(
     dashboard.records.map((record) => [record.storagePath, record]),
   );
@@ -55,11 +62,11 @@ function AdminLayout() {
   );
 
   return (
-    <main className='min-h-screen bg-background-2nd'>
-      <header className='fixed z-10 bg-accent-2/80 w-full px-12 pt-6 pb-4'>
-        <div className='max-w-300 mx-auto flex items-center flex-row justify-between md:gap-12 xl:gap-16'>
+    <main className='bg-background-2nd min-h-screen'>
+      <header className='z-10 fixed px-12 pt-6 pb-4 w-full bg-accent-2/80'>
+        <div className='flex flex-row justify-between items-center md:gap-12 xl:gap-16 mx-auto max-w-300'>
           <div className='flex items-center gap-8 xl:gap-16'>
-            <h1 className='text-3xl xl:text-3xl font-semibold'>Artwork Admin Dashboard</h1>
+            <h1 className='font-semibold text-3xl xl:text-3xl'>Artwork Admin Dashboard</h1>
             {/* <p className='text-base xl:text-lg'>carlastine.com</p> */}
           </div>
           <nav className='flex flex-wrap items-center gap-3 xl:gap-4'>
@@ -68,7 +75,7 @@ function AdminLayout() {
                 <Button
                   asChild
                   variant='ghost'
-                  className='text-base group dark:hover:bg-neutral-700/80 dark:active:opacity-85 transition duration-300 hover:scale-[1.07] focus-visible:scale-[1.07] active:scale-[1]'
+                  className='group dark:hover:bg-neutral-700/80 dark:active:opacity-85 text-base hover:scale-[1.07] focus-visible:scale-[1.07] active:scale-[1] transition duration-300'
                 >
                   <Link to='/' target='_blank'>
                     <ExternalLink className='size-5.25 text-brand-600 dark:text-brand-500/90 group-hover:text-brand-500' />
@@ -79,7 +86,7 @@ function AdminLayout() {
             </Tooltip>
             <ThemeToggle className='' />
             <Button
-              className='ml-2 border-brand-500 rounded-lg text-sm hover:bg-brand-200 dark:hover:bg-brand-800 cursor-pointer bg-transparent'
+              className='bg-transparent hover:bg-brand-200 dark:hover:bg-brand-800 ml-2 border-brand-500 rounded-lg text-sm cursor-pointer'
               variant='ghost'
               size='sm'
               onClick={async () => {
@@ -93,7 +100,7 @@ function AdminLayout() {
         </div>
       </header>
 
-      <div className='hidden min-[900px]:block mx-auto w-full max-w-384 px-12 pt-20 pb-6'>
+      <div className='hidden min-[900px]:block mx-auto px-12 pt-20 pb-6 w-full max-w-384'>
         <div className='space-y-12 py-6'>
           <DashboardSummary
             dashboard={dashboard}
@@ -102,10 +109,10 @@ function AdminLayout() {
           />
 
           <Tabs defaultValue='records' className='w-full min-w-0'>
-            <div className='flex flex-wrap items-center justify-between gap-4 max-w-300 w-full mx-auto'>
+            <div className='flex flex-wrap justify-between items-center gap-4 mx-auto w-full max-w-300'>
               {/* <div className='space-y-2'>
-                <h2 className='text-3xl font-semibold tracking-tight'>Library inventory</h2>
-                <p className='text-base text-muted-foreground'>
+                <h2 className='font-semibold text-3xl tracking-tight'>Library inventory</h2>
+                <p className='text-muted-foreground text-base'>
                   Compare the database snapshot against Bunny Storage.
                 </p>
               </div> */}
@@ -120,13 +127,17 @@ function AdminLayout() {
                   Categories
                 </TabsTrigger>
               </TabsList>
+              <UploadActionButtons
+                onImageUpload={() => setIsImageUploadOpen(true)}
+                onBulkImageUpload={() => setIsBulkImageUploadOpen(true)}
+              />
             </div>
 
             <DatabaseRecordsTab
               dashboard={dashboard}
               categories={categories}
               storageByPath={storageByPath}
-              untrackedFiles={untrackedFiles}
+              // untrackedFiles={untrackedFiles}
             />
 
             <BunnyStorageTab
@@ -140,9 +151,21 @@ function AdminLayout() {
           </Tabs>
         </div>
       </div>
-      <div className='flex justify-center items-center min-[900px]:hidden mx-auto w-full px-12 pt-64 lg:pt-20 pb-6'>
-        <h2 className='text-3xl font-semibold text-center'>Best viewed on larger screen</h2>
+      <div className='min-[900px]:hidden flex justify-center items-center mx-auto px-12 pt-64 lg:pt-20 pb-6 w-full'>
+        <h2 className='font-semibold text-3xl text-center'>Best viewed on larger screen</h2>
       </div>
+
+      <ImageUploadModal
+        categories={categories}
+        untrackedFiles={untrackedFiles}
+        open={isImageUploadOpen}
+        onOpenChange={setIsImageUploadOpen}
+      />
+      <BulkImageUploadModal
+        categories={categories}
+        open={isBulkImageUploadOpen}
+        onOpenChange={setIsBulkImageUploadOpen}
+      />
     </main>
   );
 }
