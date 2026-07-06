@@ -1,5 +1,7 @@
+import { Field } from '@base-ui/react/field';
+import { Form } from '@base-ui/react/form';
 import { useRouter } from '@tanstack/react-router';
-import { useState, type SubmitEvent } from 'react';
+import { useState, type ReactNode, type SubmitEvent } from 'react';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -21,21 +23,19 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { registerExistingArtwork, uploadSingleArtwork } from '@/lib/artwork-upload.functions';
-import { buildBunnyCdnUrl } from '@/lib/bunny';
 import type { BunnyStorageFile } from '@/lib/bunny.server';
 import type { ArtworkCategoryRecord } from '@/lib/categories.server';
-
-type UploadSuccess = {
-  title: string;
-  storagePath: string;
-  cdnUrl: string;
-};
 
 type ImageUploadModalProps = {
   categories: ArtworkCategoryRecord[];
   untrackedFiles?: BunnyStorageFile[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
+};
+
+const statusItems = {
+  draft: 'Draft',
+  published: 'Published',
 };
 
 function getSubmitLabel(isSubmitting: boolean, mode: 'upload' | 'link') {
@@ -54,6 +54,21 @@ function getSubmitLabel(isSubmitting: boolean, mode: 'upload' | 'link') {
   return 'Upload artwork';
 }
 
+function RequiredLabel({ htmlFor, children }: { htmlFor: string; children: ReactNode }) {
+  return (
+    <div className='flex items-center gap-2'>
+      <Label htmlFor={htmlFor}>{children}</Label>
+      <Field.Error
+        match='valueMissing'
+        render={<span />}
+        className='font-medium text-destructive text-xs'
+      >
+        Required
+      </Field.Error>
+    </div>
+  );
+}
+
 export function ImageUploadModal({
   categories,
   untrackedFiles = [],
@@ -61,33 +76,22 @@ export function ImageUploadModal({
   onOpenChange,
 }: ImageUploadModalProps) {
   const router = useRouter();
-  const activeCategories = categories.filter((category) => category.status === 'active');
+
   const [mode, setMode] = useState<'upload' | 'link'>('upload');
   const [categoryId, setCategoryId] = useState('');
   const [storagePath, setStoragePath] = useState('');
   const [status, setStatus] = useState<'draft' | 'published'>('draft');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [success, setSuccess] = useState<UploadSuccess | null>(null);
 
-  const previewUrl = success
-    ? buildBunnyCdnUrl(success.cdnUrl, { width: 320, format: 'webp' })
-    : null;
+  const activeCategories = categories.filter((category) => category.status === 'active');
+  const categoryItems = Object.fromEntries(
+    activeCategories.map((category) => [category.id, category.label]),
+  );
 
   async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     setErrorMessage(null);
-    setSuccess(null);
-
-    if (!categoryId) {
-      setErrorMessage('Choose a category before uploading.');
-      return;
-    }
-
-    if (mode === 'link' && !storagePath) {
-      setErrorMessage('Select an existing Bunny image to link.');
-      return;
-    }
 
     const form = event.currentTarget;
     const formData = new FormData(form);
@@ -97,20 +101,21 @@ export function ImageUploadModal({
     setIsSubmitting(true);
 
     try {
-      const record =
-        mode === 'link'
-          ? await registerExistingArtwork({
-              data: {
-                storagePath,
-                title: String(formData.get('title') ?? ''),
-                categoryId,
-                alt: String(formData.get('alt') ?? '').trim(),
-                description: String(formData.get('description') ?? '').trim(),
-                sortOrder: Number(formData.get('sort_order') ?? 0),
-                status,
-              },
-            })
-          : await uploadSingleArtwork({ data: formData });
+      if (mode === 'link') {
+        await registerExistingArtwork({
+          data: {
+            storagePath,
+            title: String(formData.get('title') ?? ''),
+            categoryId,
+            alt: String(formData.get('alt') ?? '').trim(),
+            description: String(formData.get('description') ?? '').trim(),
+            sortOrder: Number(formData.get('sort_order') ?? 0),
+            status,
+          },
+        });
+      } else {
+        await uploadSingleArtwork({ data: formData });
+      }
 
       await router.invalidate();
 
@@ -118,11 +123,6 @@ export function ImageUploadModal({
       setCategoryId('');
       setStatus('draft');
       setStoragePath('');
-      setSuccess({
-        title: record.title,
-        storagePath: record.storagePath,
-        cdnUrl: record.cdnUrl,
-      });
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Unable to upload artwork.');
     } finally {
@@ -132,12 +132,10 @@ export function ImageUploadModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-w-2xl min-h-180 opacity-95 p-12 border-border-2nd'>
+      <DialogContent className='bg-background-2nd opacity-95 p-12 border-border-2nd max-w-2xl min-h-180'>
         <DialogHeader>
-          <DialogTitle>Single upload</DialogTitle>
-          <DialogDescription>
-            Upload one artwork and store its metadata in SQLite.
-          </DialogDescription>
+          <DialogTitle className='font-semibold text-2xl'>Add Single Image to Database</DialogTitle>
+          <DialogDescription>All fields are required</DialogDescription>
         </DialogHeader>
 
         {errorMessage && (
@@ -147,61 +145,19 @@ export function ImageUploadModal({
           </Alert>
         )}
 
-        {success && (
-          <div className='space-y-4 rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-6'>
-            <div className='space-y-1.5'>
-              <h3 className='text-2xl font-semibold leading-none tracking-tight'>
-                Upload successful
-              </h3>
-              <p className='text-sm text-muted-foreground'>{success.title}</p>
-            </div>
-            <dl className='grid gap-3 text-sm'>
-              <div className='grid gap-1'>
-                <dt className='text-muted-foreground'>Storage path</dt>
-                <dd className='break-all font-mono text-foreground'>{success.storagePath}</dd>
-              </div>
-              <div className='grid gap-1'>
-                <dt className='text-muted-foreground'>Optimized preview URL</dt>
-                <dd className='break-all'>
-                  <a
-                    href={previewUrl ?? undefined}
-                    rel='noreferrer'
-                    target='_blank'
-                    className='font-medium text-primary underline underline-offset-4'
-                  >
-                    {previewUrl}
-                  </a>
-                </dd>
-              </div>
-            </dl>
-          </div>
-        )}
-
         <section className='space-y-6'>
-          <div className='space-y-1.5'>
-            <h3 className='text-2xl font-semibold leading-none tracking-tight'>Artwork details</h3>
-            <p className='text-sm text-muted-foreground'>
-              {activeCategories.length > 0
-                ? `${activeCategories.length} active categor${activeCategories.length === 1 ? 'y' : 'ies'} available.`
-                : 'No active categories are available yet.'}
-            </p>
-          </div>
-
           {activeCategories.length === 0 ? (
             <Alert variant='destructive'>
-              <AlertTitle>No active categories</AlertTitle>
+              <AlertTitle className='font-semibold text-lg'>No active categories</AlertTitle>
               <AlertDescription>
-                Add a category from the dashboard before uploading.
+                Add a category from the dashboard before adding images.
               </AlertDescription>
             </Alert>
           ) : null}
 
-          <form className='grid gap-6' encType='multipart/form-data' onSubmit={handleSubmit}>
-            <input type='hidden' name='category_id' value={categoryId} />
-            <input type='hidden' name='status' value={status} />
-
-            <div className='grid gap-2'>
-              <Label>Source</Label>
+          <Form className='gap-6 grid mt-3' encType='multipart/form-data' onSubmit={handleSubmit}>
+            <div className='gap-3 grid'>
+              <Label>Image Source</Label>
               <div className='flex gap-6'>
                 <div className='flex items-center gap-2'>
                   <input
@@ -212,20 +168,13 @@ export function ImageUploadModal({
                     checked={mode === 'upload'}
                     onChange={() => setMode('upload')}
                     aria-label='Upload new file'
-                    className='size-4 cursor-pointer accent-yellow-500'
+                    className='size-4 accent-brand-500 cursor-pointer'
                   />
-                  <Label htmlFor='source-upload' className='cursor-pointer font-normal'>
+                  <Label htmlFor='source-upload' className='font-normal cursor-pointer'>
                     Upload new file
                   </Label>
                 </div>
-                <div
-                  className='flex items-center gap-2'
-                  title={
-                    untrackedFiles.length === 0
-                      ? 'No untracked Bunny images available'
-                      : 'Link an image already in Bunny storage'
-                  }
-                >
+                <div className='flex items-center gap-2'>
                   <input
                     type='radio'
                     id='source-link'
@@ -235,13 +184,13 @@ export function ImageUploadModal({
                     onChange={() => setMode('link')}
                     disabled={untrackedFiles.length === 0}
                     aria-label='Link existing Bunny image'
-                    className='size-4 cursor-pointer accent-yellow-500 disabled:cursor-not-allowed'
+                    className='size-4 accent-brand-500 cursor-pointer disabled:cursor-not-allowed'
                   />
                   <Label
                     htmlFor='source-link'
                     className={
                       untrackedFiles.length === 0
-                        ? 'cursor-not-allowed font-normal text-muted-foreground'
+                        ? 'cursor-not-allowed font-normal text-muted-foreground/60'
                         : 'cursor-pointer font-normal'
                     }
                   >
@@ -249,31 +198,34 @@ export function ImageUploadModal({
                   </Label>
                 </div>
               </div>
-              {mode === 'link' && untrackedFiles.length === 0 ? (
-                <p className='text-sm text-muted-foreground'>
-                  No untracked Bunny images are available to link.
-                </p>
-              ) : null}
             </div>
 
             {mode === 'upload' ? (
-              <div className='grid gap-2'>
-                <Label htmlFor='file'>File</Label>
-                <Input
+              <Field.Root name='file' className='gap-3 grid'>
+                <RequiredLabel htmlFor='file'>Image file</RequiredLabel>
+                <Field.Control
+                  render={<Input />}
                   id='file'
-                  name='file'
                   type='file'
                   accept='image/jpeg,image/png,image/webp'
                   required
-                  className='p-0 border-0 file:cursor-pointer file:border-0 file:bg-accent-c/80 hover:file:bg-accent-c active:file:bg-accent-c/70  file:text-sm file:rounded-md file:px-3 file:mr-3'
+                  className='aria-invalid:hover:file:bg-destructive/80 aria-invalid:active:file:bg-destructive/60 aria-invalid:file:bg-destructive/65 file:mr-3 p-0 file:px-3 border-0 file:border-0 file:rounded-md hover:file:bg-accent-c active:file:bg-accent-c/70 file:bg-accent-c/80 file:cursor-pointer'
                 />
-              </div>
+              </Field.Root>
             ) : (
-              <div className='grid gap-2'>
-                <Label htmlFor='storage_path'>Existing Bunny image</Label>
-                <Select value={storagePath} onValueChange={setStoragePath}>
-                  <SelectTrigger id='storage_path'>
-                    <SelectValue placeholder='Select an untracked Bunny image' />
+              <Field.Root name='storage_path' className='gap-3 grid'>
+                <RequiredLabel htmlFor='storage_path'>Existing Bunny image</RequiredLabel>
+                <Select
+                  name='storage_path'
+                  required
+                  value={storagePath}
+                  onValueChange={setStoragePath}
+                >
+                  <SelectTrigger id='storage_path' className='min-w-94'>
+                    <SelectValue
+                      placeholder='Select an image stored in Bunny but not in database'
+                      className='ph'
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     {untrackedFiles.map((file) => (
@@ -283,23 +235,33 @@ export function ImageUploadModal({
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
+              </Field.Root>
             )}
 
-            <div className='grid gap-2'>
-              <Label htmlFor='title'>Title</Label>
-              <Input id='title' name='title' type='text' placeholder='Blue Bird' required />
-            </div>
+            <Field.Root name='title' className='gap-3 grid'>
+              <RequiredLabel htmlFor='title'>Title</RequiredLabel>
+              <Field.Control
+                render={<Input />}
+                id='title'
+                type='text'
+                placeholder='Image title'
+                required
+                className='ph'
+              />
+            </Field.Root>
 
-            <div className='grid gap-2'>
-              <Label htmlFor='category_id'>Category</Label>
+            <Field.Root name='category_id' className='gap-3 grid'>
+              <RequiredLabel htmlFor='category_id'>Category</RequiredLabel>
               <Select
+                name='category_id'
+                required
+                items={categoryItems}
                 value={categoryId}
                 onValueChange={setCategoryId}
                 disabled={activeCategories.length === 0}
               >
-                <SelectTrigger id='category_id'>
-                  <SelectValue placeholder='Select a category' />
+                <SelectTrigger id='category_id' className='min-w-44'>
+                  <SelectValue placeholder='Select a category' className='ph' />
                 </SelectTrigger>
                 <SelectContent>
                   {activeCategories.map((category) => (
@@ -309,55 +271,79 @@ export function ImageUploadModal({
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-            <div className='grid gap-2'>
-              <Label htmlFor='status'>Status</Label>
+            </Field.Root>
+
+            <Field.Root name='status' className='gap-3 grid'>
+              <RequiredLabel htmlFor='status'>Status</RequiredLabel>
               <Select
+                name='status'
+                required
+                items={statusItems}
                 value={status}
-                onValueChange={(value) => setStatus(value === 'published' ? 'published' : 'draft')}
+                onValueChange={setStatus}
               >
-                <SelectTrigger id='status'>
-                  <SelectValue placeholder='Select a status' />
+                <SelectTrigger id='status' className='min-w-44'>
+                  <SelectValue placeholder='Select a status' className='ph' />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value='draft'>Draft</SelectItem>
                   <SelectItem value='published'>Published</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </Field.Root>
 
-            <div className='grid gap-2'>
-              <Label htmlFor='alt'>Alt text</Label>
-              <Input id='alt' name='alt' type='text' placeholder='Blue bird illustration' />
-            </div>
+            <Field.Root name='alt' className='gap-3 grid'>
+              <RequiredLabel htmlFor='alt'>Alt text</RequiredLabel>
+              <Field.Control
+                render={<Input />}
+                id='alt'
+                type='text'
+                placeholder='Alt text for image'
+                required
+                className='ph'
+              />
+            </Field.Root>
 
-            <div className='grid gap-2'>
-              <Label htmlFor='description'>Description</Label>
-              <Textarea
+            <Field.Root name='description' className='gap-3 grid'>
+              <RequiredLabel htmlFor='description'>Image description</RequiredLabel>
+              <Field.Control
+                render={<Textarea />}
                 id='description'
-                name='description'
-                placeholder='Short artwork description'
+                placeholder='Artwork description displayed on page'
+                className='ph'
+                required
               />
-            </div>
+            </Field.Root>
 
-            <div className='grid gap-2'>
-              <Label htmlFor='sort_order'>Sort order</Label>
-              <Input
-                id='sort_order'
-                name='sort_order'
-                type='number'
-                min='0'
-                step='1'
-                defaultValue='0'
-              />
-            </div>
-
+            <Field.Root name='sort_order' className='gap-3 grid'>
+              <RequiredLabel htmlFor='sort_order'>Sort order</RequiredLabel>
+              <div className='flex flex-row items-center gap-3'>
+                <Field.Control
+                  render={<Input />}
+                  id='sort_order'
+                  type='number'
+                  min='0'
+                  step='1'
+                  defaultValue='0'
+                  placeholder='Numbers only'
+                  className='w-24 ph'
+                  required
+                />
+                <span className='text-muted-foreground text-xs italic'>
+                  Lower numbers appear higher up on pages.
+                </span>
+              </div>
+            </Field.Root>
             <div className='flex flex-wrap items-center gap-3'>
-              <Button type='submit' disabled={isSubmitting || activeCategories.length === 0}>
+              <Button
+                type='submit'
+                variant='positive'
+                disabled={isSubmitting || activeCategories.length === 0}
+              >
                 {getSubmitLabel(isSubmitting, mode)}
               </Button>
             </div>
-          </form>
+          </Form>
         </section>
       </DialogContent>
     </Dialog>

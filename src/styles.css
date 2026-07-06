@@ -95,7 +95,7 @@
   --theme-dark-accent-c: var(--color-sky-600);
   --theme-dark-accent-foreground: var(--color-neutral-50);
   --theme-dark-border: var(--color-neutral-400);
-  --theme-dark-border-2nd: var(--color-neutral-600);
+  --theme-dark-border-2nd: var(--color-neutral-500);
   --theme-dark-popover: var(--color-neutral-800);
   --theme-dark-popover-foreground: var(--color-neutral-100);
   --theme-dark-popover-border: var(--color-neutral-600);
@@ -206,7 +206,7 @@
 }
 
 .ph {
-  @apply placeholder:text-neutral-600 dark:placeholder:text-neutral-400 placeholder:italic;
+  @apply placeholder:text-neutral-600 dark:placeholder:text-neutral-300/80 data-placeholder:text-neutral-600 dark:data-placeholder:text-neutral-300/80;
 }
 
 .admin-button {

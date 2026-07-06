@@ -11,16 +11,18 @@ const buttonVariants = cva(
       variant: {
         default: 'bg-background text-foreground hover:bg-primary/90',
         destructive:
-          'bg-destructive text-white hover:bg-destructive/80 active:bg-destructive/70 focus-visible:ring-destructive/20 dark:bg-destructive/60 dark:focus-visible:ring-destructive/40',
+          'bg-destructive text-foreground hover:bg-destructive/80 active:bg-destructive/70 focus-visible:ring-destructive/20 dark:bg-destructive/60 dark:focus-visible:ring-destructive/40',
         information:
-          'bg-information text-white hover:bg-information/80 active:bg-information/70 focus-visible:ring-information/20 dark:bg-information/60 dark:focus-visible:ring-information/40',
+          'bg-information text-foreground hover:bg-information/80 active:bg-information/70 focus-visible:ring-information/20 dark:bg-information/60 dark:focus-visible:ring-information/40',
         positive:
-          'bg-positive text-white hover:bg-positive/80 active:bg-positive/70 focus-visible:ring-positive/20 dark:bg-positive/60 dark:focus-visible:ring-positive/40',
+          'bg-positive text-foreground hover:bg-positive/80 active:bg-positive/70 focus-visible:ring-positive/20 dark:bg-positive/60 dark:focus-visible:ring-positive/40',
         outline:
           'border-border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground aria-expanded:bg-accent aria-expanded:text-accent-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50',
-        secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80 aria-expanded:bg-secondary aria-expanded:text-secondary-foreground',
-        ghost: 'hover:bg-accent hover:text-accent-foreground aria-expanded:bg-accent aria-expanded:text-accent-foreground dark:hover:bg-accent/50',
-        link: 'text-primary underline-offset-4 hover:underline',
+        secondary:
+          'bg-secondary text-secondary-foreground hover:bg-secondary/80 aria-expanded:bg-secondary aria-expanded:text-secondary-foreground',
+        ghost:
+          'hover:bg-accent hover:text-accent-foreground aria-expanded:bg-accent aria-expanded:text-accent-foreground dark:hover:bg-accent/50',
+        link: 'text-foreground underline-offset-4 hover:underline',
       },
       size: {
         default: 'h-9 px-4 py-2 has-[>svg]:px-3',
