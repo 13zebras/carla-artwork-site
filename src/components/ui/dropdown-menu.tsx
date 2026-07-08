@@ -64,7 +64,7 @@ function DropdownMenuLabel({
     <MenuPrimitive.GroupLabel
       data-slot='dropdown-menu-label'
       data-inset={inset}
-      className={cn('px-2 py-1.5 text-sm font-medium data-[inset]:pl-8', className)}
+      className={cn('px-2 py-1.5 data-[inset]:pl-8 font-medium text-sm', className)}
       {...props}
     />
   );
@@ -85,7 +85,7 @@ function DropdownMenuItem({
       data-inset={inset}
       data-variant={variant}
       className={cn(
-        "relative flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none focus:bg-secondary-background focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[inset]:pl-8 data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 data-[variant=destructive]:focus:text-destructive dark:data-[variant=destructive]:focus:bg-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 [&_svg:not([class*='text-'])]:text-muted-foreground data-[variant=destructive]:*:[svg]:text-destructive!",
+        "relative flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none focus:bg-blue-100 dark:focus:bg-blue-900/80 focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[inset]:pl-8 data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 data-[variant=destructive]:focus:text-destructive dark:data-[variant=destructive]:focus:bg-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 [&_svg:not([class*='text-'])]:text-muted-foreground data-[variant=destructive]:*:[svg]:text-destructive!",
         className,
       )}
       {...props}
@@ -109,7 +109,7 @@ function DropdownMenuCheckboxItem({
       checked={checked}
       {...props}
     >
-      <span className='pointer-events-none absolute left-2 flex size-3.5 items-center justify-center'>
+      <span className='left-2 absolute flex justify-center items-center size-3.5 pointer-events-none'>
         <MenuPrimitive.CheckboxItemIndicator>
           <CheckIcon className='size-4' />
         </MenuPrimitive.CheckboxItemIndicator>
@@ -123,11 +123,7 @@ function DropdownMenuRadioGroup({ ...props }: MenuPrimitive.RadioGroup.Props) {
   return <MenuPrimitive.RadioGroup data-slot='dropdown-menu-radio-group' {...props} />;
 }
 
-function DropdownMenuRadioItem({
-  className,
-  children,
-  ...props
-}: MenuPrimitive.RadioItem.Props) {
+function DropdownMenuRadioItem({ className, children, ...props }: MenuPrimitive.RadioItem.Props) {
   return (
     <MenuPrimitive.RadioItem
       data-slot='dropdown-menu-radio-item'
@@ -137,9 +133,9 @@ function DropdownMenuRadioItem({
       )}
       {...props}
     >
-      <span className='pointer-events-none absolute left-2 flex size-3.5 items-center justify-center'>
+      <span className='left-2 absolute flex justify-center items-center size-3.5 pointer-events-none'>
         <MenuPrimitive.RadioItemIndicator>
-          <CircleIcon className='size-2 fill-current' />
+          <CircleIcon className='fill-current size-2' />
         </MenuPrimitive.RadioItemIndicator>
       </span>
       {children}
@@ -152,7 +148,7 @@ function DropdownMenuSeparator({ className, ...props }: React.ComponentProps<'hr
   return (
     <hr
       data-slot='dropdown-menu-separator'
-      className={cn('-mx-1 my-1 h-px border-0 bg-border', className)}
+      className={cn('-mx-1 my-1 bg-border border-0 h-px', className)}
       {...props}
     />
   );
@@ -162,7 +158,7 @@ function DropdownMenuShortcut({ className, ...props }: React.ComponentProps<'spa
   return (
     <span
       data-slot='dropdown-menu-shortcut'
-      className={cn('ml-auto text-xs tracking-widest text-muted-foreground', className)}
+      className={cn('ml-auto text-muted-foreground text-xs tracking-widest', className)}
       {...props}
     />
   );

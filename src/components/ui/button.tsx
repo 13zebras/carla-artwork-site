@@ -5,7 +5,7 @@ import * as React from 'react';
 import { cn } from '@/lib/utils';
 
 const buttonVariants = cva(
-  "group/button cursor-pointer inline-flex shrink-0 items-center justify-center gap-2 rounded-md border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "group/button cursor-pointer inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
@@ -13,9 +13,11 @@ const buttonVariants = cva(
         destructive:
           'bg-destructive text-foreground hover:bg-destructive/80 active:bg-destructive/70 focus-visible:ring-destructive/20 dark:bg-destructive/60 dark:focus-visible:ring-destructive/40',
         information:
-          'bg-information text-foreground hover:bg-information/80 active:bg-information/70 focus-visible:ring-information/20 dark:bg-information/60 dark:focus-visible:ring-information/40',
+          'bg-information text-neutral-50 hover:bg-information/80 active:bg-information focus-visible:ring-information/20 dark:bg-information/60 dark:focus-visible:ring-information/40',
         positive:
-          'bg-positive text-foreground hover:bg-positive/80 active:bg-positive/70 focus-visible:ring-positive/20 dark:bg-positive/60 dark:focus-visible:ring-positive/40',
+          'bg-positive/50 border-positive text-foreground hover:bg-positive/35 active:bg-positive/50 focus-visible:ring-positive/50 dark:bg-positive/60 dark:hover:bg-positive/80',
+        brand:
+          'bg-brand-500/60 border-brand-500 text-foreground hover:bg-brand-500/75 active:bg-brand-500/55 focus-visible:ring-brand-600/50',
         outline:
           'border-border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground aria-expanded:bg-accent aria-expanded:text-accent-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50',
         secondary:

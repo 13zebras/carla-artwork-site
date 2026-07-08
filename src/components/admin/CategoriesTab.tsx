@@ -35,12 +35,12 @@ export function CategoriesTab({ categories }: CategoriesTabProps) {
   const [categoryPending, setCategoryPending] = useState(false);
   const [categoryError, setCategoryError] = useState<string | null>(null);
   const [categorySuccess, setCategorySuccess] = useState<string | null>(null);
-  // const activeCategoryCount = categories.filter((category) => category.status === 'active').length;
+  console.log('%c>>> categories', 'color: red', categories);
 
   return (
-    <TabsContent value='categories' className='mt-4 max-w-300 w-full mx-auto'>
-      <div className='grid gap-6'>
-        <Card className='min-w-0 overflow-hidden rounded-sm pt-4 pb-0 border-b-0'>
+    <TabsContent value='categories' className='mx-auto mt-4 w-full max-w-300'>
+      <div className='gap-6 grid'>
+        <Card className='pt-4 pb-0 border-b-0 rounded-sm min-w-0 overflow-hidden'>
           <CardHeader>
             <CardTitle className='text-xl'>Artwork Categories</CardTitle>
             <CardDescription>
@@ -49,19 +49,19 @@ export function CategoriesTab({ categories }: CategoriesTabProps) {
           </CardHeader>
           <CardContent className='p-0'>
             {categories.length === 0 ? (
-              <div className='flex min-h-60 items-center justify-center p-6 text-sm text-muted-foreground'>
+              <div className='flex justify-center items-center p-6 min-h-60 text-muted-foreground text-sm'>
                 No categories found.
               </div>
             ) : (
-              <Table className='min-w-230 w-full'>
+              <Table className='w-full min-w-230'>
                 <TableHeader>
-                  <TableRow className='whitespace-normal h-14'>
+                  <TableRow className='h-14 whitespace-normal'>
                     <TableHead className='min-w-46 max-w-52'>Category Name / Slug</TableHead>
                     <TableHead className='min-w-0 max-w-100'>Description</TableHead>
                     <TableHead className='w-12 whitespace-normal'>Sort Order</TableHead>
                     <TableHead className='w-18'>Status</TableHead>
-                    <TableHead className='min-w-30 xl:max-[1400px]:w-45'>Created</TableHead>
-                    <TableHead className='min-w-30 xl:max-[1400px]:w-45'>Updated</TableHead>
+                    <TableHead className='xl:max-[1400px]:w-45 min-w-30'>Created</TableHead>
+                    <TableHead className='xl:max-[1400px]:w-45 min-w-30'>Updated</TableHead>
                     <TableHead className='w-30'>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -71,14 +71,14 @@ export function CategoriesTab({ categories }: CategoriesTabProps) {
                       <TableCell className='whitespace-normal'>
                         <div className='space-y-2'>
                           <p className='font-medium leading-tight'>{category.label}</p>
-                          <p className='text-xs text-muted-foreground font-mono'>{category.slug}</p>
+                          <p className='font-mono text-muted-foreground text-xs'>{category.slug}</p>
                         </div>
                       </TableCell>
                       <TableCell className='whitespace-normal'>
                         {category.description ? (
                           category.description
                         ) : (
-                          <span className='text-sm text-muted-foreground'>-</span>
+                          <span className='text-muted-foreground text-sm'>-</span>
                         )}
                       </TableCell>
                       <TableCell>{category.sortOrder}</TableCell>
@@ -118,7 +118,7 @@ export function CategoriesTab({ categories }: CategoriesTabProps) {
           </CardContent>
         </Card>
 
-        <Card className='h-fit max-w-140 rounded-sm'>
+        <Card className='rounded-sm max-w-140 h-fit'>
           <CardHeader>
             <CardTitle>Add category</CardTitle>
             <CardDescription>
@@ -170,7 +170,7 @@ export function CategoriesTab({ categories }: CategoriesTabProps) {
             >
               <div className='space-y-2'>
                 <Label htmlFor='category-label'>
-                  Category Name<span className='text-red-500 -ml-1'>*</span>
+                  Category Name<span className='-ml-1 text-red-500'>*</span>
                 </Label>
                 <Input
                   id='category-label'
@@ -182,9 +182,9 @@ export function CategoriesTab({ categories }: CategoriesTabProps) {
                 />
               </div>
 
-              <div className='space-y-2 '>
+              <div className='space-y-2'>
                 <Label htmlFor='category-slug'>
-                  Slug<span className='text-red-500 -ml-1'>*</span>
+                  Slug<span className='-ml-1 text-red-500'>*</span>
                 </Label>
                 <Input
                   id='category-slug'
@@ -197,7 +197,7 @@ export function CategoriesTab({ categories }: CategoriesTabProps) {
 
               <div className='space-y-2'>
                 <Label htmlFor='category-description'>
-                  Description<span className='text-red-500 -ml-1'>*</span>
+                  Description<span className='-ml-1 text-red-500'>*</span>
                 </Label>
                 <Textarea
                   id='category-description'
@@ -205,13 +205,13 @@ export function CategoriesTab({ categories }: CategoriesTabProps) {
                   name='description'
                   placeholder='Description of the category to be used on the category page.'
                   rows={6}
-                  className='ph border-border-2nd min-h-20'
+                  className='border-border-2nd min-h-20 ph'
                 />
               </div>
 
               <div className='space-y-2'>
                 <Label htmlFor='category-sort-order'>
-                  Sort order<span className='text-red-500 -ml-1'>*</span>
+                  Sort order<span className='-ml-1 text-red-500'>*</span>
                 </Label>
                 <Input
                   id='category-sort-order'
@@ -225,7 +225,7 @@ export function CategoriesTab({ categories }: CategoriesTabProps) {
               </div>
 
               <Button
-                className='w-full bg-brand-500 hover:bg-brand-400 dark:bg-brand-700 dark:hover:bg-brand-600 active:bg-brand-600 dark:active:bg-brand-700'
+                className='bg-brand-500 hover:bg-brand-400 active:bg-brand-600 dark:active:bg-brand-700 dark:bg-brand-700 dark:hover:bg-brand-600 w-full'
                 disabled={categoryPending}
                 type='submit'
               >

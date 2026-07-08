@@ -1,4 +1,6 @@
-import { X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+
+import { XIcon } from 'lucide-react';
 
 import {
   Drawer,
@@ -15,15 +17,35 @@ import { dateFormatter } from '@/lib/utils';
 import { Dialog, DialogContent, DialogClose, DialogTrigger } from '../ui/dialog';
 
 type ArtworkInfoDrawerProps = {
-  record: ArtworkRecord | null;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  record: ArtworkRecord;
+  onClose: () => void;
 };
 
-export function ArtworkInfoDrawer({ record, open, onOpenChange }: ArtworkInfoDrawerProps) {
+export function ArtworkInfoDrawer({ record, onClose }: ArtworkInfoDrawerProps) {
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    setOpen(true);
+  }, []);
+
+  function handleOpenChange(nextOpen: boolean) {
+    setOpen(nextOpen);
+  }
+
+  function handleOpenChangeComplete(isOpen: boolean) {
+    if (!isOpen) {
+      onClose();
+    }
+  }
+
   return (
-    <Drawer swipeDirection='right' open={open} onOpenChange={onOpenChange}>
-      {record ? <ArtworkInfoDrawerContent record={record} /> : null}
+    <Drawer
+      swipeDirection='right'
+      open={open}
+      onOpenChange={handleOpenChange}
+      onOpenChangeComplete={handleOpenChangeComplete}
+    >
+      <ArtworkInfoDrawerContent record={record} />
     </Drawer>
   );
 }
@@ -56,26 +78,26 @@ function ArtworkInfoDrawerContent({ record }: { record: ArtworkRecord }) {
   ];
 
   return (
-    <DrawerContent className='rounded-lg gap-0 data-[swipe-axis=x]:sm:[--drawer-content-width:37.5rem]'>
+    <DrawerContent className='gap-0 rounded-lg data-[swipe-axis=x]:sm:[--drawer-content-width:37.5rem]'>
       <DrawerHeader className='relative p-6 pb-4'>
-        <DrawerTitle className='text-xl font-semibold'>{record.title} - Details</DrawerTitle>
+        <DrawerTitle className='font-semibold text-xl'>{record.title} - Details</DrawerTitle>
         <DrawerClose
           aria-label='Close'
-          className='absolute right-6 top-6 flex justify-center items-center rounded-md size-6 hover:bg-neutral-300 dark:hover:bg-neutral-700 opacity-70 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring text'
+          className='top-4 right-4 absolute flex justify-center items-center dark:hover:bg-neutral-800 opacity-80 hover:opacity-100 rounded-full focus:outline-hidden focus:ring-2 focus:ring-ring ring-offset-background focus:ring-offset-3 size-6 hover:scale-120 transition-all hover:bg-accent-2'
         >
-          <X className='size-4' />
+          <XIcon className='size-5' />
         </DrawerClose>
       </DrawerHeader>
-      <div className='flex min-h-0 flex-1 flex-col'>
-        <div className='min-h-0 px-6 overflow-y-auto'>
+      <div className='flex flex-col flex-1 min-h-0'>
+        <div className='px-6 min-h-0 overflow-y-auto'>
           <Table>
             <TableBody>
               {rows.map(([label, value]) => (
                 <TableRow key={label}>
-                  <TableCell className='w-40 align-top font-medium text-muted-foreground'>
+                  <TableCell className='w-40 font-medium text-muted-foreground align-top'>
                     {label}
                   </TableCell>
-                  <TableCell className='align-top break-all whitespace-normal'>{value}</TableCell>
+                  <TableCell className='break-all align-top whitespace-normal'>{value}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -84,10 +106,10 @@ function ArtworkInfoDrawerContent({ record }: { record: ArtworkRecord }) {
 
         <Dialog>
           <DialogTrigger asChild>
-            <div className='flex min-h-65 flex-1 items-center justify-center p-6'>
+            <div className='flex flex-1 justify-center items-center p-6 min-h-65'>
               <img
                 alt={record.alt}
-                className='max-h-full max-w-full object-contain'
+                className='max-w-full max-h-full object-contain'
                 decoding='async'
                 loading='lazy'
                 src={thumbnailUrl}
@@ -97,12 +119,12 @@ function ArtworkInfoDrawerContent({ record }: { record: ArtworkRecord }) {
           <DialogContent
             showCloseButton={false}
             overlayClassName='bg-black/70 backdrop-blur-xs'
-            className='w-screen h-screen rounded-none border-0 bg-transparent p-0'
+            className='bg-transparent p-0 border-0 rounded-none w-screen h-screen'
           >
-            <DialogClose className='w-full h-full flex items-center justify-center'>
+            <DialogClose className='flex justify-center items-center w-full h-full'>
               <img
                 alt={record.alt}
-                className='max-h-[90vh] h-full w-full max-w-[90vw] object-contain'
+                className='w-full max-w-[90vw] h-full max-h-[90vh] object-contain'
                 decoding='async'
                 loading='lazy'
                 src={previewUrl}

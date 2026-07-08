@@ -26,19 +26,43 @@ import {
   type BulkArtworkUploadError,
   type BulkArtworkUploadResult,
 } from '@/lib/artwork-upload.functions';
-import type { ArtworkRecord } from '@/lib/artworks.server';
+// import type { ArtworkRecord } from '@/lib/artworks.server';
 import type { ArtworkCategoryRecord } from '@/lib/categories.server';
 
-const sampleCsv = `filename,title,category,alt,description,slug,sort_order,status
-blue-bird.jpg,Blue Bird,illustration,Blue bird illustration,,blue-bird,0,draft`;
+const sampleCsv = (
+  <div className='flex flex-col gap-2'>
+    <div>
+      <span className='text-red-500'>filename,</span>
+      <span className='text-green-500'>title,</span>
+      <span className='text-yellow-500'>category_id,</span>
+      <span className='text-sky-400'>status,</span>
+      <span className='text-orange-500'>alt,</span>
+      <span className='text-cyan-400'>description,</span>
+      <span className='text-fuchsia-400'>sort_order</span>
+    </div>
+    <div>
+      <span className='text-red-500'>blue-bird.png,</span>
+      <span className='text-green-500'>Blue Bird,</span>
+      <span className='text-yellow-500'>illustration,</span>
+      <span className='text-sky-400'>draft,</span>
+      <span className='text-orange-500'>image of blue bird,</span>
+      <span className='text-teal-400'>Lorem ipsum dolor sit amet,</span>
+      <span className='text-fuchsia-400'>20</span>
+    </div>
+  </div>
+);
 
 function ErrorTable({ errors }: { errors: BulkArtworkUploadError[] }) {
   return (
-    <section className='space-y-6 rounded-xl border bg-card p-6 text-card-foreground shadow-sm'>
-      <div className='space-y-1.5'>
-        <h3 className='text-2xl font-semibold leading-none tracking-tight'>Validation errors</h3>
-        <p className='text-sm text-muted-foreground'>
-          No files were uploaded because the CSV or image set is invalid.
+    <section className='space-y-6 bg-card shadow-sm mt-4 p-6 border-2 border-destructive/80 rounded-xl text-card-foreground'>
+      <div className='space-y-1.25 text-destructive'>
+        <h3 className='mb-4 font-semibold text-xl leading-none tracking-tight'>
+          Validation errors
+        </h3>
+        <p className='text-base'>No files were uploaded because the CSV or image set is invalid.</p>
+        <p className='text-base'>
+          {errors.length} row{errors.length === 1 ? '' : 's'} need attention before anything can be
+          uploaded.
         </p>
       </div>
       <Table>
@@ -53,7 +77,7 @@ function ErrorTable({ errors }: { errors: BulkArtworkUploadError[] }) {
           {errors.map((error) => (
             <TableRow key={`${error.row}-${error.filename ?? 'all'}-${error.message}`}>
               <TableCell>
-                <Badge variant='outline'>{error.row === 0 ? 'File' : `Row ${error.row}`}</Badge>
+                <Badge variant='destructive'>{error.row === 0 ? 'File' : `Row ${error.row}`}</Badge>
               </TableCell>
               <TableCell className='font-mono text-xs'>{error.filename ?? '—'}</TableCell>
               <TableCell>{error.message}</TableCell>
@@ -65,54 +89,54 @@ function ErrorTable({ errors }: { errors: BulkArtworkUploadError[] }) {
   );
 }
 
-function RecordsTable({ records }: { records: ArtworkRecord[] }) {
-  return (
-    <section className='space-y-6 rounded-xl border bg-card p-6 text-card-foreground shadow-sm'>
-      <div className='space-y-1.5'>
-        <h3 className='text-2xl font-semibold leading-none tracking-tight'>Created records</h3>
-        <p className='text-sm text-muted-foreground'>SQLite rows created by this bulk upload.</p>
-      </div>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Title</TableHead>
-            <TableHead>Category</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Dimensions</TableHead>
-            <TableHead>Filename</TableHead>
-            <TableHead>Storage path</TableHead>
-            <TableHead>Created</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {records.map((record) => (
-            <TableRow key={record.id}>
-              <TableCell className='font-medium'>{record.title}</TableCell>
-              <TableCell>
-                <Badge variant='secondary'>{record.category.label}</Badge>
-              </TableCell>
-              <TableCell>
-                <Badge variant={record.status === 'published' ? 'default' : 'outline'}>
-                  {record.status}
-                </Badge>
-              </TableCell>
-              <TableCell>
-                {record.width} × {record.height}
-              </TableCell>
-              <TableCell className='max-w-40 truncate text-xs text-muted-foreground'>
-                {record.originalFilename}
-              </TableCell>
-              <TableCell className='max-w-64 break-all font-mono text-xs text-muted-foreground'>
-                {record.storagePath}
-              </TableCell>
-              <TableCell className='text-xs text-muted-foreground'>{record.createdAt}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </section>
-  );
-}
+// function RecordsTable({ records }: { records: ArtworkRecord[] }) {
+//   return (
+//     <section className='space-y-6 bg-card shadow-sm p-6 border rounded-xl text-card-foreground'>
+//       <div className='space-y-1.5'>
+//         <h3 className='font-semibold text-2xl leading-none tracking-tight'>Created records</h3>
+//         <p className='text-muted-foreground text-sm'>SQLite rows created by this bulk upload.</p>
+//       </div>
+//       <Table>
+//         <TableHeader>
+//           <TableRow>
+//             <TableHead>Title</TableHead>
+//             <TableHead>Category</TableHead>
+//             <TableHead>Status</TableHead>
+//             <TableHead>Dimensions</TableHead>
+//             <TableHead>Filename</TableHead>
+//             <TableHead>Storage path</TableHead>
+//             <TableHead>Created</TableHead>
+//           </TableRow>
+//         </TableHeader>
+//         <TableBody>
+//           {records.map((record) => (
+//             <TableRow key={record.id}>
+//               <TableCell className='font-medium'>{record.title}</TableCell>
+//               <TableCell>
+//                 <Badge variant='secondary'>{record.category.label}</Badge>
+//               </TableCell>
+//               <TableCell>
+//                 <Badge variant={record.status === 'published' ? 'default' : 'outline'}>
+//                   {record.status}
+//                 </Badge>
+//               </TableCell>
+//               <TableCell>
+//                 {record.width} × {record.height}
+//               </TableCell>
+//               <TableCell className='max-w-40 text-muted-foreground text-xs truncate'>
+//                 {record.originalFilename}
+//               </TableCell>
+//               <TableCell className='max-w-64 font-mono text-muted-foreground text-xs break-all'>
+//                 {record.storagePath}
+//               </TableCell>
+//               <TableCell className='text-muted-foreground text-xs'>{record.createdAt}</TableCell>
+//             </TableRow>
+//           ))}
+//         </TableBody>
+//       </Table>
+//     </section>
+//   );
+// }
 
 type BulkImageUploadModalProps = {
   categories: ArtworkCategoryRecord[];
@@ -152,26 +176,47 @@ export function BulkImageUploadModal({
   }
 
   const hasValidationErrors = result?.ok === false;
-  const hasSuccess = result?.ok === true;
+  // const hasSuccess = result?.ok === true;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='min-h-150'>
+      <DialogContent className='w-[92vw] max-w-6xl min-h-150'>
         <DialogHeader>
-          <DialogTitle>Bulk upload artworks</DialogTitle>
-          <DialogDescription>
-            Upload one CSV plus matching image files. The CSV must include filename,title,category.
-            Category values may use a category id, slug, or label.
+          <DialogTitle className='mb-2 font-semibold text-2xl'>
+            Bulk Add Images to Database / Storage
+          </DialogTitle>
+          <DialogDescription className='mb-2 text-base'>
+            <p className='pb-2'>
+              Upload one CSV as well as matching image files.{' '}
+              <span className='font-bold text-red-500'>Required </span>
+              fields for CSV:
+            </p>
+            <ul className='flex flex-col flex-wrap gap-x-4 pl-7 max-w-3xl max-h-24 leading-6 list-disc'>
+              <li>filename - must match exactly</li>
+              <li>title</li>
+              <li>category_id</li>
+              <li>status - published, draft</li>
+              <li>alt text</li>
+              <li>description - will display on page of this artwork</li>
+              <li>sort order - number &gt;= 0</li>
+            </ul>
           </DialogDescription>
         </DialogHeader>
 
-        <form className='grid gap-6' encType='multipart/form-data' onSubmit={handleSubmit}>
-          <div className='grid gap-4 lg:grid-cols-2'>
-            <div className='grid gap-2'>
+        <form className='gap-7 grid' encType='multipart/form-data' onSubmit={handleSubmit}>
+          <div className='gap-4 grid lg:grid-cols-2'>
+            <div className='gap-3 grid'>
               <Label htmlFor='bulk-csv'>CSV file</Label>
-              <Input id='bulk-csv' name='csv' type='file' accept='.csv,text/csv' required />
+              <Input
+                id='bulk-csv'
+                name='csv'
+                type='file'
+                accept='.csv,text/csv'
+                required
+                className='hover:file:bg-positive/80 active:file:bg-positive/70 file:bg-positive/60 file:mr-3 p-0 file:px-3 border-0 file:border-0 file:rounded-md file:cursor-pointer'
+              />
             </div>
-            <div className='grid gap-2'>
+            <div className='gap-3 grid'>
               <Label htmlFor='bulk-files'>Image files</Label>
               <Input
                 id='bulk-files'
@@ -180,33 +225,31 @@ export function BulkImageUploadModal({
                 accept='image/jpeg,image/png,image/webp'
                 multiple
                 required
+                className='file:mr-3 p-0 file:px-3 border-0 file:border-0 file:rounded-md hover:file:bg-accent-c/90 active:file:bg-accent-c/80 file:bg-accent-c/70 file:cursor-pointer'
               />
             </div>
           </div>
 
-          <div className='grid gap-3'>
-            <div className='flex items-center justify-between gap-3'>
+          <div className='gap-3 grid'>
+            <div className='flex justify-between items-center gap-3'>
               <Label>Sample CSV</Label>
-              <Badge variant='outline'>Required</Badge>
             </div>
-            <pre className='overflow-x-auto rounded-lg border bg-muted/50 p-4 text-sm leading-6'>
+            <pre className='bg-muted/50 p-4 border border-border-2nd rounded-lg overflow-x-auto text-sm leading-6'>
               {sampleCsv}
             </pre>
           </div>
 
-          <div className='grid gap-3'>
-            <div className='flex items-center justify-between gap-3'>
+          <div className='gap-3 grid'>
+            <div className='flex justify-start items-center gap-3'>
               <Label>Active categories</Label>
-              <Badge variant='secondary'>{activeCategories.length}</Badge>
+              <Badge variant='positive'>{activeCategories.length}</Badge>
             </div>
             {activeCategories.length > 0 ? (
-              <div className='flex flex-wrap gap-2'>
+              <ul className='flex flex-col flex-wrap gap-x-16 gap-y-2 pl-7 max-w-fit max-h-20 font-mono text-sm list-disc'>
                 {activeCategories.map((category) => (
-                  <Badge key={category.id} variant='outline'>
-                    {category.label}
-                  </Badge>
+                  <li key={category.id}>{category.id}</li>
                 ))}
-              </div>
+              </ul>
             ) : (
               <Alert>
                 <AlertTitle>No active categories</AlertTitle>
@@ -218,11 +261,11 @@ export function BulkImageUploadModal({
           </div>
 
           <div className='flex items-center gap-3'>
-            <Button disabled={isSubmitting} type='submit'>
-              {isSubmitting ? 'Uploading…' : 'Upload bulk artworks'}
+            <Button disabled={isSubmitting} type='submit' variant='brand'>
+              {isSubmitting ? 'Uploading…' : 'Upload bulk images'}
             </Button>
             {isSubmitting ? (
-              <p className='text-sm text-muted-foreground'>
+              <p className='text-muted-foreground text-sm'>
                 Validating the CSV and matching image files…
               </p>
             ) : null}
@@ -236,7 +279,7 @@ export function BulkImageUploadModal({
           </Alert>
         ) : null}
 
-        {hasValidationErrors && result ? (
+        {/* {hasValidationErrors && result ? (
           <Alert variant='destructive'>
             <AlertTitle>Validation failed</AlertTitle>
             <AlertDescription>
@@ -244,12 +287,12 @@ export function BulkImageUploadModal({
               before anything can be uploaded.
             </AlertDescription>
           </Alert>
-        ) : null}
+        ) : null} */}
 
         {hasValidationErrors && result ? <ErrorTable errors={result.errors} /> : null}
 
-        {hasSuccess && result ? (
-          <div className='grid gap-6'>
+        {/* {hasSuccess && result ? (
+          <div className='gap-6 grid'>
             <Alert>
               <AlertTitle>Upload complete</AlertTitle>
               <AlertDescription>
@@ -259,7 +302,7 @@ export function BulkImageUploadModal({
             </Alert>
             <RecordsTable records={result.records} />
           </div>
-        ) : null}
+        ) : null} */}
       </DialogContent>
     </Dialog>
   );

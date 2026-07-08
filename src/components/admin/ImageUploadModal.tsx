@@ -2,6 +2,7 @@ import { Field } from '@base-ui/react/field';
 import { Form } from '@base-ui/react/form';
 import { useRouter } from '@tanstack/react-router';
 import { useState, type ReactNode, type SubmitEvent } from 'react';
+import { toast } from 'sonner';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -23,6 +24,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { registerExistingArtwork, uploadSingleArtwork } from '@/lib/artwork-upload.functions';
+import type { ArtworkRecord } from '@/lib/artworks.server';
 import type { BunnyStorageFile } from '@/lib/bunny.server';
 import type { ArtworkCategoryRecord } from '@/lib/categories.server';
 
@@ -100,9 +102,11 @@ export function ImageUploadModal({
 
     setIsSubmitting(true);
 
+    let record: ArtworkRecord;
+
     try {
       if (mode === 'link') {
-        await registerExistingArtwork({
+        record = await registerExistingArtwork({
           data: {
             storagePath,
             title: String(formData.get('title') ?? ''),
@@ -114,15 +118,16 @@ export function ImageUploadModal({
           },
         });
       } else {
-        await uploadSingleArtwork({ data: formData });
+        record = await uploadSingleArtwork({ data: formData });
       }
 
       await router.invalidate();
 
-      form.reset();
-      setCategoryId('');
-      setStatus('draft');
-      setStoragePath('');
+      toast.success('Artwork added', {
+        description: `“${record.title}” — ${record.originalFilename}`,
+      });
+
+      onOpenChange(false);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Unable to upload artwork.');
     } finally {
@@ -130,8 +135,20 @@ export function ImageUploadModal({
     }
   }
 
+  function handleOpenChange(nextOpen: boolean) {
+    if (!nextOpen) {
+      setMode('upload');
+      setCategoryId('');
+      setStoragePath('');
+      setStatus('draft');
+      setErrorMessage(null);
+    }
+
+    onOpenChange(nextOpen);
+  }
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className='bg-background-2nd opacity-95 p-12 border-border-2nd max-w-2xl min-h-180'>
         <DialogHeader>
           <DialogTitle className='font-semibold text-2xl'>Add Single Image to Database</DialogTitle>
@@ -339,6 +356,7 @@ export function ImageUploadModal({
                 type='submit'
                 variant='positive'
                 disabled={isSubmitting || activeCategories.length === 0}
+                className='rounded-lg'
               >
                 {getSubmitLabel(isSubmitting, mode)}
               </Button>

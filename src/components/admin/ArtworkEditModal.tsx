@@ -1,5 +1,8 @@
+import { Field } from '@base-ui/react/field';
+import { Form } from '@base-ui/react/form';
 import { useRouter } from '@tanstack/react-router';
-import { useEffect, useMemo, useState, type SubmitEvent } from 'react';
+import { useMemo, useState, type ReactNode, type SubmitEvent } from 'react';
+import { toast } from 'sonner';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -26,34 +29,58 @@ import { buildBunnyCdnUrl } from '@/lib/bunny';
 import type { ArtworkCategoryRecord } from '@/lib/categories.server';
 
 type ArtworkEditModalProps = {
-  record: ArtworkRecord | null;
+  record: ArtworkRecord;
   categories: ArtworkCategoryRecord[];
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  onClose: () => void;
 };
 
-export function ArtworkEditModal({
-  record,
-  categories,
-  open,
-  onOpenChange,
-}: ArtworkEditModalProps) {
+const statusItems = {
+  draft: 'Draft',
+  published: 'Published',
+};
+
+type ArtworkEditForm = {
+  title: string;
+  categoryId: string;
+  status: 'draft' | 'published';
+  alt: string;
+  description: string;
+  sortOrder: string;
+};
+
+function createArtworkEditForm(record: ArtworkRecord): ArtworkEditForm {
+  return {
+    title: record.title,
+    categoryId: record.categoryId,
+    status: record.status,
+    alt: record.alt,
+    description: record.description ?? '',
+    sortOrder: String(record.sortOrder),
+  };
+}
+
+function RequiredLabel({ htmlFor, children }: { htmlFor: string; children: ReactNode }) {
+  return (
+    <div className='flex items-center gap-2'>
+      <Label htmlFor={htmlFor}>{children}</Label>
+      <Field.Error
+        match='valueMissing'
+        render={<span />}
+        className='font-medium text-destructive text-xs'
+      >
+        Required
+      </Field.Error>
+    </div>
+  );
+}
+
+export function ArtworkEditModal({ record, categories, onClose }: ArtworkEditModalProps) {
   const router = useRouter();
-  const [title, setTitle] = useState('');
-  const [categoryId, setCategoryId] = useState('');
-  const [status, setStatus] = useState<'draft' | 'published'>('draft');
-  const [alt, setAlt] = useState('');
-  const [description, setDescription] = useState('');
-  const [sortOrder, setSortOrder] = useState('0');
+  const [form, setForm] = useState(() => createArtworkEditForm(record));
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const selectableCategories = useMemo(() => {
-    if (!record) {
-      return categories.filter((category) => category.status === 'active');
-    }
-
     const activeCategories = categories.filter((category) => category.status === 'active');
     if (activeCategories.some((category) => category.id === record.categoryId)) {
       return activeCategories;
@@ -74,212 +101,230 @@ export function ArtworkEditModal({
     ];
   }, [categories, record]);
 
-  useEffect(() => {
-    if (!record || !open) {
-      return;
-    }
+  const categoryItems = useMemo(
+    () => Object.fromEntries(selectableCategories.map((category) => [category.id, category.label])),
+    [selectableCategories],
+  );
 
-    setTitle(record.title);
-    setCategoryId(record.categoryId);
-    setStatus(record.status);
-    setAlt(record.alt);
-    setDescription(record.description ?? '');
-    setSortOrder(String(record.sortOrder));
-    setErrorMessage(null);
-    setSuccessMessage(null);
-  }, [record, open]);
+  const canSubmit = !isSubmitting && selectableCategories.length > 0;
+
+  function updateField<K extends keyof ArtworkEditForm>(field: K, value: ArtworkEditForm[K]) {
+    setForm((current) => ({ ...current, [field]: value }));
+  }
 
   function handleOpenChange(nextOpen: boolean) {
     if (isSubmitting) {
       return;
     }
 
-    onOpenChange(nextOpen);
     if (!nextOpen) {
       setErrorMessage(null);
-      setSuccessMessage(null);
+      onClose();
     }
   }
 
   async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
+    setErrorMessage(null);
 
-    if (!record) {
+    const trimmedTitle = form.title.trim();
+    const trimmedAlt = form.alt.trim();
+    const trimmedDescription = form.description.trim();
+    const trimmedSortOrder = form.sortOrder.trim();
+
+    if (
+      !trimmedTitle ||
+      !form.categoryId ||
+      !form.status ||
+      !trimmedAlt ||
+      !trimmedDescription ||
+      !trimmedSortOrder
+    ) {
+      setErrorMessage('Complete all required fields.');
+      return;
+    }
+
+    const sortOrderValue = Number(trimmedSortOrder);
+    if (!Number.isInteger(sortOrderValue) || sortOrderValue < 0) {
+      setErrorMessage('Sort order must be a non-negative whole number.');
       return;
     }
 
     setIsSubmitting(true);
-    setErrorMessage(null);
-    setSuccessMessage(null);
 
     try {
-      const updatedRecord = await updateArtwork({
+      await updateArtwork({
         data: {
           id: record.id,
-          title,
-          categoryId,
-          status,
-          alt,
-          description,
-          sortOrder,
+          ...form,
+          title: trimmedTitle,
+          alt: trimmedAlt,
+          description: trimmedDescription,
+          sortOrder: trimmedSortOrder,
         },
       });
 
       await router.invalidate();
-      setSuccessMessage(`Updated ${updatedRecord.title}.`);
+      toast.success('Artwork updated', {
+        description: trimmedTitle,
+      });
+      onClose();
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Unable to update artwork.');
-    } finally {
       setIsSubmitting(false);
     }
   }
 
-  const previewUrl = record
-    ? buildBunnyCdnUrl(record.cdnUrl, { width: 320, format: 'webp' })
-    : null;
+  const previewUrl = buildBunnyCdnUrl(record.cdnUrl, {
+    width: 120,
+    height: 120,
+    format: 'webp',
+  });
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      {record ? (
-        <DialogContent className='max-w-2xl min-h-180 opacity-95 p-12 border-border-2nd'>
-          <DialogHeader>
-            <DialogTitle>Edit artwork</DialogTitle>
-            <DialogDescription>
-              Update database metadata. The Bunny file and storage path will not be changed.
-            </DialogDescription>
-          </DialogHeader>
+    <Dialog open onOpenChange={handleOpenChange}>
+      <DialogContent className='opacity-95 p-12 border-border-2nd max-w-2xl min-h-180'>
+        <DialogHeader>
+          <DialogTitle className='font-semibold text-2xl'>Edit artwork</DialogTitle>
+          <DialogDescription>
+            Update database metadata. The image file and storage path cannot be changed.
+          </DialogDescription>
+        </DialogHeader>
 
-          {errorMessage ? (
-            <Alert variant='destructive'>
-              <AlertTitle>Update failed</AlertTitle>
-              <AlertDescription>{errorMessage}</AlertDescription>
-            </Alert>
-          ) : null}
-
-          {successMessage ? (
-            <Alert>
-              <AlertTitle>Artwork updated</AlertTitle>
-              <AlertDescription>{successMessage}</AlertDescription>
-            </Alert>
-          ) : null}
-
-          <section className='space-y-6'>
-            <div className='space-y-4 rounded-lg border border-border bg-muted/10 p-4'>
-              <div className='flex justify-center'>
-                {previewUrl ? (
-                  <img
-                    alt={record.alt}
-                    className='max-h-64 max-w-full object-contain'
-                    decoding='async'
-                    loading='lazy'
-                    src={previewUrl}
-                  />
-                ) : null}
-              </div>
-              <div className='grid gap-1 text-sm'>
-                <span className='text-muted-foreground'>Bunny storage path</span>
-                <span className='break-all font-mono text-foreground'>{record.storagePath}</span>
-              </div>
+        <section className='space-y-6'>
+          <div className='flex gap-6 p-4 border border-border-2nd rounded-lg'>
+            <div className='flex justify-center w-30 h-30'>
+              {previewUrl ? (
+                <img
+                  alt={record.alt}
+                  className='max-w-full max-h-30 object-contain'
+                  decoding='async'
+                  loading='lazy'
+                  src={previewUrl}
+                />
+              ) : null}
             </div>
+            <div className='flex flex-col justify-center gap-3 text-sm'>
+              <span className='text-muted-foreground text-lg'>Bunny storage path:</span>
+              <span className='font-mono text-foreground break-all'>{record.storagePath}</span>
+            </div>
+          </div>
 
-            <form className='grid gap-6' onSubmit={handleSubmit}>
-              <div className='grid gap-2'>
-                <Label htmlFor='edit-title'>Title</Label>
-                <Input
-                  id='edit-title'
-                  name='title'
-                  type='text'
-                  value={title}
-                  onChange={(event) => setTitle(event.target.value)}
-                  required
-                />
-              </div>
+          <Form className='gap-6 grid' onSubmit={handleSubmit}>
+            <Field.Root name='title' className='gap-2 grid'>
+              <RequiredLabel htmlFor='edit-title'>Title</RequiredLabel>
+              <Field.Control
+                render={<Input />}
+                id='edit-title'
+                type='text'
+                value={form.title}
+                onChange={(event) => updateField('title', event.target.value)}
+                required
+              />
+            </Field.Root>
 
-              <div className='grid gap-2'>
-                <Label htmlFor='edit-category-id'>Category</Label>
-                <Select value={categoryId} onValueChange={setCategoryId}>
-                  <SelectTrigger id='edit-category-id'>
-                    <SelectValue placeholder='Select a category' />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {selectableCategories.map((category) => (
-                      <SelectItem key={category.id} value={category.id}>
-                        {category.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            <Field.Root name='category_id' className='gap-2 grid'>
+              <RequiredLabel htmlFor='edit-category-id'>Category</RequiredLabel>
+              <Select
+                name='category_id'
+                required
+                items={categoryItems}
+                value={form.categoryId}
+                onValueChange={(value) => updateField('categoryId', value)}
+              >
+                <SelectTrigger id='edit-category-id'>
+                  <SelectValue placeholder='Select a category' />
+                </SelectTrigger>
+                <SelectContent>
+                  {selectableCategories.map((category) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field.Root>
 
-              <div className='grid gap-2'>
-                <Label htmlFor='edit-status'>Status</Label>
-                <Select
-                  value={status}
-                  onValueChange={(value) =>
-                    setStatus(value === 'published' ? 'published' : 'draft')
-                  }
-                >
-                  <SelectTrigger id='edit-status'>
-                    <SelectValue placeholder='Select a status' />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value='draft'>Draft</SelectItem>
-                    <SelectItem value='published'>Published</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <Field.Root name='status' className='gap-2 grid'>
+              <RequiredLabel htmlFor='edit-status'>Status</RequiredLabel>
+              <Select
+                name='status'
+                required
+                items={statusItems}
+                value={form.status}
+                onValueChange={(value) =>
+                  updateField('status', value === 'published' ? 'published' : 'draft')
+                }
+              >
+                <SelectTrigger id='edit-status'>
+                  <SelectValue placeholder='Select a status' />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value='draft'>Draft</SelectItem>
+                  <SelectItem value='published'>Published</SelectItem>
+                </SelectContent>
+              </Select>
+            </Field.Root>
 
-              <div className='grid gap-2'>
-                <Label htmlFor='edit-alt'>Alt text</Label>
-                <Input
-                  id='edit-alt'
-                  name='alt'
-                  type='text'
-                  value={alt}
-                  onChange={(event) => setAlt(event.target.value)}
-                />
-              </div>
+            <Field.Root name='alt' className='gap-2 grid'>
+              <RequiredLabel htmlFor='edit-alt'>Alt text</RequiredLabel>
+              <Field.Control
+                render={<Input />}
+                id='edit-alt'
+                type='text'
+                value={form.alt}
+                onChange={(event) => updateField('alt', event.target.value)}
+                required
+              />
+            </Field.Root>
 
-              <div className='grid gap-2'>
-                <Label htmlFor='edit-description'>Description</Label>
-                <Textarea
-                  id='edit-description'
-                  name='description'
-                  value={description}
-                  onChange={(event) => setDescription(event.target.value)}
-                />
-              </div>
+            <Field.Root name='description' className='gap-2 grid'>
+              <RequiredLabel htmlFor='edit-description'>Description</RequiredLabel>
+              <Field.Control
+                render={<Textarea />}
+                id='edit-description'
+                value={form.description}
+                onChange={(event) => updateField('description', event.target.value)}
+                required
+              />
+            </Field.Root>
 
-              <div className='grid gap-2'>
-                <Label htmlFor='edit-sort-order'>Sort order</Label>
-                <Input
-                  id='edit-sort-order'
-                  name='sort_order'
-                  type='number'
-                  min='0'
-                  step='1'
-                  value={sortOrder}
-                  onChange={(event) => setSortOrder(event.target.value)}
-                />
-              </div>
+            <Field.Root name='sort_order' className='gap-2 grid'>
+              <RequiredLabel htmlFor='edit-sort-order'>Sort order</RequiredLabel>
+              <Field.Control
+                render={<Input />}
+                id='edit-sort-order'
+                type='number'
+                min='0'
+                step='1'
+                value={form.sortOrder}
+                onChange={(event) => updateField('sortOrder', event.target.value)}
+                required
+              />
+            </Field.Root>
 
-              <div className='flex flex-wrap items-center gap-3'>
-                <Button type='submit' disabled={isSubmitting || selectableCategories.length === 0}>
-                  {isSubmitting ? 'Saving…' : 'Save changes'}
-                </Button>
-                <Button
-                  type='button'
-                  variant='outline'
-                  disabled={isSubmitting}
-                  onClick={() => handleOpenChange(false)}
-                >
-                  Cancel
-                </Button>
-              </div>
-            </form>
-          </section>
-        </DialogContent>
-      ) : null}
+            <div className='flex flex-wrap items-center gap-3'>
+              <Button variant='positive' type='submit' disabled={!canSubmit}>
+                {isSubmitting ? 'Saving…' : 'Save changes'}
+              </Button>
+              <Button
+                type='button'
+                variant='outline'
+                disabled={isSubmitting}
+                onClick={() => handleOpenChange(false)}
+              >
+                Cancel
+              </Button>
+            </div>
+          </Form>
+        </section>
+        {errorMessage && (
+          <Alert variant='destructive' className='bg-background mt-2'>
+            <AlertTitle>Update failed</AlertTitle>
+            <AlertDescription>{errorMessage}</AlertDescription>
+          </Alert>
+        )}
+      </DialogContent>
     </Dialog>
   );
 }

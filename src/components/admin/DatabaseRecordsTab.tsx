@@ -34,32 +34,19 @@ export function DatabaseRecordsTab({
   storageByPath,
 }: DatabaseRecordsTabProps) {
   const [infoRecord, setInfoRecord] = useState<ArtworkRecord | null>(null);
-  const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [deleteRecord, setDeleteRecord] = useState<ArtworkRecord | null>(null);
-  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [editRecord, setEditRecord] = useState<ArtworkRecord | null>(null);
-  const [isEditOpen, setIsEditOpen] = useState(false);
 
   function openInfo(record: ArtworkRecord) {
     setInfoRecord(record);
-    setIsInfoOpen(true);
   }
 
   function openDelete(record: ArtworkRecord) {
     setDeleteRecord(record);
-    setIsDeleteOpen(true);
   }
 
   function openEdit(record: ArtworkRecord) {
     setEditRecord(record);
-    setIsEditOpen(true);
-  }
-
-  function handleEditOpenChange(nextOpen: boolean) {
-    setIsEditOpen(nextOpen);
-    if (!nextOpen) {
-      setEditRecord(null);
-    }
   }
 
   return (
@@ -123,14 +110,14 @@ export function DatabaseRecordsTab({
                           src={thumbnailUrl}
                         />
                       </TableCell>
-                      <TableCell className='whitespace-normal'>
+                      <TableCell className='px-3 whitespace-normal'>
                         <p className='pb-3 font-medium text-lg leading-tight'>{record.title}</p>
                         <p className='pb-2 font-mono text-muted-foreground text-xs'>
                           {record.storagePath}
                         </p>
                       </TableCell>
 
-                      <TableCell className='whitespace-normal'>
+                      <TableCell className='px-3 whitespace-normal'>
                         <p className='font-medium'>{record.category.label}</p>
                       </TableCell>
                       <TableCell>
@@ -170,18 +157,30 @@ export function DatabaseRecordsTab({
         </Card>
       )}
 
-      <ArtworkInfoDrawer record={infoRecord} open={isInfoOpen} onOpenChange={setIsInfoOpen} />
-      <ArtworkEditModal
-        record={editRecord}
-        categories={categories}
-        open={isEditOpen}
-        onOpenChange={handleEditOpenChange}
-      />
-      <ArtworkDeleteModal
-        record={deleteRecord}
-        open={isDeleteOpen}
-        onOpenChange={setIsDeleteOpen}
-      />
+      {infoRecord ? (
+        <ArtworkInfoDrawer
+          key={infoRecord.id}
+          record={infoRecord}
+          onClose={() => setInfoRecord(null)}
+        />
+      ) : null}
+
+      {editRecord ? (
+        <ArtworkEditModal
+          key={editRecord.id}
+          record={editRecord}
+          categories={categories}
+          onClose={() => setEditRecord(null)}
+        />
+      ) : null}
+
+      {deleteRecord ? (
+        <ArtworkDeleteModal
+          key={deleteRecord.id}
+          record={deleteRecord}
+          onClose={() => setDeleteRecord(null)}
+        />
+      ) : null}
     </TabsContent>
   );
 }

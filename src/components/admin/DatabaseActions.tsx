@@ -18,15 +18,22 @@ type DatabaseActionsProps = {
 export function DatabaseActions({ record, onInfo, onEdit, onDelete }: DatabaseActionsProps) {
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger render={<Button variant='ghost' />}>
-        <SquareMenu className='size-6' />
+      <DropdownMenuTrigger
+        render={
+          <Button
+            variant='ghost'
+            className='hover:scale-[1.1] focus-visible:scale-[1.1] active:scale-[1] transition duration-100'
+          />
+        }
+      >
+        <SquareMenu className='size-7' />
       </DropdownMenuTrigger>
       <DropdownMenuContent className='border-popover-border'>
         <DropdownMenuItem
           className='inline-flex items-center w-full font-medium text-foreground text-base'
           onClick={() => onInfo(record)}
         >
-          <Info className='size-4.5 text-sky-500' />
+          <Info className='size-4.5 text-sky-600 dark:text-sky-400' />
           Info
         </DropdownMenuItem>
         <DropdownMenuItem

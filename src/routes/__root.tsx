@@ -2,6 +2,7 @@ import { TanStackDevtools } from '@tanstack/react-devtools';
 import { HeadContent, Outlet, Link, Scripts, createRootRoute } from '@tanstack/react-router';
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools';
 
+import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 
 import appCss from '../styles.css?url';
@@ -62,8 +63,11 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <HeadContent />
       </head>
-      <body className='m-0 bg-background text-foreground min-h-full bg-linear-to-b from-bg-background to-bg-gradient'>
-        <TooltipProvider>{children}</TooltipProvider>
+      <body className='bg-background to-bg-gradient bg-linear-to-b from-bg-background m-0 min-h-full text-foreground'>
+        <TooltipProvider>
+          {children}
+          <Toaster closeButton position='bottom-left' />
+        </TooltipProvider>
         <TanStackDevtools
           config={{
             position: 'bottom-right',
@@ -83,10 +87,10 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 
 function NotFound() {
   return (
-    <div className='flex flex-col items-center justify-center gap-16 h-screen'>
-      <h1 className='text-3xl font-bold'>404 - Not Found</h1>
+    <div className='flex flex-col justify-center items-center gap-16 h-screen'>
+      <h1 className='font-bold text-3xl'>404 - Not Found</h1>
       <p className='text-muted-foreground text-lg'>The page you are looking for does not exist.</p>
-      <Link to='/' className='text-sky-600 hover:text-sky-500 transition-colors text-lg'>
+      <Link to='/' className='text-sky-600 hover:text-sky-500 text-lg transition-colors'>
         Go to home page
       </Link>
     </div>

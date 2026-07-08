@@ -77,7 +77,7 @@
   --popover-border: var(--color-neutral-200);
   --card: var(--color-neutral-200);
   --card-foreground: var(--color-neutral-800);
-  --ring: var(--color-brand-300);
+  --ring: var(--color-blue-400);
   --card-shadow-color: var(--color-neutral-600);
   --card-shadow: 0 10px 15px -3px var(--color-shadow-card), 0 4px 6px -4px var(--color-shadow-card);
 
@@ -96,12 +96,12 @@
   --theme-dark-accent-foreground: var(--color-neutral-50);
   --theme-dark-border: var(--color-neutral-400);
   --theme-dark-border-2nd: var(--color-neutral-500);
-  --theme-dark-popover: var(--color-neutral-800);
+  --theme-dark-popover: var(--color-neutral-900);
   --theme-dark-popover-foreground: var(--color-neutral-100);
   --theme-dark-popover-border: var(--color-neutral-600);
   --theme-dark-card: var(--color-neutral-900);
   --theme-dark-card-foreground: var(--color-neutral-200);
-  --theme-dark-ring: var(--color-brand-600);
+  --theme-dark-ring: var(--color-blue-400);
   --theme-dark-card-shadow-color: var(--color-neutral-800);
   --theme-dark-card-shadow:
     0 5px 10px -2px var(--color-shadow-card), 1px 2px 5px -1px var(--color-shadow-card);

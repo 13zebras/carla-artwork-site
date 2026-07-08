@@ -75,7 +75,7 @@ function AdminLayout() {
                 <Button
                   asChild
                   variant='ghost'
-                  className='group dark:hover:bg-neutral-700/80 dark:active:opacity-85 text-base hover:scale-[1.07] focus-visible:scale-[1.07] active:scale-[1] transition duration-300'
+                  className='group dark:hover:bg-neutral-700/80 dark:active:opacity-85 text-base hover:scale-[1.07] focus-visible:scale-[1.07] active:scale-[1] transition duration-100'
                 >
                   <Link to='/' target='_blank'>
                     <ExternalLink className='size-5.25 text-brand-600 dark:text-brand-500/90 group-hover:text-brand-500' />
@@ -87,7 +87,7 @@ function AdminLayout() {
             <ThemeToggle className='' />
             <Button
               className='bg-transparent hover:bg-brand-200 dark:hover:bg-brand-800 ml-2 border-brand-500 rounded-lg text-sm cursor-pointer'
-              variant='ghost'
+              variant='outline'
               size='sm'
               onClick={async () => {
                 await authClient.signOut();
