@@ -23,11 +23,11 @@ import { ensureSchema, getKysely } from '@/lib/db.server';
 
 const seededCategoryIds = [
   'illustration',
-  'fineArtCollage',
-  'graphicDesign',
+  'fine-art-collage',
+  'graphic-design',
   'food',
-  'botanicalIllustration',
-  'specialProjects',
+  'botanical-illustration',
+  'special-projects',
 ];
 
 async function resetDatabase() {
@@ -52,10 +52,9 @@ function createTestArtwork(overrides: Partial<ArtworkRecord> = {}) {
     id: 'test-artwork-id',
     slug: 'test-artwork',
     title: 'Test Artwork',
-    categoryId: 'fineArtCollage',
+    categoryId: 'fine-art-collage',
     category: {
-      id: 'fineArtCollage',
-      slug: 'fine-art-collage',
+      id: 'fine-art-collage',
       label: 'Fine Art Collage',
     },
     description: 'A test artwork.',
@@ -151,7 +150,7 @@ describe('artwork metadata updates', () => {
     const updated = await updateArtworkMetadata({
       id: record.id,
       title: 'Updated Artwork',
-      categoryId: 'botanicalIllustration',
+      categoryId: 'botanical-illustration',
       description: null,
       alt: 'Updated alt text',
       sortOrder: 42,
@@ -161,10 +160,9 @@ describe('artwork metadata updates', () => {
     expect(updated).toMatchObject({
       id: record.id,
       title: 'Updated Artwork',
-      categoryId: 'botanicalIllustration',
+      categoryId: 'botanical-illustration',
       category: {
-        id: 'botanicalIllustration',
-        slug: 'botanical-illustration',
+        id: 'botanical-illustration',
         label: 'Botanical Illustration',
       },
       description: null,
@@ -201,30 +199,27 @@ describe('artwork metadata updates', () => {
 });
 
 describe('category storage', () => {
-  it('resolves seeded category ids, slugs, and labels', async () => {
-    expect((await resolveCategoryInput('fineArtCollage'))?.id).toBe('fineArtCollage');
-    expect((await resolveCategoryInput('fine-art-collage'))?.id).toBe('fineArtCollage');
-    expect((await resolveCategoryInput('Fine Art Collage'))?.id).toBe('fineArtCollage');
+  it('resolves seeded category ids and labels', async () => {
+    expect((await resolveCategoryInput('fine-art-collage'))?.id).toBe('fine-art-collage');
+    expect((await resolveCategoryInput('Fine Art Collage'))?.id).toBe('fine-art-collage');
   });
 
-  it('rejects duplicate category slugs and labels', async () => {
-    await addCategory({ label: 'Test Category', slug: 'test-category' });
+  it('rejects duplicate category ids and labels', async () => {
+    await addCategory({ label: 'Test Category' });
 
-    await expect(addCategory({ label: 'Another Category', slug: 'test-category' })).rejects.toThrow(
-      'Category slug already exists',
-    );
-    await expect(addCategory({ label: 'test category', slug: 'different-category' })).rejects.toThrow(
+    await expect(addCategory({ label: 'Test-Category' })).rejects.toThrow('Category id already exists');
+    await expect(addCategory({ label: 'test category' })).rejects.toThrow(
       'Category label already exists',
     );
   });
 
   it('lists active categories in sort order', async () => {
-    await addCategory({ label: 'Zeta Category', slug: 'zeta-category', sortOrder: 70 });
-    await addCategory({ label: 'Alpha Category', slug: 'alpha-category', sortOrder: 65 });
+    await addCategory({ label: 'Zeta Category', sortOrder: 70 });
+    await addCategory({ label: 'Alpha Category', sortOrder: 65 });
 
     expect(
       (await listCategories())
-        .map((category) => category.slug)
+        .map((category) => category.id)
         .slice(-2),
     ).toEqual(['alpha-category', 'zeta-category']);
   });
@@ -233,15 +228,14 @@ describe('category storage', () => {
 describe('csv and slug helpers', () => {
   it('normalizes category ids from csv row values', async () => {
     const rows = parseCsvRows(
-      `filename,title,category\nfirst.jpg,First,fineArtCollage\nsecond.jpg,Second,fine-art-collage\nthird.jpg,Third,Fine Art Collage`,
+      `filename,title,category\nfirst.jpg,First,fine-art-collage\nsecond.jpg,Second,Fine Art Collage`,
     );
     const resolved = await Promise.all(
       rows.map((row) => resolveCategoryInput(String(row.category))),
     );
     expect(resolved.map((category) => category?.id)).toEqual([
-      'fineArtCollage',
-      'fineArtCollage',
-      'fineArtCollage',
+      'fine-art-collage',
+      'fine-art-collage',
     ]);
   });
 

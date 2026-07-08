@@ -8,42 +8,36 @@ import { getServerEnv } from './env.server';
 const CATEGORY_SEEDS = [
   {
     id: 'illustration',
-    slug: 'illustration',
     label: 'Illustration',
     sort_order: 10,
     description: artworkCategoryDescriptions.illustration,
   },
   {
-    id: 'fineArtCollage',
-    slug: 'fine-art-collage',
+    id: 'fine-art-collage',
     label: 'Fine Art Collage',
     sort_order: 20,
     description: artworkCategoryDescriptions.fineArtCollage,
   },
   {
-    id: 'graphicDesign',
-    slug: 'graphic-design',
+    id: 'graphic-design',
     label: 'Graphic Design',
     sort_order: 30,
     description: artworkCategoryDescriptions.graphicDesign,
   },
   {
     id: 'food',
-    slug: 'food',
     label: 'Food',
     sort_order: 40,
     description: artworkCategoryDescriptions.food,
   },
   {
-    id: 'botanicalIllustration',
-    slug: 'botanical-illustration',
+    id: 'botanical-illustration',
     label: 'Botanical Illustration',
     sort_order: 50,
     description: artworkCategoryDescriptions.botanicalIllustration,
   },
   {
-    id: 'specialProjects',
-    slug: 'special-projects',
+    id: 'special-projects',
     label: 'Special Projects',
     sort_order: 60,
     description: artworkCategoryDescriptions.specialProjects,
@@ -149,7 +143,6 @@ export async function initAppSchema(): Promise<void> {
     await sql`
       create table if not exists artwork_categories (
         id text primary key,
-        slug text not null unique,
         label text not null,
         description text,
         sort_order integer not null default 0,
@@ -158,6 +151,7 @@ export async function initAppSchema(): Promise<void> {
         updated_at text not null
       )
     `.execute(db);
+    await sql`alter table artwork_categories drop column if exists slug`.execute(db);
 
     await sql`
       create table if not exists artworks (
@@ -194,8 +188,8 @@ export async function initAppSchema(): Promise<void> {
   const createdAt = nowIso();
   for (const category of CATEGORY_SEEDS) {
     await sql`
-      insert into artwork_categories (id, slug, label, description, sort_order, status, created_at, updated_at)
-      values (${category.id}, ${category.slug}, ${category.label}, ${category.description ?? null}, ${category.sort_order}, 'active', ${createdAt}, ${createdAt})
+      insert into artwork_categories (id, label, description, sort_order, status, created_at, updated_at)
+      values (${category.id}, ${category.label}, ${category.description ?? null}, ${category.sort_order}, 'active', ${createdAt}, ${createdAt})
       on conflict (id) do nothing
     `.execute(database);
   }

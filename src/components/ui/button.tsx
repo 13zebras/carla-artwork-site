@@ -13,11 +13,11 @@ const buttonVariants = cva(
         destructive:
           'bg-destructive text-foreground hover:bg-destructive/80 active:bg-destructive/70 focus-visible:ring-destructive/20 dark:bg-destructive/60 dark:focus-visible:ring-destructive/40',
         information:
-          'bg-information text-neutral-50 hover:bg-information/80 active:bg-information focus-visible:ring-information/20 dark:bg-information/60 dark:focus-visible:ring-information/40',
+          'bg-information text-neutral-50 border-information hover:bg-information/80 active:bg-information focus-visible:ring-information/20 dark:bg-information/60 dark:focus-visible:ring-information/40',
         positive:
           'bg-positive/50 border-positive text-foreground hover:bg-positive/35 active:bg-positive/50 focus-visible:ring-positive/50 dark:bg-positive/60 dark:hover:bg-positive/80',
         brand:
-          'bg-brand-500/60 border-brand-500 text-foreground hover:bg-brand-500/75 active:bg-brand-500/55 focus-visible:ring-brand-600/50',
+          'bg-brand-500/50 border-brand-500 text-foreground hover:bg-brand-500/70 active:bg-brand-500/55 focus-visible:ring-brand-600/50',
         outline:
           'border-border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground aria-expanded:bg-accent aria-expanded:text-accent-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50',
         secondary:

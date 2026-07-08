@@ -19,7 +19,7 @@ import { TabsContent } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { createAdminCategory } from '@/lib/categories.functions';
 import type { ArtworkCategoryRecord } from '@/lib/categories.server';
-import { dateFormatter } from '@/lib/utils';
+import { dateFormatter, slugify } from '@/lib/utils';
 
 type CategoriesTabProps = {
   categories: ArtworkCategoryRecord[];
@@ -35,7 +35,7 @@ export function CategoriesTab({ categories }: CategoriesTabProps) {
   const [categoryPending, setCategoryPending] = useState(false);
   const [categoryError, setCategoryError] = useState<string | null>(null);
   const [categorySuccess, setCategorySuccess] = useState<string | null>(null);
-  console.log('%c>>> categories', 'color: red', categories);
+  const [categoryLabel, setCategoryLabel] = useState('');
 
   return (
     <TabsContent value='categories' className='mx-auto mt-4 w-full max-w-300'>
@@ -56,7 +56,7 @@ export function CategoriesTab({ categories }: CategoriesTabProps) {
               <Table className='w-full min-w-230'>
                 <TableHeader>
                   <TableRow className='h-14 whitespace-normal'>
-                    <TableHead className='min-w-46 max-w-52'>Category Name / Slug</TableHead>
+                    <TableHead className='min-w-46 max-w-52'>Category Name / ID</TableHead>
                     <TableHead className='min-w-0 max-w-100'>Description</TableHead>
                     <TableHead className='w-12 whitespace-normal'>Sort Order</TableHead>
                     <TableHead className='w-18'>Status</TableHead>
@@ -71,7 +71,7 @@ export function CategoriesTab({ categories }: CategoriesTabProps) {
                       <TableCell className='whitespace-normal'>
                         <div className='space-y-2'>
                           <p className='font-medium leading-tight'>{category.label}</p>
-                          <p className='font-mono text-muted-foreground text-xs'>{category.slug}</p>
+                          <p className='font-mono text-muted-foreground text-xs'>{category.id}</p>
                         </div>
                       </TableCell>
                       <TableCell className='whitespace-normal'>
@@ -153,7 +153,8 @@ export function CategoriesTab({ categories }: CategoriesTabProps) {
                 try {
                   const created = await createAdminCategory({ data: new FormData(form) });
                   form.reset();
-                  setCategorySuccess(`Created ${created.label} (${created.slug}).`);
+                  setCategoryLabel('');
+                  setCategorySuccess(`Created ${created.label} (${created.id}).`);
                   await router.invalidate();
                 } catch (error) {
                   setCategoryError(
@@ -179,20 +180,24 @@ export function CategoriesTab({ categories }: CategoriesTabProps) {
                   maxLength={80}
                   placeholder='Name used to identify the category'
                   className='ph'
+                  value={categoryLabel}
+                  onChange={(event) => setCategoryLabel(event.target.value)}
                 />
               </div>
 
               <div className='space-y-2'>
-                <Label htmlFor='category-slug'>
-                  Slug<span className='-ml-1 text-red-500'>*</span>
-                </Label>
+                <Label htmlFor='category-id'>Category ID - auto-generated - read-only</Label>
                 <Input
-                  id='category-slug'
-                  required
-                  name='slug'
-                  placeholder='words-separated-by-dashes'
-                  className='ph'
+                  id='category-id'
+                  readOnly
+                  value={slugify(categoryLabel)}
+                  placeholder='auto-generated-from-name'
+                  className='text-dim-fg ph'
                 />
+                {/* <p className='text-muted-foreground text-xs'>
+                  Auto-generated from the category name. Used as the unique identifier in URLs and
+                  storage paths.
+                </p> */}
               </div>
 
               <div className='space-y-2'>
@@ -209,7 +214,7 @@ export function CategoriesTab({ categories }: CategoriesTabProps) {
                 />
               </div>
 
-              <div className='space-y-2'>
+              <div className='space-y-2 max-w-20'>
                 <Label htmlFor='category-sort-order'>
                   Sort order<span className='-ml-1 text-red-500'>*</span>
                 </Label>
@@ -225,7 +230,7 @@ export function CategoriesTab({ categories }: CategoriesTabProps) {
               </div>
 
               <Button
-                className='bg-brand-500 hover:bg-brand-400 active:bg-brand-600 dark:active:bg-brand-700 dark:bg-brand-700 dark:hover:bg-brand-600 w-full'
+                className='bg-brand-500 hover:bg-brand-400 active:bg-brand-600 dark:active:bg-brand-700 dark:bg-brand-700 dark:hover:bg-brand-600 w-40'
                 disabled={categoryPending}
                 type='submit'
               >

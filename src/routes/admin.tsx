@@ -86,7 +86,7 @@ function AdminLayout() {
             </Tooltip>
             <ThemeToggle className='' />
             <Button
-              className='bg-transparent hover:bg-brand-200 dark:hover:bg-brand-800 ml-2 border-brand-500 rounded-lg text-sm cursor-pointer'
+              className='bg-black hover:bg-brand-600 dark:hover:bg-brand-800 ml-2 border-neutral-700 hover:border-brand-600 rounded-lg text-white text-sm cursor-pointer'
               variant='outline'
               size='sm'
               onClick={async () => {

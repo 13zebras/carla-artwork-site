@@ -182,23 +182,20 @@ export function BulkImageUploadModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='w-[92vw] max-w-6xl min-h-150'>
         <DialogHeader>
-          <DialogTitle className='mb-2 font-semibold text-2xl'>
+          <DialogTitle className='mb-3 font-semibold text-2xl'>
             Bulk Add Images to Database / Storage
           </DialogTitle>
           <DialogDescription className='mb-2 text-base'>
-            <p className='pb-2'>
-              Upload one CSV as well as matching image files.{' '}
-              <span className='font-bold text-red-500'>Required </span>
-              fields for CSV:
-            </p>
-            <ul className='flex flex-col flex-wrap gap-x-4 pl-7 max-w-3xl max-h-24 leading-6 list-disc'>
-              <li>filename - must match exactly</li>
+            <p className='pb-3'>Upload one CSV as well as the corresponding image files.</p>
+            <p className='pb-1 font-bold text-red-500'>Required fields for CSV:</p>
+            <ul className='flex flex-col flex-wrap gap-x-16 pl-7 max-w-fit max-h-24 font-mono leading-6 list-disc'>
+              <li>filename: must match exactly</li>
               <li>title</li>
               <li>category_id</li>
-              <li>status - published, draft</li>
+              <li>status: published, draft</li>
               <li>alt text</li>
-              <li>description - will display on page of this artwork</li>
-              <li>sort order - number &gt;= 0</li>
+              <li>description: will display on artwork page</li>
+              <li>sort order: a number &gt;= 0</li>
             </ul>
           </DialogDescription>
         </DialogHeader>
@@ -232,16 +229,19 @@ export function BulkImageUploadModal({
 
           <div className='gap-3 grid'>
             <div className='flex justify-between items-center gap-3'>
-              <Label>Sample CSV</Label>
+              <Label>Sample CSV (each row must be in the exact order shown)</Label>
             </div>
             <pre className='bg-muted/50 p-4 border border-border-2nd rounded-lg overflow-x-auto text-sm leading-6'>
               {sampleCsv}
             </pre>
+            <p className='pl-3 text-muted-foreground text-sm italic'>
+              tip: use a spreadsheet, export as a csv file
+            </p>
           </div>
 
           <div className='gap-3 grid'>
             <div className='flex justify-start items-center gap-3'>
-              <Label>Active categories</Label>
+              <Label className='text-base'>Active categories to use in CSV</Label>
               <Badge variant='positive'>{activeCategories.length}</Badge>
             </div>
             {activeCategories.length > 0 ? (
@@ -254,7 +254,7 @@ export function BulkImageUploadModal({
               <Alert>
                 <AlertTitle>No active categories</AlertTitle>
                 <AlertDescription>
-                  Add a category first so bulk rows can resolve category id, slug, or label values.
+                  Add a category first so bulk rows can resolve category id or label values.
                 </AlertDescription>
               </Alert>
             )}

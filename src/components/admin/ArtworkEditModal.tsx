@@ -90,7 +90,6 @@ export function ArtworkEditModal({ record, categories, onClose }: ArtworkEditMod
       ...activeCategories,
       {
         id: record.category.id,
-        slug: record.category.slug,
         label: `${record.category.label} (current)`,
         description: null,
         sortOrder: Number.MAX_SAFE_INTEGER,

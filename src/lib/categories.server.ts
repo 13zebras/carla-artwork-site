@@ -1,12 +1,10 @@
-import { randomUUID } from 'node:crypto';
-
 import { sql } from 'kysely';
 
+import { slugify } from '@/lib/utils';
 import { getKysely } from './db.server';
 
 export type ArtworkCategoryRecord = {
   id: string;
-  slug: string;
   label: string;
   description: string | null;
   sortOrder: number;
@@ -17,7 +15,6 @@ export type ArtworkCategoryRecord = {
 
 type CategoryRow = {
   id: string;
-  slug: string;
   label: string;
   description: string | null;
   sort_order: number;
@@ -29,7 +26,6 @@ type CategoryRow = {
 function toRecord(row: CategoryRow): ArtworkCategoryRecord {
   return {
     id: row.id,
-    slug: row.slug,
     label: row.label,
     description: row.description,
     sortOrder: row.sort_order,
@@ -37,15 +33,6 @@ function toRecord(row: CategoryRow): ArtworkCategoryRecord {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
-}
-
-function slugify(value: string) {
-  return value
-    .normalize('NFKD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
 }
 
 function normalizeLabel(label: string) {
@@ -71,7 +58,7 @@ function normalizeSortOrder(sortOrder: number | undefined) {
 
 export async function listCategories({ includeArchived = false }: { includeArchived?: boolean } = {}) {
   const { rows } = await sql`
-    select id, slug, label, description, sort_order, status, created_at, updated_at
+    select id, label, description, sort_order, status, created_at, updated_at
     from artwork_categories
     ${includeArchived ? sql`` : sql`where status = 'active'`}
     order by sort_order asc, label asc
@@ -89,7 +76,7 @@ export async function resolveCategoryInput(input: string) {
   const db = getKysely();
 
   const byId = await sql`
-    select id, slug, label, description, sort_order, status, created_at, updated_at
+    select id, label, description, sort_order, status, created_at, updated_at
     from artwork_categories where id = ${value} limit 1
   `.execute(db);
   const byIdRow = byId.rows[0] as CategoryRow | undefined;
@@ -98,17 +85,8 @@ export async function resolveCategoryInput(input: string) {
   }
 
   const lowerValue = value.toLowerCase();
-  const bySlug = await sql`
-    select id, slug, label, description, sort_order, status, created_at, updated_at
-    from artwork_categories where lower(slug) = ${lowerValue} limit 1
-  `.execute(db);
-  const bySlugRow = bySlug.rows[0] as CategoryRow | undefined;
-  if (bySlugRow) {
-    return toRecord(bySlugRow);
-  }
-
   const byLabel = await sql`
-    select id, slug, label, description, sort_order, status, created_at, updated_at
+    select id, label, description, sort_order, status, created_at, updated_at
     from artwork_categories where lower(label) = ${lowerValue} limit 1
   `.execute(db);
   const byLabelRow = byLabel.rows[0] as CategoryRow | undefined;
@@ -117,7 +95,6 @@ export async function resolveCategoryInput(input: string) {
 
 export async function addCategory(input: {
   label: string;
-  slug?: string;
   description?: string;
   sortOrder?: number;
 }) {
@@ -126,27 +103,25 @@ export async function addCategory(input: {
   const description = input.description?.trim() || null;
   const sortOrder = normalizeSortOrder(input.sortOrder);
 
-  const existing = await sql`select slug, lower(label) as normalized_label from artwork_categories`.execute(
+  const existing = await sql`select id, lower(label) as normalized_label from artwork_categories`.execute(
     db,
   );
-  const existingRows = existing.rows as Array<{ slug: string; normalized_label: string }>;
-  const existingSlugs = new Set(existingRows.map((row) => row.slug));
+  const existingRows = existing.rows as Array<{ id: string; normalized_label: string }>;
+  const existingIds = new Set(existingRows.map((row) => row.id));
   const normalizedLabels = new Set(existingRows.map((row) => row.normalized_label));
 
-  const baseSlug = input.slug?.trim() ? slugify(input.slug.trim()) : slugify(label);
-  if (!baseSlug || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(baseSlug)) {
-    throw new Error('Category slug must contain only lowercase letters, numbers, and hyphens');
+  const id = slugify(label);
+  if (!id || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id)) {
+    throw new Error('Category id must contain only lowercase letters, numbers, and hyphens');
   }
 
   if (normalizedLabels.has(label.toLowerCase())) {
     throw new Error('Category label already exists');
   }
 
-  if (existingSlugs.has(baseSlug)) {
-    throw new Error('Category slug already exists');
+  if (existingIds.has(id)) {
+    throw new Error('Category id already exists');
   }
-
-  const slug = baseSlug;
 
   const maxRow = await sql`select max(sort_order) as "maxSortOrder" from artwork_categories`.execute(db);
   const maxSortOrder = (maxRow.rows[0] as { maxSortOrder: number | null } | undefined)?.maxSortOrder ?? 0;
@@ -154,8 +129,7 @@ export async function addCategory(input: {
 
   const createdAt = new Date().toISOString();
   const record: ArtworkCategoryRecord = {
-    id: randomUUID(),
-    slug,
+    id,
     label,
     description,
     sortOrder: nextSortOrder,
@@ -167,7 +141,6 @@ export async function addCategory(input: {
   await sql`
     insert into artwork_categories (
       id,
-      slug,
       label,
       description,
       sort_order,
@@ -176,7 +149,6 @@ export async function addCategory(input: {
       updated_at
     ) values (
       ${record.id},
-      ${record.slug},
       ${record.label},
       ${record.description},
       ${record.sortOrder},

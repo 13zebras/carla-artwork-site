@@ -6,7 +6,6 @@ type Executable = Kysely<Record<string, never>> | Transaction<Record<string, nev
 
 export type ArtworkCategorySummary = {
   id: string;
-  slug: string;
   label: string;
 };
 
@@ -39,7 +38,6 @@ type ArtworkRow = {
   slug: string;
   title: string;
   category_id: string;
-  category_slug: string;
   category_label: string;
   description: string | null;
   alt: string;
@@ -65,7 +63,6 @@ function mapRow(row: ArtworkRow): ArtworkRecord {
     categoryId: row.category_id,
     category: {
       id: row.category_id,
-      slug: row.category_slug,
       label: row.category_label,
     },
     description: row.description,
@@ -90,7 +87,6 @@ const SELECT_COLUMNS = sql`
   artworks.slug,
   artworks.title,
   artworks.category_id,
-  artwork_categories.slug as category_slug,
   artwork_categories.label as category_label,
   artworks.description,
   artworks.alt,

@@ -56,7 +56,7 @@ export function DatabaseRecordsTab({
         <Card className='p-8 rounded-sm h-44'>
           <CardContent className='flex flex-col justify-center items-start gap-8 h-full'>
             <h2 className='font-bold text-2xl'>Empty Image Database</h2>
-            <h3 className='font-semibold text-lg'>No uploaded artworks saved in the database.</h3>
+            <h3 className='font-semibold text-base'>No uploaded artworks saved in the database.</h3>
           </CardContent>
         </Card>
       ) : (

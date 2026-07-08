@@ -24,32 +24,32 @@ function LoginPage() {
   const [error, setError] = useState<string | null>(null);
 
   return (
-    <main className='flex min-h-screen w-full items-center justify-center bg-linear-to-b from-background to-bg-gradient text-foreground'>
-      <ThemeToggle className='fixed right-4 top-4 z-50' />
-      <Card className='w-100 border-border/60 bg-background/85 text-foreground shadow-card backdrop-blur'>
+    <main className='flex flex-col justify-start items-center gap-8 to-bg-gradient bg-linear-to-b from-background w-full min-h-screen text-foreground'>
+      <ThemeToggle className='top-4 right-4 z-50 fixed' />
+      <Card className='bg-background-2nd shadow-card backdrop-blur mt-48 border-border/60 w-100 text-foreground'>
         <CardHeader>
-          <CardTitle className='text-2xl font-semibold pb-4'>Admin Sign-in</CardTitle>
-          <CardDescription className='text-base text-muted-foreground'>
+          <CardTitle className='pb-4 font-semibold text-2xl'>Admin Sign-in</CardTitle>
+          <CardDescription className='text-muted-foreground text-base'>
             Enter email to receive a magic link to the artist dashboard.
           </CardDescription>
         </CardHeader>
         <CardContent className='space-y-4'>
-          {error ? (
-            <Alert className='border-0 p-2'>
-              <AlertTitle className='text-red-500 text-lg font-semibold'>
+          {/* {error ? (
+            <Alert className='p-2 border-0'>
+              <AlertTitle className='font-semibold text-red-500 text-lg'>
                 Sign in failed!
               </AlertTitle>
-              <AlertDescription className='text-base text-red-500'>{error}</AlertDescription>
+              <AlertDescription className='text-red-500 text-base'>{error}</AlertDescription>
             </Alert>
           ) : null}
           {success ? (
-            <Alert className='border-0 p-2'>
-              <AlertTitle className='text-green-400 text-lg pb-2'>Success!</AlertTitle>
-              <AlertDescription className='text-green-400 text-base '>
+            <Alert className='p-2 border-0'>
+              <AlertTitle className='pb-2 text-green-400 text-lg'>Success!</AlertTitle>
+              <AlertDescription className='text-green-400 text-base'>
                 Check your email for the sign-in link.
               </AlertDescription>
             </Alert>
-          ) : null}
+          ) : null} */}
 
           <form
             className='space-y-6 pt-2'
@@ -83,7 +83,7 @@ function LoginPage() {
                 id='email'
                 type='email'
                 autoComplete='email'
-                className='md:text-base h-10'
+                className='h-10 md:text-base'
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 required
@@ -92,7 +92,7 @@ function LoginPage() {
             <Button
               type='submit'
               variant='default'
-              className='w-full text-stone-100 bg-brand-700/85 border border-brand-600 hover:bg-brand-700/70 active:bg-brand-700/95 text-base h-10'
+              className='bg-brand-700/85 hover:bg-brand-700/70 active:bg-brand-700/95 border border-brand-600 w-full h-10 text-stone-100 text-base'
               disabled={pending}
             >
               {pending ? 'Sending…' : 'Send magic link'}
@@ -100,6 +100,24 @@ function LoginPage() {
           </form>
         </CardContent>
       </Card>
+      <div className='mx-auto'>
+        {error ? (
+          <Alert className='bg-destructive/30 p-4 border border-destructive'>
+            <AlertTitle className='pb-2 font-bold text-foreground text-xl'>
+              Sign in failed!
+            </AlertTitle>
+            <AlertDescription className='text-foreground text-base'>{error}</AlertDescription>
+          </Alert>
+        ) : null}
+        {success ? (
+          <Alert className='bg-positive/30 p-4 border border-positive'>
+            <AlertTitle className='pb-2 font-bold text-foreground text-xl'>Success!</AlertTitle>
+            <AlertDescription className='text-foreground text-lg'>
+              Check your email for the sign-in link.
+            </AlertDescription>
+          </Alert>
+        ) : null}
+      </div>
     </main>
   );
 }

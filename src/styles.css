@@ -36,6 +36,7 @@
   --color-background-2nd: var(--background-2nd);
   --color-foreground: var(--foreground);
   --color-muted-foreground: var(--muted-foreground);
+  --color-dim-fg: var(--dim-fg);
   --color-bg-gradient: var(--bg-gradient);
   --color-accent: var(--accent);
   --color-accent-2: var(--accent-2);
@@ -65,6 +66,7 @@
   --background-2nd: var(--color-neutral-200);
   --foreground: var(--color-neutral-950);
   --muted-foreground: var(--color-neutral-700);
+  --dim-fg: var(--color-neutral-500);
   --bg-gradient: var(--color-neutral-200);
   --accent: var(--color-neutral-200);
   --accent-2: var(--color-neutral-300);
@@ -89,6 +91,7 @@
   --theme-dark-background-2nd: var(--color-neutral-950);
   --theme-dark-foreground: var(--color-neutral-50);
   --theme-dark-muted-foreground: var(--color-neutral-200);
+  --theme-dark-dim-fg: var(--color-neutral-400);
   --theme-dark-bg-gradient: var(--color-neutral-950);
   --theme-dark-accent: var(--color-neutral-900);
   --theme-dark-accent-2: var(--color-neutral-800);
@@ -113,6 +116,7 @@
   --background-2nd: var(--theme-dark-background-2nd);
   --foreground: var(--theme-dark-foreground);
   --muted-foreground: var(--theme-dark-muted-foreground);
+  --dim-fg: var(--theme-dark-dim-fg);
   --bg-gradient: var(--theme-dark-bg-gradient);
   --accent: var(--theme-dark-accent);
   --accent-2: var(--theme-dark-accent-2);
@@ -137,6 +141,7 @@
     --background-2nd: var(--theme-dark-background-2nd);
     --foreground: var(--theme-dark-foreground);
     --muted-foreground: var(--theme-dark-muted-foreground);
+    --dim-fg: var(--theme-dark-dim-fg);
     --bg-gradient: var(--theme-dark-bg-gradient);
     --accent: var(--theme-dark-accent);
     --accent-2: var(--theme-dark-accent-2);

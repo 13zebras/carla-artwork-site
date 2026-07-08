@@ -311,7 +311,6 @@ async function prepareSingleArtwork(formData: FormData) {
   const cdnUrl = buildBunnyCdnUrl(getServerEnv().BUNNY_CDN_BASE_URL + `/${storagePath}`);
   const categorySummary = {
     id: category.id,
-    slug: category.slug,
     label: category.label,
   };
 
@@ -485,7 +484,7 @@ export async function prepareExistingArtworkRecord(input: {
 
   return createArtworkRecord({
     title: input.title,
-    category: { id: category.id, slug: category.slug, label: category.label },
+    category: { id: category.id, label: category.label },
     slug,
     storagePath: input.storagePath,
     cdnUrl,
@@ -779,7 +778,6 @@ async function prepareBulkRows(formData: FormData): Promise<BulkPreparationResul
     const cdnUrl = buildBunnyCdnUrl(`${getServerEnv().BUNNY_CDN_BASE_URL}/${storagePath}`);
     const categorySummary = {
       id: category.id,
-      slug: category.slug,
       label: category.label,
     };
 

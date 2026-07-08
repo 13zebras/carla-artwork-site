@@ -43,9 +43,8 @@ export const createAdminCategory = createServerFn({ method: 'POST' })
     await requireAdminFromRequest();
 
     const label = data.get('label')?.toString() ?? '';
-    const slug = data.get('slug')?.toString() ?? undefined;
     const description = data.get('description')?.toString() ?? undefined;
     const sortOrder = parseSortOrder(data.get('sort_order'));
 
-    return addCategory({ label, slug, description, sortOrder });
+    return addCategory({ label, description, sortOrder });
   });

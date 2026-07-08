@@ -47,23 +47,20 @@ if (!databaseUrl) {
 const CATEGORY_SEEDS = [
   {
     id: 'illustration',
-    slug: 'illustration',
     label: 'Illustration',
     sort_order: 10,
     description:
       'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
   },
   {
-    id: 'fineArtCollage',
-    slug: 'fine-art-collage',
+    id: 'fine-art-collage',
     label: 'Fine Art Collage',
     sort_order: 20,
     description:
       'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.',
   },
   {
-    id: 'graphicDesign',
-    slug: 'graphic-design',
+    id: 'graphic-design',
     label: 'Graphic Design',
     sort_order: 30,
     description:
@@ -71,23 +68,20 @@ const CATEGORY_SEEDS = [
   },
   {
     id: 'food',
-    slug: 'food',
     label: 'Food',
     sort_order: 40,
     description:
       'Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Et harum quidem rerum facilis est et expedita distinctio.',
   },
   {
-    id: 'botanicalIllustration',
-    slug: 'botanical-illustration',
+    id: 'botanical-illustration',
     label: 'Botanical Illustration',
     sort_order: 50,
     description:
       'Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.',
   },
   {
-    id: 'specialProjects',
-    slug: 'special-projects',
+    id: 'special-projects',
     label: 'Special Projects',
     sort_order: 60,
     description:
@@ -167,7 +161,6 @@ async function main() {
     await client.query(`
       create table if not exists artwork_categories (
         id text primary key,
-        slug text not null unique,
         label text not null,
         description text,
         sort_order integer not null default 0,
@@ -176,6 +169,7 @@ async function main() {
         updated_at text not null
       )
     `);
+    await client.query(`alter table artwork_categories drop column if exists slug`);
     await client.query(`
       create table if not exists artworks (
         id text primary key,
@@ -212,10 +206,10 @@ async function main() {
     const createdAt = new Date().toISOString();
     for (const category of CATEGORY_SEEDS) {
       await client.query(
-        `insert into artwork_categories (id, slug, label, description, sort_order, status, created_at, updated_at)
-         values ($1, $2, $3, $4, $5, 'active', $6, $6)
+        `insert into artwork_categories (id, label, description, sort_order, status, created_at, updated_at)
+         values ($1, $2, $3, $4, 'active', $5, $5)
          on conflict (id) do nothing`,
-        [category.id, category.slug, category.label, category.description, category.sort_order, createdAt],
+        [category.id, category.label, category.description, category.sort_order, createdAt],
       );
     }
 
