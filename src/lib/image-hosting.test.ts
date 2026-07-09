@@ -3,7 +3,12 @@ import { createHash } from 'node:crypto';
 import { sql } from 'kysely';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { buildBulkErrors, getUniqueArtworkSlug, parseCsvRows } from '@/lib/artwork-upload.helpers';
+import {
+  buildBulkErrors,
+  buildCategoryResolver,
+  getUniqueArtworkSlug,
+  parseCsvRows,
+} from '@/lib/artwork-upload.helpers';
 import {
   buildStoragePath,
   contentTypeFromExtension,
@@ -228,10 +233,10 @@ describe('category storage', () => {
 describe('csv and slug helpers', () => {
   it('normalizes category ids from csv row values', async () => {
     const rows = parseCsvRows(
-      `filename,title,category\nfirst.jpg,First,fine-art-collage\nsecond.jpg,Second,Fine Art Collage`,
+      `filename,title,category_id\nfirst.jpg,First,fine-art-collage\nsecond.jpg,Second,Fine Art Collage`,
     );
     const resolved = await Promise.all(
-      rows.map((row) => resolveCategoryInput(String(row.category))),
+      rows.map((row) => resolveCategoryInput(String(row.category_id))),
     );
     expect(resolved.map((category) => category?.id)).toEqual([
       'fine-art-collage',
@@ -245,34 +250,36 @@ describe('csv and slug helpers', () => {
         row: 2,
         filename: 'blue-bird.jpg',
         title: 'Blue Bird',
-        category: 'illustration',
-        alt: undefined,
-        description: undefined,
-        slug: undefined,
-        sortOrder: undefined,
-        status: undefined,
+        categoryId: 'illustration',
+        alt: 'Blue bird illustration',
+        description: 'A blue bird illustration.',
+        sortOrder: 0,
+        status: 'draft',
       },
       {
         row: 3,
         filename: 'blue-bird.jpg',
         title: 'Blue Bird 2',
-        category: 'illustration',
-        alt: undefined,
-        description: undefined,
-        slug: undefined,
-        sortOrder: undefined,
-        status: undefined,
+        categoryId: 'illustration',
+        alt: 'Second blue bird',
+        description: 'Another blue bird illustration.',
+        sortOrder: 1,
+        status: 'draft',
       },
     ] satisfies Parameters<typeof buildBulkErrors>[0];
 
-    const duplicateErrors = await buildBulkErrors(rows, [
-      new File(['x'], 'blue-bird.jpg', { type: 'image/jpeg' }),
-    ]);
+    const resolveCategory = buildCategoryResolver(await listCategories({ includeArchived: true }));
+
+    const duplicateErrors = buildBulkErrors(
+      rows,
+      [new File(['x'], 'blue-bird.jpg', { type: 'image/jpeg' })],
+      resolveCategory,
+    );
     expect(
       duplicateErrors.some((error) => error.message.includes('Duplicate filename blue-bird.jpg')),
     ).toBe(true);
 
-    const missingErrors = await buildBulkErrors(rows.slice(0, 1), []);
+    const missingErrors = buildBulkErrors(rows.slice(0, 1), [], resolveCategory);
     expect(
       missingErrors.some((error) => error.message.includes('Missing uploaded file blue-bird.jpg')),
     ).toBe(true);

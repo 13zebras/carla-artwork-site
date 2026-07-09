@@ -4,9 +4,9 @@ import type { ArtworkRecord } from './artworks.server';
 import type { BunnyStorageFile } from './bunny.server';
 import type { ArtworkCategoryRecord } from './categories.server';
 
+export type { BulkArtworkUploadError } from './artwork-upload.helpers';
 export type {
   AdminDashboardData,
-  BulkArtworkUploadError,
   BulkArtworkUploadFailure,
   BulkArtworkUploadResult,
   BulkArtworkUploadSuccess,

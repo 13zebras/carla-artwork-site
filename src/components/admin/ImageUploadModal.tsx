@@ -354,7 +354,7 @@ export function ImageUploadModal({
             <div className='flex flex-wrap items-center gap-3'>
               <Button
                 type='submit'
-                variant='positive'
+                variant='brand'
                 disabled={isSubmitting || activeCategories.length === 0}
                 className='rounded-lg'
               >

@@ -2,9 +2,18 @@ import { createHash, randomUUID } from 'node:crypto';
 import path from 'node:path';
 
 import { createServerFn } from '@tanstack/react-start';
-import { parse } from 'csv-parse/sync';
 import { imageSize } from 'image-size';
 
+import {
+  buildBulkErrors,
+  buildCategoryResolver,
+  getUniqueArtworkSlug,
+  normalizeFilename,
+  parseCsvRows,
+  validateCsvHeaders,
+  type BulkArtworkUploadError,
+  type ParsedCsvRow,
+} from './artwork-upload.helpers';
 import {
   bulkInsertArtworks,
   deleteArtworkById,
@@ -12,7 +21,6 @@ import {
   getArtworkByStoragePath,
   insertArtwork,
   listArtworkRecords,
-  slugExists,
   updateArtworkMetadata,
   type ArtworkRecord,
   type ArtworkStatus,
@@ -26,11 +34,7 @@ import {
   uploadToBunnyStorage,
   type BunnyStorageFile,
 } from './bunny.server';
-import {
-  listCategories,
-  type ArtworkCategoryRecord,
-  resolveCategoryInput,
-} from './categories.server';
+import { listCategories, type ArtworkCategoryRecord } from './categories.server';
 import { ensureSchema } from './db.server';
 import { getServerEnv } from './env.server';
 
@@ -38,12 +42,6 @@ export type AdminDashboardData = {
   records: ArtworkRecord[];
   storageFiles: BunnyStorageFile[];
   categories: ArtworkCategoryRecord[];
-};
-
-export type BulkArtworkUploadError = {
-  row: number;
-  filename: string | null;
-  message: string;
 };
 
 export type BulkArtworkUploadSuccess = {
@@ -67,23 +65,7 @@ type BulkPreparationResult =
       preparedRows: PreparedBulkRow[];
     };
 
-type ParsedCsvRow = {
-  row: number;
-  filename: string;
-  title: string;
-  category: string;
-  alt: string | undefined;
-  description: string | undefined;
-  sortOrder: number | undefined;
-  status: string | undefined;
-};
-
-type RawCsvRow = {
-  row: number;
-  [key: string]: string | number;
-};
-
-type PreparedBulkRow = Omit<ParsedCsvRow, 'category'> & {
+type PreparedBulkRow = Omit<ParsedCsvRow, 'categoryId'> & {
   file: File;
   finalSlug: string;
   storagePath: string;
@@ -95,7 +77,7 @@ type PreparedBulkRow = Omit<ParsedCsvRow, 'category'> & {
   checksumSha256: string;
   categoryId: string;
   category: ArtworkRecord['category'];
-  descriptionValue: string | null;
+  descriptionValue: string;
   altValue: string;
   sortOrderValue: number;
   statusValue: ArtworkStatus;
@@ -226,50 +208,10 @@ export function buildStoragePath(slug: string, extension: 'jpg' | 'png' | 'webp'
   return `artworks/${slug}-${shortId}.${extension}`;
 }
 
-export function parseCsvRows(csvText: string): RawCsvRow[] {
-  const rows = parse(csvText, {
-    columns: true,
-    skip_empty_lines: true,
-    trim: true,
-    bom: true,
-  }) as Array<Record<string, string>>;
-
-  return rows.map((row, index) => ({ row: index + 2, ...row }));
-}
-
-async function collectCategoryOrError(
-  input: string,
-  row: number,
-  filename: string | null,
-  errors: BulkArtworkUploadError[],
-) {
-  const category = await resolveCategoryInput(input);
-  if (!category) {
-    errors.push({ row, filename, message: `Unknown category: ${input}` });
-    return undefined;
-  }
-  if (category.status !== 'active') {
-    errors.push({ row, filename, message: `Category ${input} is archived` });
-    return undefined;
-  }
-  return category;
-}
-
 function getBaseSlug(title: string) {
   // ponytail: slug is derived from the first 3 words of the title (user never provides it).
   const firstThreeWords = title.trim().split(/\s+/).slice(0, 3).join(' ');
   return slugify(firstThreeWords);
-}
-
-export async function getUniqueArtworkSlug(baseSlug: string, takenSlugs: Set<string>) {
-  let candidate = baseSlug;
-  let suffix = 2;
-  while (takenSlugs.has(candidate) || (await slugExists(candidate))) {
-    candidate = `${baseSlug}-${suffix}`;
-    suffix += 1;
-  }
-  takenSlugs.add(candidate);
-  return candidate;
 }
 
 function mapFormDataFile(value: FormDataEntryValue | null, label: string) {
@@ -626,86 +568,6 @@ function parseBulkRows(formData: FormData) {
   return { csvFile, fileValues };
 }
 
-function normalizeFilename(value: string) {
-  return path.basename(value.trim());
-}
-
-function validateCsvHeaders(rows: RawCsvRow[]) {
-  if (rows.length === 0) {
-    throw new Error('CSV file is empty');
-  }
-  const headers = Object.keys(rows[0]);
-  for (const requiredHeader of ['filename', 'title', 'category']) {
-    if (!headers.includes(requiredHeader)) {
-      throw new Error(`CSV header ${requiredHeader} is required`);
-    }
-  }
-}
-
-export async function buildBulkErrors(rows: ParsedCsvRow[], files: File[]) {
-  const errors: BulkArtworkUploadError[] = [];
-  const filenameCounts = new Map<string, number>();
-  for (const row of rows) {
-    const filename = normalizeFilename(row.filename);
-    filenameCounts.set(filename, (filenameCounts.get(filename) ?? 0) + 1);
-  }
-
-  for (const row of rows) {
-    const filename = normalizeFilename(row.filename);
-    if (filename.length === 0) {
-      errors.push({ row: row.row, filename, message: 'Filename is required' });
-    }
-    if (filenameCounts.get(filename) !== 1) {
-      errors.push({ row: row.row, filename, message: `Duplicate filename ${filename}` });
-    }
-
-    if (row.title.trim().length === 0) {
-      errors.push({ row: row.row, filename, message: 'Title is required' });
-    }
-    if (row.category.trim().length === 0) {
-      errors.push({ row: row.row, filename, message: 'Category is required' });
-    }
-    if (row.status && row.status !== 'draft' && row.status !== 'published') {
-      errors.push({ row: row.row, filename, message: 'Status must be draft or published' });
-    }
-    if (row.sortOrder !== undefined && !Number.isInteger(row.sortOrder)) {
-      errors.push({ row: row.row, filename, message: 'Sort order must be an integer' });
-    }
-    if (!(await collectCategoryOrError(row.category, row.row, filename, errors))) {
-      continue;
-    }
-  }
-
-  const fileMap = new Map<string, File>();
-  for (const file of files) {
-    const name = normalizeFilename(file.name);
-    if (fileMap.has(name)) {
-      errors.push({ row: 0, filename: name, message: `Duplicate uploaded file ${name}` });
-    }
-    fileMap.set(name, file);
-  }
-
-  for (const row of rows) {
-    const filename = normalizeFilename(row.filename);
-    if (!fileMap.has(filename)) {
-      errors.push({ row: row.row, filename, message: `Missing uploaded file ${filename}` });
-    }
-  }
-
-  for (const file of files) {
-    const name = normalizeFilename(file.name);
-    if (!rows.some((row) => normalizeFilename(row.filename) === name)) {
-      errors.push({
-        row: 0,
-        filename: name,
-        message: `Uploaded file ${name} is not referenced in the CSV`,
-      });
-    }
-  }
-
-  return errors;
-}
-
 async function prepareBulkRows(formData: FormData): Promise<BulkPreparationResult> {
   await requireAdminFromRequest();
 
@@ -718,9 +580,9 @@ async function prepareBulkRows(formData: FormData): Promise<BulkPreparationResul
     row: row.row,
     filename: row.filename?.toString() ?? '',
     title: row.title?.toString() ?? '',
-    category: row.category?.toString() ?? '',
-    alt: row.alt?.toString(),
-    description: row.description?.toString(),
+    categoryId: row.category_id?.toString().trim() ?? '',
+    alt: row.alt?.toString().trim() || undefined,
+    description: row.description?.toString().trim() || undefined,
     sortOrder:
       row.sort_order?.toString().trim() === '' || row.sort_order === undefined
         ? undefined
@@ -728,7 +590,8 @@ async function prepareBulkRows(formData: FormData): Promise<BulkPreparationResul
     status: row.status?.toString().trim() || undefined,
   }));
 
-  const errors = await buildBulkErrors(rows, fileValues);
+  const resolveCategory = buildCategoryResolver(await listCategories({ includeArchived: true }));
+  const errors = buildBulkErrors(rows, fileValues, resolveCategory);
 
   if (errors.length > 0) {
     return { errors };
@@ -747,15 +610,10 @@ async function prepareBulkRows(formData: FormData): Promise<BulkPreparationResul
       };
     }
 
-    const category = await resolveCategoryInput(row.category);
-    if (!category) {
+    const category = resolveCategory(row.categoryId);
+    if (!category || category.status !== 'active') {
       return {
-        errors: [{ row: row.row, filename, message: `Unknown category: ${row.category}` }],
-      };
-    }
-    if (category.status !== 'active') {
-      return {
-        errors: [{ row: row.row, filename, message: `Category ${row.category} is archived` }],
+        errors: [{ row: row.row, filename, message: `Unknown category: ${row.categoryId}` }],
       };
     }
 
@@ -794,10 +652,10 @@ async function prepareBulkRows(formData: FormData): Promise<BulkPreparationResul
       checksumSha256: imageMeta.checksumSha256,
       categoryId: category.id,
       category: categorySummary,
-      descriptionValue: row.description?.trim() || null,
-      altValue: row.alt?.trim() || row.title.trim(),
+      descriptionValue: row.description?.trim() ?? '',
+      altValue: row.alt?.trim() ?? '',
       sortOrderValue: row.sortOrder ?? 0,
-      statusValue: row.status ? normalizeStatus(row.status) : 'draft',
+      statusValue: normalizeStatus(row.status),
     });
   }
 
@@ -862,8 +720,11 @@ export const uploadBulkArtworks = createServerFn({ method: 'POST' })
       const cleanupResults = await Promise.allSettled(
         uploadedPaths.map((storagePath) => deleteFromBunnyStorage(storagePath)),
       );
+      const cleanupFailures = cleanupResults.filter(
+        (result) => result.status === 'rejected',
+      ).length;
       throw new Error(
-        `Bulk upload failed; cleaned up Bunny files: ${cleanupResults.filter((result) => result.status === 'rejected').length} delete failures`,
+        `Bulk upload failed after storing ${uploadedPaths.length} of ${prepared.preparedRows.length} files. Rolled back ${uploadedPaths.length} file(s)${cleanupFailures ? `; ${cleanupFailures} cleanup delete(s) failed` : ''}.`,
         { cause: error },
       );
     }
@@ -875,11 +736,12 @@ export const uploadBulkArtworks = createServerFn({ method: 'POST' })
       const cleanupResults = await Promise.allSettled(
         records.map((record) => deleteFromBunnyStorage(record.storagePath)),
       );
+      const cleanupFailures = cleanupResults.filter(
+        (result) => result.status === 'rejected',
+      ).length;
       throw new Error(
-        `Bulk insert failed; cleaned up Bunny files: ${cleanupResults.filter((result) => result.status === 'rejected').length} delete failures`,
-        {
-          cause: error,
-        },
+        `Bulk insert failed after storing ${records.length} file(s). Rolled back ${records.length} file(s)${cleanupFailures ? `; ${cleanupFailures} cleanup delete(s) failed` : ''}.`,
+        { cause: error },
       );
     }
   });

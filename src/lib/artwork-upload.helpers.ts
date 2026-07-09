@@ -3,7 +3,7 @@ import path from 'node:path';
 import { parse } from 'csv-parse/sync';
 
 import { slugExists } from './artworks.server';
-import { resolveCategoryInput } from './categories.server';
+import type { ArtworkCategoryRecord } from './categories.server';
 
 export type BulkArtworkUploadError = {
   row: number;
@@ -15,10 +15,9 @@ export type ParsedCsvRow = {
   row: number;
   filename: string;
   title: string;
-  category: string;
+  categoryId: string;
   alt: string | undefined;
   description: string | undefined;
-  slug: string | undefined;
   sortOrder: number | undefined;
   status: string | undefined;
 };
@@ -28,26 +27,32 @@ export type RawCsvRow = {
   [key: string]: string | number;
 };
 
-function slugify(value: string) {
-  return value
-    .normalize('NFKD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-}
+export type CategoryResolver = (input: string) => ArtworkCategoryRecord | undefined;
 
-function normalizeFilename(value: string) {
+export function normalizeFilename(value: string) {
   return path.basename(value.trim());
 }
 
-async function collectCategoryOrError(
+export function buildCategoryResolver(categories: ArtworkCategoryRecord[]): CategoryResolver {
+  const byId = new Map(categories.map((category) => [category.id, category]));
+  const byLabel = new Map(categories.map((category) => [category.label.toLowerCase(), category]));
+  return (input: string): ArtworkCategoryRecord | undefined => {
+    const value = input.trim();
+    if (value.length === 0) {
+      return undefined;
+    }
+    return byId.get(value) ?? byLabel.get(value.toLowerCase());
+  };
+}
+
+function collectCategoryOrError(
   input: string,
   row: number,
   filename: string | null,
   errors: BulkArtworkUploadError[],
+  resolveCategory: CategoryResolver,
 ) {
-  const category = await resolveCategoryInput(input);
+  const category = resolveCategory(input);
   if (!category) {
     errors.push({ row, filename, message: `Unknown category: ${input}` });
     return undefined;
@@ -70,6 +75,18 @@ export function parseCsvRows(csvText: string): RawCsvRow[] {
   return rows.map((row, index) => ({ row: index + 2, ...row }));
 }
 
+export function validateCsvHeaders(rows: RawCsvRow[]) {
+  if (rows.length === 0) {
+    throw new Error('CSV file is empty');
+  }
+  const headers = Object.keys(rows[0]);
+  for (const requiredHeader of ['filename', 'title', 'category_id']) {
+    if (!headers.includes(requiredHeader)) {
+      throw new Error(`CSV header ${requiredHeader} is required`);
+    }
+  }
+}
+
 export async function getUniqueArtworkSlug(baseSlug: string, takenSlugs: Set<string>) {
   let candidate = baseSlug;
   let suffix = 2;
@@ -81,7 +98,11 @@ export async function getUniqueArtworkSlug(baseSlug: string, takenSlugs: Set<str
   return candidate;
 }
 
-export async function buildBulkErrors(rows: ParsedCsvRow[], files: File[]) {
+export function buildBulkErrors(
+  rows: ParsedCsvRow[],
+  files: File[],
+  resolveCategory: CategoryResolver,
+) {
   const errors: BulkArtworkUploadError[] = [];
   const filenameCounts = new Map<string, number>();
   for (const row of rows) {
@@ -101,19 +122,27 @@ export async function buildBulkErrors(rows: ParsedCsvRow[], files: File[]) {
     if (row.title.trim().length === 0) {
       errors.push({ row: row.row, filename, message: 'Title is required' });
     }
-    if (row.category.trim().length === 0) {
+    if (row.categoryId.trim().length === 0) {
       errors.push({ row: row.row, filename, message: 'Category is required' });
     }
-    if (row.slug && slugify(row.slug) === '') {
-      errors.push({ row: row.row, filename, message: 'Slug is invalid' });
-    }
-    if (row.status && row.status !== 'draft' && row.status !== 'published') {
+    if (!row.status) {
+      errors.push({ row: row.row, filename, message: 'Status is required' });
+    } else if (row.status !== 'draft' && row.status !== 'published') {
       errors.push({ row: row.row, filename, message: 'Status must be draft or published' });
     }
-    if (row.sortOrder !== undefined && !Number.isInteger(row.sortOrder)) {
+    if (!row.alt || row.alt.trim().length === 0) {
+      errors.push({ row: row.row, filename, message: 'Alt text is required' });
+    }
+    if (!row.description || row.description.trim().length === 0) {
+      errors.push({ row: row.row, filename, message: 'Description is required' });
+    }
+    if (row.sortOrder === undefined) {
+      errors.push({ row: row.row, filename, message: 'Sort order is required' });
+    } else if (!Number.isInteger(row.sortOrder)) {
       errors.push({ row: row.row, filename, message: 'Sort order must be an integer' });
     }
-    if (!(await collectCategoryOrError(row.category, row.row, filename, errors))) {
+
+    if (!collectCategoryOrError(row.categoryId, row.row, filename, errors, resolveCategory)) {
       continue;
     }
   }

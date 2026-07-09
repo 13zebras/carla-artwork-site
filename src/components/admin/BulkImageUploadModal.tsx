@@ -1,5 +1,6 @@
 import { useRouter } from '@tanstack/react-router';
-import { type SubmitEvent, useState } from 'react';
+import { type SubmitEvent, useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -26,7 +27,6 @@ import {
   type BulkArtworkUploadError,
   type BulkArtworkUploadResult,
 } from '@/lib/artwork-upload.functions';
-// import type { ArtworkRecord } from '@/lib/artworks.server';
 import type { ArtworkCategoryRecord } from '@/lib/categories.server';
 
 const sampleCsv = (
@@ -89,55 +89,6 @@ function ErrorTable({ errors }: { errors: BulkArtworkUploadError[] }) {
   );
 }
 
-// function RecordsTable({ records }: { records: ArtworkRecord[] }) {
-//   return (
-//     <section className='space-y-6 bg-card shadow-sm p-6 border rounded-xl text-card-foreground'>
-//       <div className='space-y-1.5'>
-//         <h3 className='font-semibold text-2xl leading-none tracking-tight'>Created records</h3>
-//         <p className='text-muted-foreground text-sm'>SQLite rows created by this bulk upload.</p>
-//       </div>
-//       <Table>
-//         <TableHeader>
-//           <TableRow>
-//             <TableHead>Title</TableHead>
-//             <TableHead>Category</TableHead>
-//             <TableHead>Status</TableHead>
-//             <TableHead>Dimensions</TableHead>
-//             <TableHead>Filename</TableHead>
-//             <TableHead>Storage path</TableHead>
-//             <TableHead>Created</TableHead>
-//           </TableRow>
-//         </TableHeader>
-//         <TableBody>
-//           {records.map((record) => (
-//             <TableRow key={record.id}>
-//               <TableCell className='font-medium'>{record.title}</TableCell>
-//               <TableCell>
-//                 <Badge variant='secondary'>{record.category.label}</Badge>
-//               </TableCell>
-//               <TableCell>
-//                 <Badge variant={record.status === 'published' ? 'default' : 'outline'}>
-//                   {record.status}
-//                 </Badge>
-//               </TableCell>
-//               <TableCell>
-//                 {record.width} × {record.height}
-//               </TableCell>
-//               <TableCell className='max-w-40 text-muted-foreground text-xs truncate'>
-//                 {record.originalFilename}
-//               </TableCell>
-//               <TableCell className='max-w-64 font-mono text-muted-foreground text-xs break-all'>
-//                 {record.storagePath}
-//               </TableCell>
-//               <TableCell className='text-muted-foreground text-xs'>{record.createdAt}</TableCell>
-//             </TableRow>
-//           ))}
-//         </TableBody>
-//       </Table>
-//     </section>
-//   );
-// }
-
 type BulkImageUploadModalProps = {
   categories: ArtworkCategoryRecord[];
   open: boolean;
@@ -155,6 +106,14 @@ export function BulkImageUploadModal({
   const [result, setResult] = useState<BulkArtworkUploadResult | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (!open) {
+      setResult(null);
+      setSubmitError(null);
+      setIsSubmitting(false);
+    }
+  }, [open]);
+
   async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsSubmitting(true);
@@ -166,8 +125,10 @@ export function BulkImageUploadModal({
       const response = await uploadBulkArtworks({ data: formData });
       if (response.ok) {
         await router.invalidate();
+        toast.success('Bulk Upload Successful');
       }
       setResult(response);
+      onOpenChange(false);
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : 'Bulk upload failed');
     } finally {
@@ -176,7 +137,6 @@ export function BulkImageUploadModal({
   }
 
   const hasValidationErrors = result?.ok === false;
-  // const hasSuccess = result?.ok === true;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -279,30 +239,11 @@ export function BulkImageUploadModal({
           </Alert>
         ) : null}
 
-        {/* {hasValidationErrors && result ? (
-          <Alert variant='destructive'>
-            <AlertTitle>Validation failed</AlertTitle>
-            <AlertDescription>
-              {result.errors.length} row{result.errors.length === 1 ? '' : 's'} need attention
-              before anything can be uploaded.
-            </AlertDescription>
-          </Alert>
-        ) : null} */}
-
-        {hasValidationErrors && result ? <ErrorTable errors={result.errors} /> : null}
-
-        {/* {hasSuccess && result ? (
-          <div className='gap-6 grid'>
-            <Alert>
-              <AlertTitle>Upload complete</AlertTitle>
-              <AlertDescription>
-                Inserted <strong>{result.insertedCount}</strong> artwork
-                {result.insertedCount === 1 ? '' : 's'}.
-              </AlertDescription>
-            </Alert>
-            <RecordsTable records={result.records} />
+        {hasValidationErrors && result ? (
+          <div className='max-h-[55vh] overflow-y-auto'>
+            <ErrorTable errors={result.errors} />
           </div>
-        ) : null} */}
+        ) : null}
       </DialogContent>
     </Dialog>
   );

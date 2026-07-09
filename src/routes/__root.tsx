@@ -66,7 +66,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <body className='bg-background to-bg-gradient bg-linear-to-b from-bg-background m-0 min-h-full text-foreground'>
         <TooltipProvider>
           {children}
-          <Toaster closeButton position='bottom-left' />
+          <Toaster richColors position='bottom-left' />
         </TooltipProvider>
         <TanStackDevtools
           config={{

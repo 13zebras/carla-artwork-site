@@ -1,5 +1,6 @@
 import { useRouter } from '@tanstack/react-router';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -13,6 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { deleteArtwork } from '@/lib/artwork-upload.functions';
 import type { ArtworkRecord } from '@/lib/artworks.server';
+import { cn } from '@/lib/utils';
 
 type ArtworkDeleteModalProps = {
   record: ArtworkRecord;
@@ -49,6 +51,9 @@ export function ArtworkDeleteModal({ record, onClose }: ArtworkDeleteModalProps)
       await deleteArtwork({ data: { id: record.id } });
       await router.invalidate();
       onClose();
+      toast.success('Artwork DELETED', {
+        description: `${record.title}`,
+      });
     } catch (error) {
       setErrorMessage(
         error instanceof Error && error.message.trim().length > 0
@@ -61,26 +66,27 @@ export function ArtworkDeleteModal({ record, onClose }: ArtworkDeleteModalProps)
 
   return (
     <Dialog open onOpenChange={handleOpenChange}>
-      <DialogContent className='w-[420px] max-w-[420px]'>
+      <DialogContent
+        className={cn(
+          'flex flex-col justify-between gap-6 px-8 py-6 w-108 max-w-108 h-fit min-h-61 max-h-76',
+          isFinalConfirmation && 'border border-destructive',
+        )}
+      >
         <DialogHeader>
-          <DialogTitle>
-            {isFinalConfirmation ? 'Are you sure you want to delete?' : `Delete "${record.title}"?`}
+          <DialogTitle className='mb-3 text-lg'>
+            <p className='mb-2'>You are about to delete:</p>
+            <p className='text-xl italic'>{record.title}</p>
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription
+            className={cn('text-base', isFinalConfirmation && 'text-xl text-destructive font-bold')}
+          >
             {isFinalConfirmation
-              ? 'This will permanently delete the database record and remove the image from Bunny Storage.'
-              : 'This action cannot be undone.'}
+              ? 'This action cannot be undone.'
+              : 'This will permanently delete the database record and remove the image from Bunny Storage.'}
           </DialogDescription>
         </DialogHeader>
 
-        {errorMessage ? (
-          <Alert variant='destructive'>
-            <AlertTitle>Delete failed</AlertTitle>
-            <AlertDescription>{errorMessage}</AlertDescription>
-          </Alert>
-        ) : null}
-
-        <DialogFooter>
+        <DialogFooter className=''>
           <Button disabled={isDeleting} variant='outline' onClick={() => handleOpenChange(false)}>
             Cancel
           </Button>
@@ -98,6 +104,12 @@ export function ArtworkDeleteModal({ record, onClose }: ArtworkDeleteModalProps)
             </Button>
           )}
         </DialogFooter>
+        {errorMessage && (
+          <Alert variant='destructive' className=''>
+            <AlertTitle>Delete failed</AlertTitle>
+            <AlertDescription>{errorMessage}</AlertDescription>
+          </Alert>
+        )}
       </DialogContent>
     </Dialog>
   );

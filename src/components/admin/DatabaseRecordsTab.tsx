@@ -17,6 +17,7 @@ import { buildBunnyCdnUrl } from '@/lib/bunny';
 import type { BunnyStorageFile } from '@/lib/bunny.server';
 import type { ArtworkCategoryRecord } from '@/lib/categories.server';
 
+import { Headless } from '../ui/toast';
 import { ArtworkDeleteModal } from './ArtworkDeleteModal';
 import { ArtworkEditModal } from './ArtworkEditModal';
 import { ArtworkInfoDrawer } from './ArtworkInfoDrawer';
@@ -67,6 +68,7 @@ export function DatabaseRecordsTab({
             <CardDescription className='text-base'>
               Full data for each image in the database with Bunny storage previews
             </CardDescription>
+            <Headless variant='error' />
           </CardHeader>
           <CardContent className='p-0'>
             <Table className=''>
