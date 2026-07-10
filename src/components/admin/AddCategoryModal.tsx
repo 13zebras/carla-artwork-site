@@ -109,7 +109,7 @@ export function AddCategoryModal({ open, onOpenChange }: AddCategoryModalProps) 
                 readOnly
                 value={slugify(categoryLabel)}
                 placeholder='auto-generated-from-name'
-                className='text-dim-fg ph'
+                className='border-neutral-300 dark:border-neutral-700 text-dim-fg/80 ph'
               />
             </div>
 
@@ -122,8 +122,8 @@ export function AddCategoryModal({ open, onOpenChange }: AddCategoryModalProps) 
                 required
                 name='description'
                 placeholder='Description of the category to be used on the category page.'
-                rows={6}
-                className='border-border-2nd min-h-20 ph'
+                rows={8}
+                className='border-border-2nd min-h-32 ph'
               />
             </div>
 
@@ -138,7 +138,7 @@ export function AddCategoryModal({ open, onOpenChange }: AddCategoryModalProps) 
                 inputMode='numeric'
                 placeholder='70'
                 type='number'
-                className='ph'
+                className='h-8 ph'
               />
             </div>
 

@@ -23,28 +23,34 @@ import {
   type ArtworkRecord,
 } from '@/lib/artworks.server';
 import { buildBunnyCdnUrl } from '@/lib/bunny';
-import { addCategory, listCategories, resolveCategoryInput } from '@/lib/categories.server';
+import {
+  addCategory,
+  deleteCategoryById,
+  getCategoryById,
+  getCategoryBySlug,
+  listCategories,
+  resolveCategoryInput,
+  updateCategory,
+} from '@/lib/categories.server';
 import { ensureSchema, getKysely } from '@/lib/db.server';
-
-const seededCategoryIds = [
-  'illustration',
-  'fine-art-collage',
-  'graphic-design',
-  'food',
-  'botanical-illustration',
-  'special-projects',
-];
 
 async function resetDatabase() {
   await ensureSchema();
-  await sql`truncate table artworks`.execute(getKysely());
-  await sql`delete from artwork_categories where id not in (${sql.join(
-    seededCategoryIds.map((id) => sql`${id}`),
-  )})`.execute(getKysely());
+  // Truncate both tables in one statement so the FK from artworks -> artwork_categories
+  // does not block truncating the referenced table.
+  await sql`truncate table artworks, artwork_categories`.execute(getKysely());
+  await sql`alter sequence artwork_category_id_seq restart with 1`.execute(getKysely());
+}
+
+async function seedTestCategories() {
+  await addCategory({ label: 'Illustration' });
+  await addCategory({ label: 'Fine Art Collage' });
+  await addCategory({ label: 'Botanical Illustration' });
 }
 
 beforeEach(async () => {
   await resetDatabase();
+  await seedTestCategories();
 });
 
 afterEach(() => {
@@ -57,9 +63,9 @@ function createTestArtwork(overrides: Partial<ArtworkRecord> = {}) {
     id: 'test-artwork-id',
     slug: 'test-artwork',
     title: 'Test Artwork',
-    categoryId: 'fine-art-collage',
+    categoryId: 'c002',
     category: {
-      id: 'fine-art-collage',
+      id: 'c002',
       label: 'Fine Art Collage',
     },
     description: 'A test artwork.',
@@ -141,7 +147,9 @@ describe('artwork deletion', () => {
     const fetchMock = vi.fn<typeof fetch>();
     vi.stubGlobal('fetch', fetchMock);
 
-    await expect(deleteArtworkWithStorage('missing-artwork-id')).rejects.toThrow('Artwork not found');
+    await expect(deleteArtworkWithStorage('missing-artwork-id')).rejects.toThrow(
+      'Artwork not found',
+    );
 
     expect(fetchMock).not.toHaveBeenCalled();
   });
@@ -155,7 +163,7 @@ describe('artwork metadata updates', () => {
     const updated = await updateArtworkMetadata({
       id: record.id,
       title: 'Updated Artwork',
-      categoryId: 'botanical-illustration',
+      categoryId: 'c003',
       description: null,
       alt: 'Updated alt text',
       sortOrder: 42,
@@ -165,9 +173,9 @@ describe('artwork metadata updates', () => {
     expect(updated).toMatchObject({
       id: record.id,
       title: 'Updated Artwork',
-      categoryId: 'botanical-illustration',
+      categoryId: 'c003',
       category: {
-        id: 'botanical-illustration',
+        id: 'c003',
         label: 'Botanical Illustration',
       },
       description: null,
@@ -193,7 +201,7 @@ describe('artwork metadata updates', () => {
       updateArtworkMetadata({
         id: 'missing-artwork-id',
         title: 'Missing',
-        categoryId: 'illustration',
+        categoryId: 'c001',
         description: null,
         alt: 'Missing',
         sortOrder: 0,
@@ -204,15 +212,27 @@ describe('artwork metadata updates', () => {
 });
 
 describe('category storage', () => {
-  it('resolves seeded category ids and labels', async () => {
-    expect((await resolveCategoryInput('fine-art-collage'))?.id).toBe('fine-art-collage');
-    expect((await resolveCategoryInput('Fine Art Collage'))?.id).toBe('fine-art-collage');
+  it('resolves immutable category ids only', async () => {
+    expect((await resolveCategoryInput('c002'))?.id).toBe('c002');
+    expect(await resolveCategoryInput('Fine Art Collage')).toBeUndefined();
   });
 
-  it('rejects duplicate category ids and labels', async () => {
+  it('resolves category URL slugs separately from bulk upload ids', async () => {
+    const category = await getCategoryBySlug('fine-art-collage');
+
+    expect(category).toMatchObject({
+      id: 'c002',
+      categorySlug: 'fine-art-collage',
+      label: 'Fine Art Collage',
+    });
+  });
+
+  it('rejects duplicate category slugs and labels', async () => {
     await addCategory({ label: 'Test Category' });
 
-    await expect(addCategory({ label: 'Test-Category' })).rejects.toThrow('Category id already exists');
+    await expect(addCategory({ label: 'Test-Category' })).rejects.toThrow(
+      'Category slug already exists',
+    );
     await expect(addCategory({ label: 'test category' })).rejects.toThrow(
       'Category label already exists',
     );
@@ -222,26 +242,88 @@ describe('category storage', () => {
     await addCategory({ label: 'Zeta Category', sortOrder: 70 });
     await addCategory({ label: 'Alpha Category', sortOrder: 65 });
 
-    expect(
-      (await listCategories())
-        .map((category) => category.id)
-        .slice(-2),
-    ).toEqual(['alpha-category', 'zeta-category']);
+    expect((await listCategories()).map((category) => category.id).slice(-2)).toEqual([
+      'c005',
+      'c004',
+    ]);
+  });
+});
+
+describe('category updates', () => {
+  it('updates editable fields without changing the id', async () => {
+    const created = await addCategory({ label: 'Edit Me', description: 'Old', sortOrder: 100 });
+
+    // Pin the created record's timestamps in the past so the update is detectable even
+    // if it runs within the same millisecond as the create.
+    const pastTimestamp = '2020-01-01T00:00:00.000Z';
+    await sql`update artwork_categories set created_at = ${pastTimestamp}, updated_at = ${pastTimestamp} where id = ${created.id}`.execute(
+      getKysely(),
+    );
+
+    const updated = await updateCategory({
+      id: created.id,
+      label: 'Edited Label',
+      description: 'New',
+      sortOrder: 200,
+      status: 'archived',
+    });
+
+    expect(updated).toMatchObject({
+      id: created.id,
+      categorySlug: 'edited-label',
+      label: 'Edited Label',
+      description: 'New',
+      sortOrder: 200,
+      status: 'archived',
+    });
+    expect(updated.updatedAt).not.toBe(pastTimestamp);
+  });
+
+  it('rejects duplicate labels excluding the category being edited', async () => {
+    await addCategory({ label: 'Existing Label' });
+    const created = await addCategory({ label: 'Mine' });
+
+    await expect(
+      updateCategory({ id: created.id, label: 'Existing Label', status: 'active' }),
+    ).rejects.toThrow('Category label already exists');
+  });
+
+  it('reports missing category ids', async () => {
+    await expect(updateCategory({ id: 'missing', label: 'X', status: 'active' })).rejects.toThrow(
+      'Category not found',
+    );
+  });
+});
+
+describe('category deletion', () => {
+  it('deletes an unused category', async () => {
+    const created = await addCategory({ label: 'Delete Me' });
+    const deleted = await deleteCategoryById(created.id);
+
+    expect(deleted.id).toBe(created.id);
+    expect(await getCategoryById(created.id)).toBeUndefined();
+  });
+
+  it('rejects deleting a category used by artworks', async () => {
+    await insertArtwork(createTestArtwork({ categoryId: 'c002' }));
+
+    await expect(deleteCategoryById('c002')).rejects.toThrow('Cannot delete');
+  });
+
+  it('reports missing category ids', async () => {
+    await expect(deleteCategoryById('missing')).rejects.toThrow('Category not found');
   });
 });
 
 describe('csv and slug helpers', () => {
   it('normalizes category ids from csv row values', async () => {
     const rows = parseCsvRows(
-      `filename,title,category_id\nfirst.jpg,First,fine-art-collage\nsecond.jpg,Second,Fine Art Collage`,
+      `filename,title,category_id\nfirst.jpg,First,c002\nsecond.jpg,Second,Fine Art Collage`,
     );
     const resolved = await Promise.all(
       rows.map((row) => resolveCategoryInput(String(row.category_id))),
     );
-    expect(resolved.map((category) => category?.id)).toEqual([
-      'fine-art-collage',
-      'fine-art-collage',
-    ]);
+    expect(resolved.map((category) => category?.id)).toEqual(['c002', undefined]);
   });
 
   it('reports missing files and duplicate filenames before upload', async () => {
@@ -250,7 +332,7 @@ describe('csv and slug helpers', () => {
         row: 2,
         filename: 'blue-bird.jpg',
         title: 'Blue Bird',
-        categoryId: 'illustration',
+        categoryId: 'c001',
         alt: 'Blue bird illustration',
         description: 'A blue bird illustration.',
         sortOrder: 0,
@@ -260,7 +342,7 @@ describe('csv and slug helpers', () => {
         row: 3,
         filename: 'blue-bird.jpg',
         title: 'Blue Bird 2',
-        categoryId: 'illustration',
+        categoryId: 'c001',
         alt: 'Second blue bird',
         description: 'Another blue bird illustration.',
         sortOrder: 1,
@@ -344,7 +426,7 @@ describe('linking existing Bunny images', () => {
     const record = await prepareExistingArtworkRecord({
       storagePath: 'artworks/blue-bird.png',
       title: 'Blue Bird',
-      categoryId: 'illustration',
+      categoryId: 'c001',
       alt: null,
       description: null,
       sortOrder: 0,
@@ -385,7 +467,7 @@ describe('linking existing Bunny images', () => {
       prepareExistingArtworkRecord({
         storagePath: 'artworks/taken.png',
         title: 'Taken',
-        categoryId: 'illustration',
+        categoryId: 'c001',
         alt: null,
         description: null,
         sortOrder: 0,
@@ -404,7 +486,7 @@ describe('linking existing Bunny images', () => {
       prepareExistingArtworkRecord({
         storagePath: 'artworks/photo.gif',
         title: 'Gif',
-        categoryId: 'illustration',
+        categoryId: 'c001',
         alt: null,
         description: null,
         sortOrder: 0,

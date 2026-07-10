@@ -29,7 +29,7 @@ import type { BunnyStorageFile } from '@/lib/bunny.server';
 import type { ArtworkCategoryRecord } from '@/lib/categories.server';
 
 type ImageUploadModalProps = {
-  categories: ArtworkCategoryRecord[];
+  activeCategories: ArtworkCategoryRecord[];
   untrackedFiles?: BunnyStorageFile[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -72,7 +72,7 @@ function RequiredLabel({ htmlFor, children }: { htmlFor: string; children: React
 }
 
 export function ImageUploadModal({
-  categories,
+  activeCategories,
   untrackedFiles = [],
   open,
   onOpenChange,
@@ -86,7 +86,6 @@ export function ImageUploadModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const activeCategories = categories.filter((category) => category.status === 'active');
   const categoryItems = Object.fromEntries(
     activeCategories.map((category) => [category.id, category.label]),
   );
@@ -343,7 +342,7 @@ export function ImageUploadModal({
                   step='1'
                   defaultValue='0'
                   placeholder='Numbers only'
-                  className='w-24 ph'
+                  className='w-24 h-8 ph'
                   required
                 />
                 <span className='text-muted-foreground text-xs italic'>

@@ -130,7 +130,10 @@ export async function downloadFromBunnyStorage(storagePath: string): Promise<{
   };
 }
 
-async function fetchDirectory(prefix: string, env: ReturnType<typeof getServerEnv>): Promise<BunnyStorageFile[]> {
+async function fetchDirectory(
+  prefix: string,
+  env: ReturnType<typeof getServerEnv>,
+): Promise<BunnyStorageFile[]> {
   const response = await fetch(
     `${env.BUNNY_STORAGE_ENDPOINT}/${env.BUNNY_STORAGE_ZONE}/${prefix}`,
     {
@@ -150,7 +153,10 @@ async function fetchDirectory(prefix: string, env: ReturnType<typeof getServerEn
   return entries.map((entry) => parseListingEntry(entry, prefix));
 }
 
-async function listPrefixRecursive(rootPrefix: string, env: ReturnType<typeof getServerEnv>): Promise<BunnyStorageFile[]> {
+async function listPrefixRecursive(
+  rootPrefix: string,
+  env: ReturnType<typeof getServerEnv>,
+): Promise<BunnyStorageFile[]> {
   const files: BunnyStorageFile[] = [];
   const queue = [rootPrefix];
 

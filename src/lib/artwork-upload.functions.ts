@@ -15,7 +15,7 @@ export type {
 export type AdminDashboard = {
   records: ArtworkRecord[];
   storageFiles: BunnyStorageFile[];
-  categories: ArtworkCategoryRecord[];
+  activeCategories: ArtworkCategoryRecord[];
 };
 
 export const listAdminDashboard = createServerFn({ method: 'GET' }).handler(async () => {
@@ -81,9 +81,8 @@ export const registerExistingArtwork = createServerFn({ method: 'POST' })
     },
   )
   .handler(async ({ data }) => {
-    const { registerExistingArtwork: runRegisterExistingArtwork } = await import(
-      './artwork-upload.server'
-    );
+    const { registerExistingArtwork: runRegisterExistingArtwork } =
+      await import('./artwork-upload.server');
     return runRegisterExistingArtwork({ data });
   });
 

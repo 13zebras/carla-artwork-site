@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
@@ -17,21 +18,19 @@ import { buildBunnyCdnUrl } from '@/lib/bunny';
 import type { BunnyStorageFile } from '@/lib/bunny.server';
 import type { ArtworkCategoryRecord } from '@/lib/categories.server';
 
-import { Headless } from '../ui/toast';
 import { ArtworkDeleteModal } from './ArtworkDeleteModal';
 import { ArtworkEditModal } from './ArtworkEditModal';
 import { ArtworkInfoDrawer } from './ArtworkInfoDrawer';
-import { DatabaseActions } from './DatabaseActions';
 
 type DatabaseRecordsTabProps = {
   dashboard: AdminDashboard;
-  categories: ArtworkCategoryRecord[];
+  activeCategories: ArtworkCategoryRecord[];
   storageByPath: Map<string, BunnyStorageFile>;
 };
 
 export function DatabaseRecordsTab({
   dashboard,
-  categories,
+  activeCategories,
   storageByPath,
 }: DatabaseRecordsTabProps) {
   const [infoRecord, setInfoRecord] = useState<ArtworkRecord | null>(null);
@@ -54,21 +53,20 @@ export function DatabaseRecordsTab({
     <TabsContent value='records' className='mx-auto mt-4 w-full max-w-300'>
       {dashboard.records.length === 0 ? (
         // EMPTY DATABASE STATE
-        <Card className='p-8 rounded-sm h-44'>
-          <CardContent className='flex flex-col justify-center items-start gap-8 h-full'>
-            <h2 className='font-bold text-2xl'>Empty Image Database</h2>
+        <Card className='p-8 rounded-sm h-40'>
+          <CardContent className='flex flex-col justify-center items-start gap-6 h-full'>
+            <h2 className='font-bold text-xl'>Empty Image Database</h2>
             <h3 className='font-semibold text-base'>No uploaded artworks saved in the database.</h3>
           </CardContent>
         </Card>
       ) : (
         // TABLE OF DATABASE RECORDS
-        <Card className='pt-4 pb-0 border-b-0 rounded-sm w-full max-w-300 overflow-hidden'>
+        <Card className='gap-5 pt-5 pb-0 border-b-0 rounded-sm w-full max-w-300 overflow-hidden'>
           <CardHeader className='flex flex-col gap-2'>
-            <CardTitle className='pb-1 font-semibold text-2xl'>Database Artwork Records</CardTitle>
-            <CardDescription className='text-base'>
+            <CardTitle className='font-semibold text-xl'>Database Artwork Records</CardTitle>
+            <CardDescription>
               Full data for each image in the database with Bunny storage previews
             </CardDescription>
-            <Headless variant='error' />
           </CardHeader>
           <CardContent className='p-0'>
             <Table className=''>
@@ -143,12 +141,38 @@ export function DatabaseRecordsTab({
                         className='text-center cursor-default'
                         onClick={(e) => e.stopPropagation()}
                       >
-                        <DatabaseActions
-                          record={record}
-                          onInfo={openInfo}
-                          onEdit={openEdit}
-                          onDelete={openDelete}
-                        />
+                        <div className='flex flex-col items-center gap-3'>
+                          <Button
+                            variant='information'
+                            size='xs'
+                            className='w-18'
+                            onClick={() => openInfo(record)}
+                          >
+                            Info
+                          </Button>
+                          <Button
+                            variant='positive'
+                            size='xs'
+                            className='w-18'
+                            onClick={() => openEdit(record)}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            variant='destructive'
+                            size='xs'
+                            className='w-18'
+                            onClick={() => openDelete(record)}
+                          >
+                            Delete
+                          </Button>
+                          {/* <DatabaseActions
+                            record={record}
+                            onInfo={openInfo}
+                            onEdit={openEdit}
+                            onDelete={openDelete}
+                          /> */}
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
@@ -171,7 +195,7 @@ export function DatabaseRecordsTab({
         <ArtworkEditModal
           key={editRecord.id}
           record={editRecord}
-          categories={categories}
+          activeCategories={activeCategories}
           onClose={() => setEditRecord(null)}
         />
       ) : null}

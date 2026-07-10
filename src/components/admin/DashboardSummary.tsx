@@ -52,7 +52,7 @@ export function DashboardSummary({
       <Card className='dashboard-summary-card'>
         <CardTitle className='text-sm text-center'>Active Categories</CardTitle>
         <CardContent className='text-xl tabular-nums px-0 text-center'>
-          {dashboard.categories.length.toLocaleString('en-US')}
+          {dashboard.activeCategories.length.toLocaleString('en-US')}
         </CardContent>
       </Card>
     </section>

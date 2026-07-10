@@ -1,12 +1,14 @@
-// Initializes the `carla` database with the app schema + category seeds.
+// Initializes the `carla` database with the app schema.
 // Self-contained: loads DATABASE_URL from .env.local, uses the `pg` package.
-// Idempotent (create table if not exists / on conflict do nothing) — safe to re-run.
+// Idempotent (create table if not exists) — safe to re-run.
+// No categories are seeded; they are added through the admin UI.
 //
 //   node scripts/init-db.mjs        (or)   pnpm db:init
 
 import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import pg from 'pg';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -42,52 +44,6 @@ if (!databaseUrl) {
   console.error('✖ DATABASE_URL is not set (checked .env.local and the environment).');
   process.exit(1);
 }
-
-// Same category seeds as src/lib/db.server.ts (descriptions from src/data/artworkCategories.ts).
-const CATEGORY_SEEDS = [
-  {
-    id: 'illustration',
-    label: 'Illustration',
-    sort_order: 10,
-    description:
-      'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
-  },
-  {
-    id: 'fine-art-collage',
-    label: 'Fine Art Collage',
-    sort_order: 20,
-    description:
-      'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.',
-  },
-  {
-    id: 'graphic-design',
-    label: 'Graphic Design',
-    sort_order: 30,
-    description:
-      'At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident, similique sunt in culpa qui officia deserunt mollitia animi, id est laborum et dolorum fuga.',
-  },
-  {
-    id: 'food',
-    label: 'Food',
-    sort_order: 40,
-    description:
-      'Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Et harum quidem rerum facilis est et expedita distinctio.',
-  },
-  {
-    id: 'botanical-illustration',
-    label: 'Botanical Illustration',
-    sort_order: 50,
-    description:
-      'Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.',
-  },
-  {
-    id: 'special-projects',
-    label: 'Special Projects',
-    sort_order: 60,
-    description:
-      'Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem.',
-  },
-];
 
 const pool = new pg.Pool({ connectionString: databaseUrl });
 
@@ -149,18 +105,18 @@ async function main() {
         "updatedAt" timestamptz not null default current_timestamp
       )
     `);
-    await client.query(
-      `create index if not exists "session_userId_idx" on "session"("userId")`,
-    );
+    await client.query(`create index if not exists "session_userId_idx" on "session"("userId")`);
     await client.query(`create index if not exists "account_userId_idx" on account("userId")`);
     await client.query(
       `create index if not exists "verification_identifier_idx" on verification(identifier)`,
     );
 
     // app tables
+    await client.query(`create sequence if not exists artwork_category_id_seq`);
     await client.query(`
       create table if not exists artwork_categories (
         id text primary key,
+        category_slug text not null,
         label text not null,
         description text,
         sort_order integer not null default 0,
@@ -168,6 +124,12 @@ async function main() {
         created_at text not null,
         updated_at text not null
       )
+    `);
+    await client.query(`alter table artwork_categories add column if not exists category_slug text`);
+    await client.query(`
+      update artwork_categories
+      set category_slug = id
+      where category_slug is null or category_slug = ''
     `);
     await client.query(`alter table artwork_categories drop column if exists slug`);
     await client.query(`
@@ -192,36 +154,102 @@ async function main() {
         updated_at text not null
       )
     `);
+    await client.query(`
+      do $$
+      declare
+        fk_name text;
+      begin
+        select conname into fk_name
+        from pg_constraint
+        where conrelid = 'artworks'::regclass
+          and confrelid = 'artwork_categories'::regclass
+          and contype = 'f'
+        limit 1;
+
+        if fk_name is not null then
+          execute format('alter table artworks drop constraint %I', fk_name);
+        end if;
+      end $$
+    `);
+    await client.query(`drop table if exists category_id_migration`);
+    await client.query(
+      `create temporary table category_id_migration (old_id text primary key, new_id text not null) on commit drop`,
+    );
+    await client.query(`
+      with max_existing as (
+        select coalesce(max((substring(id from 2))::integer), 0) as max_id
+        from artwork_categories
+        where id ~ '^c[0-9]+$'
+      ), legacy as (
+        select
+          id as old_id,
+          row_number() over (order by sort_order asc, label asc, id asc) as rn
+        from artwork_categories
+        where id !~ '^c[0-9]+$'
+      )
+      insert into category_id_migration (old_id, new_id)
+      select legacy.old_id, 'c' || lpad((max_existing.max_id + legacy.rn)::text, 3, '0')
+      from legacy
+      cross join max_existing
+    `);
+    await client.query(`
+      update artworks
+      set category_id = category_id_migration.new_id
+      from category_id_migration
+      where artworks.category_id = category_id_migration.old_id
+    `);
+    await client.query(`
+      update artwork_categories
+      set id = category_id_migration.new_id
+      from category_id_migration
+      where artwork_categories.id = category_id_migration.old_id
+    `);
+    await client.query(`
+      do $$
+      begin
+        if not exists (
+          select 1
+          from pg_constraint
+          where conrelid = 'artworks'::regclass
+            and confrelid = 'artwork_categories'::regclass
+            and contype = 'f'
+        ) then
+          alter table artworks
+          add constraint artworks_category_id_fkey
+          foreign key (category_id) references artwork_categories(id);
+        end if;
+      end $$
+    `);
+    await client.query(`alter table artwork_categories alter column category_slug set not null`);
+    await client.query(`
+      select setval(
+        'artwork_category_id_seq',
+        greatest(coalesce(max((substring(id from 2))::integer), 0), 1),
+        coalesce(max((substring(id from 2))::integer), 0) > 0
+      )
+      from artwork_categories
+      where id ~ '^c[0-9]+$'
+    `);
+    await client.query(
+      `create unique index if not exists "artwork_categories_category_slug_idx" on artwork_categories(category_slug)`,
+    );
     await client.query(
       `create index if not exists "artwork_categories_status_sort_idx" on artwork_categories(status, sort_order, label)`,
     );
-    await client.query(`create index if not exists "artworks_category_idx" on artworks(category_id)`);
+    await client.query(
+      `create index if not exists "artworks_category_idx" on artworks(category_id)`,
+    );
     await client.query(
       `create index if not exists "artworks_status_sort_idx" on artworks(status, sort_order, created_at)`,
     );
 
     await client.query('COMMIT');
 
-    // seed categories (on conflict do nothing)
-    const createdAt = new Date().toISOString();
-    for (const category of CATEGORY_SEEDS) {
-      await client.query(
-        `insert into artwork_categories (id, label, description, sort_order, status, created_at, updated_at)
-         values ($1, $2, $3, $4, 'active', $5, $5)
-         on conflict (id) do nothing`,
-        [category.id, category.label, category.description, category.sort_order, createdAt],
-      );
-    }
-
     const { rows } = await client.query(
       `select count(*)::int as n from information_schema.tables where table_schema = 'public'`,
     );
-    const { rows: catRows } = await client.query(
-      `select count(*)::int as n from artwork_categories`,
-    );
-    console.log(
-      `✓ Schema ready — ${rows[0].n} tables, ${catRows[0].n} category rows in artwork_categories.`,
-    );
+    console.log(`✓ Schema ready — ${rows[0].n} tables.`);
+    console.log('ℹ No categories seeded. Add categories through the admin UI.');
   } finally {
     client.release();
   }

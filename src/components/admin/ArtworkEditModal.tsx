@@ -30,7 +30,7 @@ import type { ArtworkCategoryRecord } from '@/lib/categories.server';
 
 type ArtworkEditModalProps = {
   record: ArtworkRecord;
-  categories: ArtworkCategoryRecord[];
+  activeCategories: ArtworkCategoryRecord[];
   onClose: () => void;
 };
 
@@ -74,14 +74,17 @@ function RequiredLabel({ htmlFor, children }: { htmlFor: string; children: React
   );
 }
 
-export function ArtworkEditModal({ record, categories, onClose }: ArtworkEditModalProps) {
+export function ArtworkEditModal({
+  record,
+  activeCategories,
+  onClose,
+}: ArtworkEditModalProps) {
   const router = useRouter();
   const [form, setForm] = useState(() => createArtworkEditForm(record));
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const selectableCategories = useMemo(() => {
-    const activeCategories = categories.filter((category) => category.status === 'active');
     if (activeCategories.some((category) => category.id === record.categoryId)) {
       return activeCategories;
     }
@@ -98,7 +101,7 @@ export function ArtworkEditModal({ record, categories, onClose }: ArtworkEditMod
         updatedAt: record.updatedAt,
       },
     ];
-  }, [categories, record]);
+  }, [activeCategories, record]);
 
   const categoryItems = useMemo(
     () => Object.fromEntries(selectableCategories.map((category) => [category.id, category.label])),

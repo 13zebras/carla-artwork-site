@@ -35,13 +35,12 @@ export function normalizeFilename(value: string) {
 
 export function buildCategoryResolver(categories: ArtworkCategoryRecord[]): CategoryResolver {
   const byId = new Map(categories.map((category) => [category.id, category]));
-  const byLabel = new Map(categories.map((category) => [category.label.toLowerCase(), category]));
   return (input: string): ArtworkCategoryRecord | undefined => {
     const value = input.trim();
     if (value.length === 0) {
       return undefined;
     }
-    return byId.get(value) ?? byLabel.get(value.toLowerCase());
+    return byId.get(value);
   };
 }
 

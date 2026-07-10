@@ -13,10 +13,22 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
-import { listAdminDashboard } from '@/lib/artwork-upload.functions';
+import {
+  listAdminDashboard,
+  type AdminDashboard,
+} from '@/lib/artwork-upload.functions';
 import { authClient } from '@/lib/auth-client';
 import { getSession, requireAdmin } from '@/lib/auth.functions';
-import { listAdminCategories } from '@/lib/categories.functions';
+import { cn } from '@/lib/utils';
+
+function mergeCategories(
+  activeCategories: AdminDashboard['activeCategories'],
+  archivedCategories: AdminDashboard['activeCategories'],
+) {
+  return [...activeCategories, ...archivedCategories].sort(
+    (a, b) => a.sortOrder - b.sortOrder || a.label.localeCompare(b.label),
+  );
+}
 
 export const Route = createFileRoute('/admin')({
   beforeLoad: async ({ location }) => {
@@ -31,22 +43,17 @@ export const Route = createFileRoute('/admin')({
       throw redirect({ to: '/login', search: { redirect: location.href } });
     }
   },
-  loader: async () => {
-    const [dashboard, categories] = await Promise.all([
-      listAdminDashboard(),
-      listAdminCategories(),
-    ]);
-
-    return { dashboard, categories };
-  },
+  loader: async () => listAdminDashboard(),
   component: AdminLayout,
 });
 
 function AdminLayout() {
   const navigate = useNavigate();
 
-  const { dashboard, categories } = Route.useLoaderData();
-
+  const { dashboard, archivedCategories } = Route.useLoaderData();
+  const { activeCategories } = dashboard;
+  const allCategories = mergeCategories(activeCategories, archivedCategories);
+  console.log('%c>>> dashboard', 'color: red', dashboard);
   const [isImageUploadOpen, setIsImageUploadOpen] = useState(false);
   const [isBulkImageUploadOpen, setIsBulkImageUploadOpen] = useState(false);
 
@@ -67,7 +74,6 @@ function AdminLayout() {
         <div className='flex flex-row justify-between items-center md:gap-12 xl:gap-16 mx-auto max-w-300'>
           <div className='flex items-center gap-8 xl:gap-16'>
             <h1 className='font-semibold text-3xl xl:text-3xl'>Artwork Admin Dashboard</h1>
-            {/* <p className='text-base xl:text-lg'>carlastine.com</p> */}
           </div>
           <nav className='flex flex-wrap items-center gap-3 xl:gap-4'>
             <Tooltip>
@@ -100,7 +106,12 @@ function AdminLayout() {
         </div>
       </header>
 
-      <div className='hidden min-[900px]:block mx-auto px-12 pt-20 pb-6 w-full max-w-384'>
+      <div
+        className={cn(
+          'hidden min-[900px]:block mx-auto px-12 pt-20 pb-6 w-full max-w-384',
+          dashboard.records.length === 0 && 'max-w-250',
+        )}
+      >
         <div className='space-y-12 py-6'>
           <DashboardSummary
             dashboard={dashboard}
@@ -109,13 +120,7 @@ function AdminLayout() {
           />
 
           <Tabs defaultValue='records' className='w-full min-w-0'>
-            <div className='flex flex-wrap justify-between items-center gap-4 mx-auto w-full max-w-300'>
-              {/* <div className='space-y-2'>
-                <h2 className='font-semibold text-3xl tracking-tight'>Library inventory</h2>
-                <p className='text-muted-foreground text-base'>
-                  Compare the database snapshot against Bunny Storage.
-                </p>
-              </div> */}
+            <div className='flex flex-wrap justify-between items-center gap-4 mx-auto pr-2 w-full max-w-300'>
               <TabsList variant='line'>
                 <TabsTrigger className='text-base' value='records'>
                   Database Records
@@ -135,19 +140,13 @@ function AdminLayout() {
 
             <DatabaseRecordsTab
               dashboard={dashboard}
-              categories={categories}
+              activeCategories={activeCategories}
               storageByPath={storageByPath}
-              // untrackedFiles={untrackedFiles}
             />
 
-            <BunnyStorageTab
-              dashboard={dashboard}
-              recordByStoragePath={recordByStoragePath}
-              categories={categories}
-              untrackedFiles={untrackedFiles}
-            />
+            <BunnyStorageTab dashboard={dashboard} recordByStoragePath={recordByStoragePath} />
 
-            <CategoriesTab categories={categories} />
+            <CategoriesTab allCategories={allCategories} />
           </Tabs>
         </div>
       </div>
@@ -156,13 +155,13 @@ function AdminLayout() {
       </div>
 
       <ImageUploadModal
-        categories={categories}
+        activeCategories={activeCategories}
         untrackedFiles={untrackedFiles}
         open={isImageUploadOpen}
         onOpenChange={setIsImageUploadOpen}
       />
       <BulkImageUploadModal
-        categories={categories}
+        activeCategories={activeCategories}
         open={isBulkImageUploadOpen}
         onOpenChange={setIsBulkImageUploadOpen}
       />

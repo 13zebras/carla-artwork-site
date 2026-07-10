@@ -90,18 +90,17 @@ function ErrorTable({ errors }: { errors: BulkArtworkUploadError[] }) {
 }
 
 type BulkImageUploadModalProps = {
-  categories: ArtworkCategoryRecord[];
+  activeCategories: ArtworkCategoryRecord[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
 };
 
 export function BulkImageUploadModal({
-  categories,
+  activeCategories,
   open,
   onOpenChange,
 }: BulkImageUploadModalProps) {
   const router = useRouter();
-  const activeCategories = categories.filter((category) => category.status === 'active');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [result, setResult] = useState<BulkArtworkUploadResult | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);

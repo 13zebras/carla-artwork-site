@@ -1,13 +1,15 @@
 // Drops the app tables (artworks, artwork_categories) and re-initializes them.
 // Auth tables (user/session/account/verification) are left untouched, so logins persist.
-// Delegates the rebuild + re-seed to scripts/init-db.mjs (idempotent) to keep one source of truth.
+// Delegates the rebuild to scripts/init-db.mjs (idempotent) to keep one source of truth.
+// No categories are re-seeded; the categories table starts empty after a reset.
 //
 //   node scripts/reset-db.mjs        (or)   pnpm db:reset
 
-import { readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import pg from 'pg';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -55,15 +57,16 @@ async function main() {
     await client.query('BEGIN');
     await client.query('drop table if exists artworks');
     await client.query('drop table if exists artwork_categories');
+    await client.query('drop sequence if exists artwork_category_id_seq');
     await client.query('COMMIT');
 
-    console.log('✓ Dropped artworks and artwork_categories (auth tables untouched).');
+    console.log('✓ Dropped artworks, artwork_categories, and category id sequence (auth tables untouched).');
   } finally {
     client.release();
   }
 
-  // Re-create schema + re-seed categories via init-db.mjs (creates only what's missing).
-  console.log('→ Re-initializing schema and seeds…');
+  // Re-create schema via init-db.mjs (creates only what's missing; no categories seeded).
+  console.log('→ Re-initializing schema…');
   execFileSync(process.execPath, [path.join(__dirname, 'init-db.mjs')], {
     stdio: 'inherit',
     cwd: repoRoot,

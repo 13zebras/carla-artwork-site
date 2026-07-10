@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react';
-
 import { XIcon } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 import {
   Drawer,

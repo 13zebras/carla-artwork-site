@@ -11,10 +11,10 @@ export function UploadActionButtons({
   onBulkImageUpload,
 }: UploadActionButtonsProps) {
   return (
-    <div className='flex gap-2'>
+    <div className='flex gap-4'>
       <Tooltip>
         <TooltipTrigger
-          render={<Button variant='positive' className='w-29 cursor-pointer' />}
+          render={<Button variant='positive' size='sm' className='w-28 cursor-pointer' />}
           onClick={onImageUpload}
         >
           Add Image
@@ -23,7 +23,7 @@ export function UploadActionButtons({
       </Tooltip>
       <Tooltip>
         <TooltipTrigger
-          render={<Button variant='information' className='w-29 cursor-pointer' />}
+          render={<Button variant='information' size='sm' className='w-28 cursor-pointer' />}
           onClick={onBulkImageUpload}
         >
           Bulk Images

@@ -39,9 +39,12 @@ import { ensureSchema } from './db.server';
 import { getServerEnv } from './env.server';
 
 export type AdminDashboardData = {
-  records: ArtworkRecord[];
-  storageFiles: BunnyStorageFile[];
-  categories: ArtworkCategoryRecord[];
+  dashboard: {
+    records: ArtworkRecord[];
+    storageFiles: BunnyStorageFile[];
+    activeCategories: ArtworkCategoryRecord[];
+  };
+  archivedCategories: ArtworkCategoryRecord[];
 };
 
 export type BulkArtworkUploadSuccess = {
@@ -311,11 +314,23 @@ function createArtworkRecord(input: {
 export const listAdminDashboard = createServerFn({ method: 'GET' }).handler(async () => {
   await ensureSchema();
   await requireAdminFromRequest();
+
+  const [records, storageFiles, allCategories] = await Promise.all([
+    listArtworkRecords(),
+    listBunnyStorageFiles(),
+    listCategories({ includeArchived: true }),
+  ]);
+  const activeCategories = allCategories.filter((category) => category.status === 'active');
+  const archivedCategories = allCategories.filter((category) => category.status === 'archived');
+
   return {
-    records: await listArtworkRecords(),
-    storageFiles: await listBunnyStorageFiles(),
-    categories: await listCategories(),
-  };
+    dashboard: {
+      records,
+      storageFiles,
+      activeCategories,
+    },
+    archivedCategories,
+  } satisfies AdminDashboardData;
 });
 
 export async function deleteArtworkWithStorage(id: string) {

@@ -134,6 +134,10 @@
   --card-shadow: var(--theme-dark-card-shadow);
 }
 
+body {
+  --admin-tabs-width: calc(100% + 0.25rem);
+}
+
 @media (prefers-color-scheme: dark) {
   :root:not(.light):not(.dark) {
     color-scheme: dark;

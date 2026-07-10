@@ -32,11 +32,7 @@ function TooltipTrigger({
   const child = asChild && React.isValidElement(children) ? children : undefined;
 
   return (
-    <TooltipPrimitive.Trigger
-      data-slot='tooltip-trigger'
-      render={render ?? child}
-      {...props}
-    >
+    <TooltipPrimitive.Trigger data-slot='tooltip-trigger' render={render ?? child} {...props}>
       {child ? undefined : children}
     </TooltipPrimitive.Trigger>
   );
@@ -51,10 +47,7 @@ function TooltipContent({
   children,
   ...props
 }: TooltipPrimitive.Popup.Props &
-  Pick<
-    TooltipPrimitive.Positioner.Props,
-    'align' | 'alignOffset' | 'side' | 'sideOffset'
-  >) {
+  Pick<TooltipPrimitive.Positioner.Props, 'align' | 'alignOffset' | 'side' | 'sideOffset'>) {
   return (
     <TooltipPrimitive.Portal>
       <TooltipPrimitive.Positioner

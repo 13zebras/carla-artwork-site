@@ -1,5 +1,5 @@
-import { Toaster as Sonner, type ToasterProps } from 'sonner';
 import { useEffect, useState } from 'react';
+import { Toaster as Sonner, type ToasterProps } from 'sonner';
 
 type Theme = 'light' | 'dark' | 'system';
 

@@ -1,58 +1,13 @@
 import { Kysely, PostgresDialect, sql } from 'kysely';
 import pg from 'pg';
 
-import { artworkCategoryDescriptions } from '@/data/artworkCategories';
-
 import { getServerEnv } from './env.server';
-
-const CATEGORY_SEEDS = [
-  {
-    id: 'illustration',
-    label: 'Illustration',
-    sort_order: 10,
-    description: artworkCategoryDescriptions.illustration,
-  },
-  {
-    id: 'fine-art-collage',
-    label: 'Fine Art Collage',
-    sort_order: 20,
-    description: artworkCategoryDescriptions.fineArtCollage,
-  },
-  {
-    id: 'graphic-design',
-    label: 'Graphic Design',
-    sort_order: 30,
-    description: artworkCategoryDescriptions.graphicDesign,
-  },
-  {
-    id: 'food',
-    label: 'Food',
-    sort_order: 40,
-    description: artworkCategoryDescriptions.food,
-  },
-  {
-    id: 'botanical-illustration',
-    label: 'Botanical Illustration',
-    sort_order: 50,
-    description: artworkCategoryDescriptions.botanicalIllustration,
-  },
-  {
-    id: 'special-projects',
-    label: 'Special Projects',
-    sort_order: 60,
-    description: artworkCategoryDescriptions.specialProjects,
-  },
-] as const;
 
 type AppDatabase = Record<string, never>;
 
 let pool: pg.Pool | undefined;
 let db: Kysely<AppDatabase> | undefined;
 let schemaPromise: Promise<void> | undefined;
-
-function nowIso() {
-  return new Date().toISOString();
-}
 
 export function getPool(): pg.Pool {
   if (!pool) {
@@ -79,7 +34,7 @@ export function ensureSchema(): Promise<void> {
 export async function initAppSchema(): Promise<void> {
   const database = getKysely();
 
-  await database.connection().execute(async (db) => {
+  await database.transaction().execute(async (db) => {
     await sql`
       create table if not exists "user" (
         id text primary key,
@@ -140,9 +95,12 @@ export async function initAppSchema(): Promise<void> {
       db,
     );
 
+    await sql`create sequence if not exists artwork_category_id_seq`.execute(db);
+
     await sql`
       create table if not exists artwork_categories (
         id text primary key,
+        category_slug text not null,
         label text not null,
         description text,
         sort_order integer not null default 0,
@@ -150,6 +108,12 @@ export async function initAppSchema(): Promise<void> {
         created_at text not null,
         updated_at text not null
       )
+    `.execute(db);
+    await sql`alter table artwork_categories add column if not exists category_slug text`.execute(db);
+    await sql`
+      update artwork_categories
+      set category_slug = id
+      where category_slug is null or category_slug = ''
     `.execute(db);
     await sql`alter table artwork_categories drop column if exists slug`.execute(db);
 
@@ -176,23 +140,100 @@ export async function initAppSchema(): Promise<void> {
       )
     `.execute(db);
 
+    await sql`
+      do $$
+      declare
+        fk_name text;
+      begin
+        select conname into fk_name
+        from pg_constraint
+        where conrelid = 'artworks'::regclass
+          and confrelid = 'artwork_categories'::regclass
+          and contype = 'f'
+        limit 1;
+
+        if fk_name is not null then
+          execute format('alter table artworks drop constraint %I', fk_name);
+        end if;
+      end $$
+    `.execute(db);
+
+    await sql`drop table if exists category_id_migration`.execute(db);
+    await sql`create temporary table category_id_migration (old_id text primary key, new_id text not null)`.execute(
+      db,
+    );
+    await sql`
+      with max_existing as (
+        select coalesce(max((substring(id from 2))::integer), 0) as max_id
+        from artwork_categories
+        where id ~ '^c[0-9]+$'
+      ), legacy as (
+        select
+          id as old_id,
+          row_number() over (order by sort_order asc, label asc, id asc) as rn
+        from artwork_categories
+        where id !~ '^c[0-9]+$'
+      )
+      insert into category_id_migration (old_id, new_id)
+      select legacy.old_id, 'c' || lpad((max_existing.max_id + legacy.rn)::text, 3, '0')
+      from legacy
+      cross join max_existing
+    `.execute(db);
+    await sql`
+      update artworks
+      set category_id = category_id_migration.new_id
+      from category_id_migration
+      where artworks.category_id = category_id_migration.old_id
+    `.execute(db);
+    await sql`
+      update artwork_categories
+      set id = category_id_migration.new_id
+      from category_id_migration
+      where artwork_categories.id = category_id_migration.old_id
+    `.execute(db);
+    await sql`drop table if exists category_id_migration`.execute(db);
+
+    await sql`
+      do $$
+      begin
+        if not exists (
+          select 1
+          from pg_constraint
+          where conrelid = 'artworks'::regclass
+            and confrelid = 'artwork_categories'::regclass
+            and contype = 'f'
+        ) then
+          alter table artworks
+          add constraint artworks_category_id_fkey
+          foreign key (category_id) references artwork_categories(id);
+        end if;
+      end $$
+    `.execute(db);
+
+    await sql`alter table artwork_categories alter column category_slug set not null`.execute(db);
+    await sql`
+      select setval(
+        'artwork_category_id_seq',
+        greatest(coalesce(max((substring(id from 2))::integer), 0), 1),
+        coalesce(max((substring(id from 2))::integer), 0) > 0
+      )
+      from artwork_categories
+      where id ~ '^c[0-9]+$'
+    `.execute(db);
+
+    await sql`create unique index if not exists "artwork_categories_category_slug_idx" on artwork_categories(category_slug)`.execute(
+      db,
+    );
     await sql`create index if not exists "artwork_categories_status_sort_idx" on artwork_categories(status, sort_order, label)`.execute(
       db,
     );
-    await sql`create index if not exists "artworks_category_idx" on artworks(category_id)`.execute(db);
+    await sql`create index if not exists "artworks_category_idx" on artworks(category_id)`.execute(
+      db,
+    );
     await sql`create index if not exists "artworks_status_sort_idx" on artworks(status, sort_order, created_at)`.execute(
       db,
     );
   });
-
-  const createdAt = nowIso();
-  for (const category of CATEGORY_SEEDS) {
-    await sql`
-      insert into artwork_categories (id, label, description, sort_order, status, created_at, updated_at)
-      values (${category.id}, ${category.label}, ${category.description ?? null}, ${category.sort_order}, 'active', ${createdAt}, ${createdAt})
-      on conflict (id) do nothing
-    `.execute(database);
-  }
 }
 
 export async function closeDb(): Promise<void> {

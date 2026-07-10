@@ -1,7 +1,4 @@
-import { useState } from 'react';
-
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
@@ -12,52 +9,15 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { TabsContent } from '@/components/ui/tabs';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { AdminDashboard } from '@/lib/artwork-upload.functions';
 import type { ArtworkRecord } from '@/lib/artworks.server';
 import type { BunnyStorageFile } from '@/lib/bunny.server';
-import type { ArtworkCategoryRecord } from '@/lib/categories.server';
 import { dateFormatter } from '@/lib/utils';
-
-import { BulkImageUploadModal } from './BulkImageUploadModal';
-import { ImageUploadModal } from './ImageUploadModal';
 
 type BunnyStorageTabProps = {
   dashboard: AdminDashboard;
   recordByStoragePath: Map<string, ArtworkRecord>;
-  categories: ArtworkCategoryRecord[];
-  untrackedFiles: BunnyStorageFile[];
 };
-
-type UploadActionButtonsProps = {
-  onImageUpload: () => void;
-  onBulkImageUpload: () => void;
-};
-
-function UploadActionButtons({ onImageUpload, onBulkImageUpload }: UploadActionButtonsProps) {
-  return (
-    <>
-      <Tooltip>
-        <TooltipTrigger
-          render={<Button variant='positive' className='w-32 cursor-pointer' />}
-          onClick={onImageUpload}
-        >
-          Upload Image
-        </TooltipTrigger>
-        <TooltipContent side='top'>Upload a single image</TooltipContent>
-      </Tooltip>
-      <Tooltip>
-        <TooltipTrigger
-          render={<Button variant='information' className='w-32 cursor-pointer' />}
-          onClick={onBulkImageUpload}
-        >
-          Bulk Upload
-        </TooltipTrigger>
-        <TooltipContent side='top'>Upload several images at once</TooltipContent>
-      </Tooltip>
-    </>
-  );
-}
 
 function formatSizeLabel(sizeBytes: BunnyStorageFile['sizeBytes']) {
   if (sizeBytes === null) {
@@ -82,49 +42,22 @@ function formatSizeLabel(sizeBytes: BunnyStorageFile['sizeBytes']) {
   return `${size.toFixed(fractionDigits)} ${units[unitIndex]}`;
 }
 
-export function BunnyStorageTab({
-  dashboard,
-  recordByStoragePath,
-  categories,
-  untrackedFiles,
-}: BunnyStorageTabProps) {
-  const [isImageUploadOpen, setIsImageUploadOpen] = useState(false);
-  const [isBulkImageUploadOpen, setIsBulkImageUploadOpen] = useState(false);
-
-  function openImageUpload() {
-    setIsImageUploadOpen(true);
-  }
-
-  function openBulkImageUpload() {
-    setIsBulkImageUploadOpen(true);
-  }
-
+export function BunnyStorageTab({ dashboard, recordByStoragePath }: BunnyStorageTabProps) {
   return (
     <TabsContent value='storage' className='mx-auto mt-4 w-full max-w-300'>
       {dashboard.storageFiles.length === 0 ? (
-        <Card className='p-8 rounded-sm'>
-          <CardContent className='flex justify-between items-center gap-6'>
-            <div className='flex flex-col justify-start items-start gap-6'>
-              <h2 className='font-bold text-2xl'>Bunny Image Storage Is Empty</h2>
-              <h3 className='font-semibold text-lg'>o artworks have been uploaded to Bunny CDN.</h3>
-            </div>
-            <div className='flex flex-col justify-between items-start gap-6'>
-              <h4 className='max-w-sm text-muted-foreground text-lg'>
-                Add images to save in the database.
-              </h4>
-              <div className='flex gap-4'>
-                <UploadActionButtons
-                  onImageUpload={openImageUpload}
-                  onBulkImageUpload={openBulkImageUpload}
-                />
-              </div>
-            </div>
+        <Card className='p-8 rounded-sm h-40'>
+          <CardContent className='flex flex-col justify-center items-start gap-6 h-full'>
+            <h2 className='font-bold text-xl'>Empty Bunny Image Storage</h2>
+            <h3 className='font-semibold text-base'>
+              No artworks have been uploaded to Bunny CDN.
+            </h3>
           </CardContent>
         </Card>
       ) : (
-        <Card className='pt-4 pb-0 border-b-0 rounded-sm overflow-hidden'>
-          <CardHeader>
-            <CardTitle className='text-xl'>Bunny Storage Image Files</CardTitle>
+        <Card className='gap-5 pt-5 pb-0 border-b-0 rounded-sm w-full max-w-300 overflow-hidden'>
+          <CardHeader className='flex flex-col gap-2'>
+            <CardTitle className='font-semibold text-xl'>Bunny Storage Image Files</CardTitle>
             <CardDescription>
               Images stored in Bunny CDN, with untracked files called out explicitly.
             </CardDescription>
@@ -182,18 +115,6 @@ export function BunnyStorageTab({
           </CardContent>
         </Card>
       )}
-
-      <ImageUploadModal
-        categories={categories}
-        untrackedFiles={untrackedFiles}
-        open={isImageUploadOpen}
-        onOpenChange={setIsImageUploadOpen}
-      />
-      <BulkImageUploadModal
-        categories={categories}
-        open={isBulkImageUploadOpen}
-        onOpenChange={setIsBulkImageUploadOpen}
-      />
     </TabsContent>
   );
 }
