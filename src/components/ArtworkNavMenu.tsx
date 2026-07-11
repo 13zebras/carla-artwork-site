@@ -9,9 +9,9 @@ import {
   NavigationMenuTrigger,
 } from '@/components/ui/navigation-menu';
 import { artworkCategoryLinks } from '@/data/artworkCategories';
+import { cn } from '@/lib/shared/utils';
 
-const activeCategoryLinkClassName =
-  'font-hand-rendered inline text-muted-foreground/60 pointer-events-none cursor-default transition-colors hover:bg-transparent hover:text-muted-foreground/60 focus:bg-transparent focus:text-muted-foreground/60 dark:hover:bg-transparent';
+import { linkClassName, activeLinkClassName } from './Header';
 
 export function ArtworkNavMenu() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
@@ -20,7 +20,12 @@ export function ArtworkNavMenu() {
     <NavigationMenu viewport={false}>
       <NavigationMenuList className='gap-0'>
         <NavigationMenuItem>
-          <NavigationMenuTrigger className='data-[state=open]:bg-transparent data-[state=open]:hover:bg-transparent data-[state=open]:focus:bg-transparent focus:bg-transparent h-auto data-[state=open]:text-foreground focus:text-foreground nav-menu-link'>
+          <NavigationMenuTrigger
+            className={cn(
+              'data-[state=open]:bg-transparent data-[state=open]:hover:bg-transparent data-[state=open]:focus:bg-transparent focus:bg-transparent h-auto data-[state=open]:text-foreground focus:text-foreground',
+              linkClassName,
+            )}
+          >
             Artwork
           </NavigationMenuTrigger>
           <NavigationMenuContent className='z-50 shadow-shadow-card group-data-[viewport=false]/navigation-menu:shadow-xl group-data-[viewport=false]/navigation-menu:border border-border-2nd group-data-[viewport=false]/navigation-menu:rounded-xs w-max max-w-75'>
@@ -32,14 +37,17 @@ export function ArtworkNavMenu() {
                   <li key={label}>
                     <NavigationMenuLink asChild>
                       {isActive ? (
-                        <span aria-current='page' className={activeCategoryLinkClassName}>
+                        <span
+                          aria-current='page'
+                          className={cn(linkClassName, activeLinkClassName)}
+                        >
                           {label}
                         </span>
                       ) : (
                         <Link
                           to={to}
                           params={params}
-                          className='text-muted-foreground transition-colors nav-menu-link'
+                          className={cn(linkClassName, 'transition-colors')}
                         >
                           {label}
                         </Link>

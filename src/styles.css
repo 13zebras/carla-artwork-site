@@ -206,14 +206,6 @@ body {
   }
 }
 
-.nav-menu-link {
-  @apply font-hand-rendered text-muted-foreground text-sm xs:text-base px-1 xxs:px-2 pt-1 pb-1 rounded-md hover:text-foreground hover:bg-brand-200/60 active:text-foreground active:bg-brand-300/60 dark:hover:bg-brand-700/80 dark:active:bg-brand-700/70;
-}
-
-.dashboard-summary-card {
-  @apply w-30 xl:w-36 h-24 justify-center items-center gap-3 px-3 py-2 shrink-0 bg-card/70 shadow-sm;
-}
-
 .ph {
   @apply placeholder:text-neutral-600 dark:placeholder:text-neutral-300/80 data-placeholder:text-neutral-600 dark:data-placeholder:text-neutral-300/80;
 }

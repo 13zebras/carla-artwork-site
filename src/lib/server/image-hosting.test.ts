@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import { sql } from 'kysely';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { buildAboutImageStoragePath, toAboutContent } from '@/lib/server/about.server';
 import {
   buildBulkErrors,
   buildCategoryResolver,
@@ -32,7 +33,11 @@ import {
   updateCategory,
 } from '@/lib/server/categories.server';
 import { ensureSchema, getKysely } from '@/lib/server/db.server';
-import { getSiteSettings, updateDemoMode } from '@/lib/server/site-settings.server';
+import {
+  getSiteSettings,
+  updateAboutSettings,
+  updateDemoMode,
+} from '@/lib/server/site-settings.server';
 import type { ArtworkRecord } from '@/lib/shared/artworks.types';
 import { buildBunnyCdnUrl } from '@/lib/shared/bunny';
 
@@ -43,6 +48,12 @@ async function resetDatabase() {
   await sql`truncate table artworks, artwork_categories`.execute(getKysely());
   await sql`alter sequence artwork_category_id_seq restart with 1`.execute(getKysely());
   await updateDemoMode(false);
+  await updateAboutSettings({
+    aboutText: '',
+    aboutMobileImagePath: null,
+    aboutDesktopImagePath: null,
+    aboutImageAlt: '',
+  });
 }
 
 async function seedTestCategories() {
@@ -227,6 +238,37 @@ describe('site settings', () => {
 
     expect(settings.demoMode).toBe(true);
     await expect(getSiteSettings()).resolves.toMatchObject({ demoMode: true });
+  });
+
+  it('persists about content and responsive image details', async () => {
+    const text = 'First paragraph.\n\nSecond paragraph.\n\nThird paragraph.';
+    const settings = await updateAboutSettings({
+      aboutText: text,
+      aboutMobileImagePath: 'siteImages/about-page-photo-mobile.webp',
+      aboutDesktopImagePath: 'siteImages/about-page-photo-desktop.jpg',
+      aboutImageAlt: 'Carla working in her studio',
+    });
+
+    expect(settings).toMatchObject({
+      aboutText: text,
+      aboutMobileImagePath: 'siteImages/about-page-photo-mobile.webp',
+      aboutDesktopImagePath: 'siteImages/about-page-photo-desktop.jpg',
+      aboutImageAlt: 'Carla working in her studio',
+    });
+    expect(toAboutContent(settings)).toMatchObject({
+      text,
+      mobileImageUrl: expect.stringContaining('siteImages/about-page-photo-mobile.webp?v='),
+      desktopImageUrl: expect.stringContaining('siteImages/about-page-photo-desktop.jpg?v='),
+    });
+  });
+
+  it('builds stable Bunny paths for both about photos', () => {
+    expect(buildAboutImageStoragePath('mobile', 'png')).toBe(
+      'siteImages/about-page-photo-mobile.png',
+    );
+    expect(buildAboutImageStoragePath('desktop', 'webp')).toBe(
+      'siteImages/about-page-photo-desktop.webp',
+    );
   });
 });
 

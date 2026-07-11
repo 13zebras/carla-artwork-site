@@ -11,6 +11,7 @@ import type {
 } from '../shared/artwork-upload.types';
 import type { ArtworkRecord, ArtworkStatus } from '../shared/artworks.types';
 import { buildBunnyCdnUrl } from '../shared/bunny';
+import { toAboutContent } from './about.server';
 import {
   buildBulkErrors,
   buildCategoryResolver,
@@ -313,6 +314,7 @@ export const listAdminDashboard = createServerFn({ method: 'GET' }).handler(asyn
     },
     archivedCategories,
     demoMode: siteSettings.demoMode,
+    about: toAboutContent(siteSettings),
   } satisfies AdminDashboardData;
 });
 

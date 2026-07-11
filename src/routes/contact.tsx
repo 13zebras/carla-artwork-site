@@ -101,12 +101,12 @@ function ContactComponent() {
   return (
     <div className='relative bg-background min-h-screen text-foreground'>
       <Header />
-      <main className='px-8 sm:px-8 pt-50 sm:pt-53 md:pt-56 xl:pt-44 pb-16'>
+      <main className='px-8 xs:px-10 sm:px-12 pt-50 sm:pt-52 xl:pt-44 pb-16'>
         <section className='mx-auto sm:pt-4 w-full max-w-xl'>
-          <div className='space-y-3 mb-8 text-center'>
-            <h1 className='font-hand-rendered text-3xl sm:text-5xl md:text-6xl'>Contact Me! </h1>
+          <div className='space-y-3 mb-6 xs:mb-10 text-center'>
+            <h1 className='font-hand-rendered text-3xl sm:text-5xl'>Contact Me! </h1>
             <p className='text-muted-foreground text-sm xs:text-base sm:text-lg'>
-              Send a note and I’ll get back to you soon.
+              Send a note, and I’ll get back to you soon.
             </p>
           </div>
 
@@ -114,13 +114,13 @@ function ContactComponent() {
             className='space-y-6 bg-background-2nd shadow-card p-5 sm:p-8 border border-border/60 rounded-xl'
             onSubmit={handleSubmit}
           >
-            <div className='space-y-2'>
+            <div className='space-y-3'>
               <Label htmlFor='contact-name'>Name</Label>
               <Input
                 id='contact-name'
                 name='name'
                 autoComplete='name'
-                className='bg-background h-11 md:text-base'
+                className='bg-background h-9 md:h-11 text-sm md:text-base'
                 maxLength={100}
                 value={name}
                 onChange={(event) => setName(event.target.value)}
@@ -128,14 +128,14 @@ function ContactComponent() {
               />
             </div>
 
-            <div className='space-y-2'>
+            <div className='space-y-3'>
               <Label htmlFor='contact-email'>Email</Label>
               <Input
                 id='contact-email'
                 name='email'
                 type='email'
                 autoComplete='email'
-                className='bg-background h-11 md:text-base'
+                className='bg-background h-9 md:h-11 text-sm md:text-base'
                 maxLength={254}
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
@@ -148,13 +148,23 @@ function ContactComponent() {
               <Textarea
                 id='contact-message'
                 name='message'
-                className='bg-background min-h-40 md:text-base resize-y'
+                className='bg-background min-h-30 sm:min-h-40 text-sm md:text-base resize-y'
                 maxLength={5000}
                 value={message}
                 onChange={(event) => setMessage(event.target.value)}
                 required
               />
             </div>
+
+            <Button
+              type='submit'
+              variant='brand'
+              size='lg'
+              className='w-full'
+              disabled={!canSubmit}
+            >
+              {pending ? 'Sending…' : 'Send message'}
+            </Button>
 
             <div className='flex justify-center mx-auto w-full max-w-100 min-h-16 overflow-visible max-[378px]:scale-80 max-[420px]:scale-90'>
               {TURNSTILE_SITE_KEY ? (
@@ -181,16 +191,6 @@ function ContactComponent() {
                 </p>
               )}
             </div>
-
-            <Button
-              type='submit'
-              variant='brand'
-              size='lg'
-              className='w-full'
-              disabled={!canSubmit}
-            >
-              {pending ? 'Sending…' : 'Send message'}
-            </Button>
           </form>
 
           <div className='mt-6' aria-live='polite'>

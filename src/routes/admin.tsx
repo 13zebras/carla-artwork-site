@@ -2,6 +2,7 @@ import { Link, createFileRoute, redirect, useNavigate } from '@tanstack/react-ro
 import { ExternalLink } from 'lucide-react';
 import { useState } from 'react';
 
+import { AboutTab } from '@/components/admin/AboutTab';
 import { BulkImageUploadModal } from '@/components/admin/BulkImageUploadModal';
 import { BunnyStorageTab } from '@/components/admin/BunnyStorageTab';
 import { CategoriesTab } from '@/components/admin/CategoriesTab';
@@ -48,7 +49,7 @@ export const Route = createFileRoute('/admin')({
 function AdminLayout() {
   const navigate = useNavigate();
 
-  const { dashboard, archivedCategories, demoMode } = Route.useLoaderData();
+  const { dashboard, archivedCategories, demoMode, about } = Route.useLoaderData();
   const { activeCategories } = dashboard;
   const allCategories = mergeCategories(activeCategories, archivedCategories);
 
@@ -107,7 +108,7 @@ function AdminLayout() {
 
       <div
         className={cn(
-          'hidden min-[900px]:block mx-auto px-12 pt-20 pb-6 w-full max-w-384',
+          'hidden min-[950px]:block mx-auto px-12 pt-20 pb-6 w-full max-w-384',
           dashboard.records.length === 0 && 'max-w-250',
         )}
       >
@@ -130,6 +131,9 @@ function AdminLayout() {
                 <TabsTrigger className='text-base' value='categories'>
                   Categories
                 </TabsTrigger>
+                <TabsTrigger className='text-base' value='about'>
+                  About
+                </TabsTrigger>
               </TabsList>
               <UploadActionButtons
                 onImageUpload={() => setIsImageUploadOpen(true)}
@@ -146,10 +150,12 @@ function AdminLayout() {
             <BunnyStorageTab dashboard={dashboard} recordByStoragePath={recordByStoragePath} />
 
             <CategoriesTab allCategories={allCategories} />
+
+            <AboutTab key={about.updatedAt} about={about} />
           </Tabs>
         </div>
       </div>
-      <div className='min-[900px]:hidden flex justify-center items-center mx-auto px-12 pt-64 lg:pt-20 pb-6 w-full'>
+      <div className='min-[950px]:hidden flex justify-center items-center mx-auto px-12 pt-64 lg:pt-20 pb-6 w-full'>
         <h2 className='font-semibold text-3xl text-center'>Best viewed on larger screen</h2>
       </div>
 

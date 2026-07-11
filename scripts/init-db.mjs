@@ -116,9 +116,25 @@ async function main() {
       create table if not exists site_settings (
         id text primary key check (id = 'site'),
         demo_mode boolean not null default false,
+        about_text text not null default '',
+        about_mobile_image_path text,
+        about_desktop_image_path text,
+        about_image_alt text not null default '',
         updated_at text not null
       )
     `);
+    await client.query(
+      `alter table site_settings add column if not exists about_text text not null default ''`,
+    );
+    await client.query(
+      `alter table site_settings add column if not exists about_mobile_image_path text`,
+    );
+    await client.query(
+      `alter table site_settings add column if not exists about_desktop_image_path text`,
+    );
+    await client.query(
+      `alter table site_settings add column if not exists about_image_alt text not null default ''`,
+    );
     await client.query(`
       insert into site_settings (id, demo_mode, updated_at)
       values ('site', false, current_timestamp::text)

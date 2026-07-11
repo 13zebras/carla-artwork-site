@@ -1,3 +1,4 @@
+import type { AboutContent } from './about.types';
 import type { ArtworkRecord } from './artworks.types';
 import type { BunnyStorageFile } from './bunny.types';
 import type { ArtworkCategoryRecord } from './categories.types';
@@ -16,6 +17,7 @@ export type AdminDashboardData = {
   };
   archivedCategories: ArtworkCategoryRecord[];
   demoMode: boolean;
+  about: AboutContent;
 };
 
 export type BulkArtworkUploadSuccess = {

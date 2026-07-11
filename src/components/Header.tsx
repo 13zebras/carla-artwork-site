@@ -1,8 +1,16 @@
 import { Link, useRouterState } from '@tanstack/react-router';
 import type { ReactNode } from 'react';
 
+import { cn } from '@/lib/shared/utils';
+
 import { ArtworkNavMenu } from './ArtworkNavMenu';
 import { ThemeToggle } from './ThemeToggle';
+
+export const linkClassName =
+  'font-hand-rendered text-muted-foreground text-sm xs:text-base px-1 xxs:px-2 pt-1 pb-1 rounded-md hover:text-foreground hover:bg-brand-200/60 active:text-foreground active:bg-brand-300/60 dark:hover:bg-brand-700/80 dark:active:bg-brand-700/70' as const;
+
+export const activeLinkClassName =
+  'text-muted-foreground/60 pointer-events-none cursor-default transition-colors hover:bg-transparent hover:text-muted-foreground/60 focus:bg-transparent focus:text-muted-foreground/60 dark:hover:bg-transparent' as const;
 
 function HomeLogoLink({ className, children }: { className: string; children: ReactNode }) {
   const isHome = useRouterState({ select: (state) => state.location.pathname === '/' });
@@ -19,10 +27,11 @@ function HomeLogoLink({ className, children }: { className: string; children: Re
 }
 
 export function Header() {
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
   return (
-    <header className='fixed z-20 flex justify-center bg-background w-full h-50 sm:h-52 xl:h-38'>
-      <div className='relative flex flex-col xl:flex-row items-center sm:items-start xl:items-center justify-center xl:justify-between gap-7 xl:gap-20 max-w-7xl w-full h-full px-4 xxs:px-6 xs:px-10 sm:px-12'>
-        <HomeLogoLink className='hidden xs:block max-w-162.5 w-full h-auto'>
+    <header className='z-20 fixed flex justify-center bg-background w-full h-50 sm:h-52 xl:h-38'>
+      <div className='relative flex xl:flex-row flex-col justify-center xl:justify-between items-center sm:items-start xl:items-center gap-7 xl:gap-20 px-4 xs:px-10 xxs:px-6 sm:px-12 w-full max-w-7xl h-full'>
+        <HomeLogoLink className='hidden xs:block w-full max-w-162.5 h-auto'>
           <img
             src='/header-logos/logo-h-650x55.webp'
             srcSet='/header-logos/logo-h-650x55.webp 1x, /header-logos/logo-h-1300x110.webp 2x'
@@ -32,7 +41,7 @@ export function Header() {
             className='hidden xs:block w-full h-auto'
           />
         </HomeLogoLink>
-        <HomeLogoLink className='block xs:hidden max-w-83.75 w-full h-auto'>
+        <HomeLogoLink className='xs:hidden block w-full max-w-83.75 h-auto'>
           <img
             src='/header-logos/logo-stacked-335x70.webp'
             srcSet='/header-logos/logo-stacked-335x70.webp 1x, /header-logos/logo-stacked-670x140.webp 2x'
@@ -43,19 +52,25 @@ export function Header() {
           />
         </HomeLogoLink>
 
-        <nav className='flex justify-between xs:justify-center xl:justify-end w-full xs:w-auto max-w-100 xs:max-w-full xs:gap-8 xl:gap-4 xl:mt-4 grow-0'>
+        <nav className='flex justify-between xs:justify-center xl:justify-end xs:gap-8 xl:gap-4 xl:mt-4 w-full xs:w-auto max-w-100 xs:max-w-full grow-0'>
           <ArtworkNavMenu />
-          <a href='https://shopify.com' className='nav-menu-link'>
+          <a href='https://shopify.com' className={linkClassName}>
             Shop
           </a>
-          <Link to='/about' className='nav-menu-link'>
+          <Link
+            to='/about'
+            className={cn(linkClassName, pathname === '/about' && activeLinkClassName)}
+          >
             About
           </Link>
-          <Link to='/contact' className='nav-menu-link'>
+          <Link
+            to='/contact'
+            className={cn(linkClassName, pathname === '/contact' && activeLinkClassName)}
+          >
             Contact
           </Link>
         </nav>
-        <ThemeToggle className='absolute right-2 xs:right-3 sm:right-4 top-2 xs:top-3 z-50' />
+        <ThemeToggle className='top-2 xs:top-3 right-2 xs:right-3 sm:right-4 z-50 absolute' />
       </div>
     </header>
   );
