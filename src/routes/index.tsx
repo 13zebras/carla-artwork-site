@@ -12,8 +12,6 @@ export const Route = createFileRoute('/')({
 function Home() {
   const artworks = Route.useLoaderData();
 
-  console.log('%c>>> artworks in index', 'color: red', artworks);
-
   return (
     <div className='relative'>
       <Header />

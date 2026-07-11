@@ -68,18 +68,18 @@ export function CategoriesTab({ allCategories }: CategoriesTabProps) {
             <AddCategoryBtn />
           </CardHeader>
 
-          <CardContent className='p-8'>
+          <CardContent className='p-0'>
             <Table className='w-full min-w-200'>
               <TableHeader>
                 <TableRow className='h-14 whitespace-normal'>
-                  <TableHead className='min-w-46 max-w-56'>Category Name</TableHead>
-                  <TableHead className='min-w-0 max-w-120'>Description</TableHead>
-                  <TableHead className='w-16 whitespace-normal'>Sort Order</TableHead>
-                  <TableHead className='w-20'>Status</TableHead>
-                  <TableHead className='pr-4 w-34 min-[1200px]:w-45 whitespace-normal'>
+                  <TableHead className='min-w-46'>Category Name</TableHead>
+                  <TableHead className='min-w-0 max-w-100'>Description</TableHead>
+                  <TableHead className='w-16 text-center whitespace-normal'>Sort Order</TableHead>
+                  <TableHead className='w-20 text-center'>Status</TableHead>
+                  <TableHead className='w-39 text-center whitespace-normal'>
                     Created / Updated
                   </TableHead>
-                  <TableHead className='w-28'>Actions</TableHead>
+                  <TableHead className='w-28 text-center'>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -97,22 +97,22 @@ export function CategoriesTab({ allCategories }: CategoriesTabProps) {
                         )}
                       </div>
                     </TableCell>
-                    <TableCell>{category.sortOrder}</TableCell>
-                    <TableCell>
+                    <TableCell className='text-center'>{category.sortOrder}</TableCell>
+                    <TableCell className='text-center'>
                       <Badge variant={category.status === 'active' ? 'positive' : 'outline'}>
                         {category.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className='font-mono text-xs whitespace-normal'>
+                    <TableCell className='text-xs whitespace-normal'>
                       <p className='block pb-4'>
                         Created:
-                        <span className='ml-2'>
+                        <span className='block tracking-wide'>
                           {formatDate(dateFormatter, category.createdAt)}
                         </span>
                       </p>
                       <p className=''>
                         Updated:
-                        <span className='font-mono'>
+                        <span className='block tracking-wide'>
                           {formatDate(dateFormatter, category.updatedAt)}
                         </span>
                       </p>

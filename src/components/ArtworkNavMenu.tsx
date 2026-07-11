@@ -23,7 +23,7 @@ export function ArtworkNavMenu() {
           <NavigationMenuTrigger className='data-[state=open]:bg-transparent data-[state=open]:hover:bg-transparent data-[state=open]:focus:bg-transparent focus:bg-transparent h-auto data-[state=open]:text-foreground focus:text-foreground nav-menu-link'>
             Artwork
           </NavigationMenuTrigger>
-          <NavigationMenuContent className='z-50 shadow-shadow-card group-data-[viewport=false]/navigation-menu:shadow-xl group-data-[viewport=false]/navigation-menu:border border-popover-border group-data-[viewport=false]/navigation-menu:rounded-xs w-max max-w-75'>
+          <NavigationMenuContent className='z-50 shadow-shadow-card group-data-[viewport=false]/navigation-menu:shadow-xl group-data-[viewport=false]/navigation-menu:border border-border-2nd group-data-[viewport=false]/navigation-menu:rounded-xs w-max max-w-75'>
             <ul className='gap-1 grid p-0 min-w-40'>
               {artworkCategoryLinks.map(({ label, params, to }) => {
                 const isActive = pathname === `/category/${params.category}`;
@@ -33,8 +33,7 @@ export function ArtworkNavMenu() {
                     <NavigationMenuLink asChild>
                       {isActive ? (
                         <span aria-current='page' className={activeCategoryLinkClassName}>
-                          {label}{' '}
-                          <span className='inline text-muted-foreground/60 text-xs'>(current)</span>
+                          {label}
                         </span>
                       ) : (
                         <Link

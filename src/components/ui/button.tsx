@@ -21,7 +21,7 @@ const buttonVariants = cva(
         vibrant:
           'bg-fuchsia-700 hover:bg-fuchsia-700/70 text-neutral-200 dark:bg-fuchsia-600/65 dark:hover:bg-fuchsia-600/75 hover:border-fuchsia-500/75 active:bg-fuchsia-700 dark:active:bg-fuchsia-600/60',
         outline:
-          'border-border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground aria-expanded:bg-accent aria-expanded:text-accent-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50',
+          'border-border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground aria-expanded:bg-accent aria-expanded:text-accent-foreground dark:border-border/40 dark:bg-neutral-800/70 dark:hover:bg-neutral-800 dark:hover:border-border/60',
         secondary:
           'bg-secondary text-secondary-foreground hover:bg-secondary/80 aria-expanded:bg-secondary aria-expanded:text-secondary-foreground',
         ghost:

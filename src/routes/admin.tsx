@@ -51,7 +51,7 @@ function AdminLayout() {
   const { dashboard, archivedCategories, demoMode } = Route.useLoaderData();
   const { activeCategories } = dashboard;
   const allCategories = mergeCategories(activeCategories, archivedCategories);
-  console.log('%c>>> dashboard', 'color: red', dashboard);
+
   const [isImageUploadOpen, setIsImageUploadOpen] = useState(false);
   const [isBulkImageUploadOpen, setIsBulkImageUploadOpen] = useState(false);
 

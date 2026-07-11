@@ -208,7 +208,7 @@ export async function listPublishedArtworks() {
       and artwork_categories.status = 'active'
     order by artworks.sort_order asc, artworks.created_at desc, artworks.title asc
   `.execute(getKysely());
-  console.log('>>> rows', rows);
+
   return (rows as PortfolioArtworkRow[]).map(mapPortfolioArtworkRow);
 }
 

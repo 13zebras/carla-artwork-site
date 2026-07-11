@@ -14,8 +14,6 @@ export const listHomeArtworks = createServerFn({ method: 'GET' }).handler(async 
     return artworks;
   }
 
-  console.log('>>> artworks.functions NOT demo');
-
   const { listPublishedArtworks } = await import('./artworks.server');
   return listPublishedArtworks();
 });

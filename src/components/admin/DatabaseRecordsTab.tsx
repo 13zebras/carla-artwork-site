@@ -1,4 +1,7 @@
-import { useState } from 'react';
+import { useRouter } from '@tanstack/react-router';
+import { LoaderCircle } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -12,7 +15,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { TabsContent } from '@/components/ui/tabs';
-import type { AdminDashboard } from '@/lib/artwork-upload.functions';
+import { updateArtwork, type AdminDashboard } from '@/lib/artwork-upload.functions';
 import type { ArtworkRecord } from '@/lib/artworks.server';
 import { buildBunnyCdnUrl } from '@/lib/bunny';
 import type { BunnyStorageFile } from '@/lib/bunny.server';
@@ -28,14 +31,41 @@ type DatabaseRecordsTabProps = {
   storageByPath: Map<string, BunnyStorageFile>;
 };
 
+const MINIMUM_STATUS_FEEDBACK_MS = 400;
+
+function wait(milliseconds: number) {
+  return new Promise<void>((resolve) => setTimeout(resolve, milliseconds));
+}
+
 export function DatabaseRecordsTab({
   dashboard,
   activeCategories,
   storageByPath,
 }: DatabaseRecordsTabProps) {
+  const router = useRouter();
   const [infoRecord, setInfoRecord] = useState<ArtworkRecord | null>(null);
   const [deleteRecord, setDeleteRecord] = useState<ArtworkRecord | null>(null);
   const [editRecord, setEditRecord] = useState<ArtworkRecord | null>(null);
+  const [updatingStatusIds, setUpdatingStatusIds] = useState<Set<string>>(() => new Set());
+  const [statusOverrides, setStatusOverrides] = useState<
+    Record<string, ArtworkRecord['status']>
+  >({});
+
+  useEffect(() => {
+    setStatusOverrides((current) => {
+      const next = { ...current };
+      let didChange = false;
+
+      for (const record of dashboard.records) {
+        if (next[record.id] === record.status) {
+          delete next[record.id];
+          didChange = true;
+        }
+      }
+
+      return didChange ? next : current;
+    });
+  }, [dashboard.records]);
 
   function openInfo(record: ArtworkRecord) {
     setInfoRecord(record);
@@ -47,6 +77,56 @@ export function DatabaseRecordsTab({
 
   function openEdit(record: ArtworkRecord) {
     setEditRecord(record);
+  }
+
+  async function toggleStatus(record: ArtworkRecord, currentStatus: ArtworkRecord['status']) {
+    if (updatingStatusIds.has(record.id)) {
+      return;
+    }
+
+    const nextStatus = currentStatus === 'published' ? 'draft' : 'published';
+    const startedAt = Date.now();
+
+    setUpdatingStatusIds((current) => new Set(current).add(record.id));
+    setStatusOverrides((current) => ({ ...current, [record.id]: nextStatus }));
+
+    try {
+      await updateArtwork({
+        data: {
+          id: record.id,
+          title: record.title,
+          categoryId: record.categoryId,
+          alt: record.alt,
+          description: record.description,
+          sortOrder: record.sortOrder,
+          status: nextStatus,
+        },
+      });
+
+      const remainingFeedbackTime = Math.max(
+        0,
+        MINIMUM_STATUS_FEEDBACK_MS - (Date.now() - startedAt),
+      );
+      await Promise.all([router.invalidate(), wait(remainingFeedbackTime)]);
+
+      toast.success(`Artwork ${nextStatus === 'published' ? 'published' : 'moved to draft'}`, {
+        description: record.title,
+      });
+    } catch (error) {
+      setStatusOverrides((current) => {
+        const next = { ...current };
+        delete next[record.id];
+        return next;
+      });
+      const message = error instanceof Error ? error.message : 'Unable to update artwork status.';
+      toast.error('Status update failed', { description: message });
+    } finally {
+      setUpdatingStatusIds((current) => {
+        const next = new Set(current);
+        next.delete(record.id);
+        return next;
+      });
+    }
   }
 
   return (
@@ -87,6 +167,8 @@ export function DatabaseRecordsTab({
                     format: 'webp',
                   });
                   const hasStorageObject = storageByPath.has(record.storagePath);
+                  const displayedStatus = statusOverrides[record.id] ?? record.status;
+                  const isUpdatingStatus = updatingStatusIds.has(record.id);
                   return (
                     <TableRow
                       key={record.id}
@@ -121,12 +203,24 @@ export function DatabaseRecordsTab({
                       <TableCell>
                         <div className='flex flex-col items-center gap-4'>
                           <Button
-                            variant={record.status === 'published' ? 'vibrant' : 'outline'}
+                            variant={displayedStatus === 'published' ? 'vibrant' : 'outline'}
                             size='xs'
-                            className='rounded-lg w-21'
-                            onClick={(e) => e.stopPropagation()}
+                            className='rounded-lg w-21 transition-colors duration-300 ease-out disabled:opacity-80'
+                            disabled={isUpdatingStatus}
+                            aria-label={`Change ${record.title} status to ${displayedStatus === 'published' ? 'draft' : 'published'}`}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              void toggleStatus(record, displayedStatus);
+                            }}
                           >
-                            {record.status.charAt(0).toUpperCase() + record.status.slice(1)}
+                            {isUpdatingStatus ? (
+                              <>
+                                <LoaderCircle className='animate-spin' />
+                                Saving…
+                              </>
+                            ) : (
+                              displayedStatus.charAt(0).toUpperCase() + displayedStatus.slice(1)
+                            )}
                           </Button>
                           <Badge
                             className='w-21 cursor-default'
