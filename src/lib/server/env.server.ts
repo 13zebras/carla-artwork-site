@@ -5,6 +5,8 @@ type ServerEnv = {
   ADMIN_EMAIL: string;
   RESEND_API_KEY: string;
   AUTH_EMAIL_FROM: string;
+  CONTACT_EMAIL_TO: string;
+  TURNSTILE_SECRET_KEY: string;
   BUNNY_STORAGE_ZONE: string;
   BUNNY_STORAGE_PASSWORD: string;
   BUNNY_STORAGE_ENDPOINT: string;
@@ -56,6 +58,16 @@ export function getServerEnv(): ServerEnv {
     requiredEnv('AUTH_EMAIL_FROM'),
     missing,
   );
+  const contactEmailTo = collectRequiredEnv(
+    'CONTACT_EMAIL_TO',
+    requiredEnv('CONTACT_EMAIL_TO'),
+    missing,
+  );
+  const turnstileSecretKey = collectRequiredEnv(
+    'TURNSTILE_SECRET_KEY',
+    requiredEnv('TURNSTILE_SECRET_KEY'),
+    missing,
+  );
   const bunnyStorageZone = collectRequiredEnv(
     'BUNNY_STORAGE_ZONE',
     requiredEnv('BUNNY_STORAGE_ZONE'),
@@ -88,6 +100,8 @@ export function getServerEnv(): ServerEnv {
     ADMIN_EMAIL: adminEmailRaw.toLowerCase(),
     RESEND_API_KEY: resendApiKey,
     AUTH_EMAIL_FROM: authEmailFrom,
+    CONTACT_EMAIL_TO: contactEmailTo,
+    TURNSTILE_SECRET_KEY: turnstileSecretKey,
     BUNNY_STORAGE_ZONE: bunnyStorageZone,
     BUNNY_STORAGE_PASSWORD: bunnyStoragePassword,
     BUNNY_STORAGE_ENDPOINT: normalizeOrigin(bunnyStorageEndpointRaw),
