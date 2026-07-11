@@ -3,7 +3,7 @@ import { toast } from 'sonner';
 
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { setDemoMode } from '@/lib/site-settings.functions';
+import { setDemoMode } from '@/lib/functions/site-settings.functions';
 
 type DemoModeSwitchProps = {
   demoMode: boolean;

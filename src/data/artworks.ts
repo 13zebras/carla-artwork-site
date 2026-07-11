@@ -3,7 +3,7 @@ import {
   ARTWORK_CATEGORY_SLUGS,
   type ArtworkCategory,
 } from '@/data/artworkCategories';
-import type { PortfolioArtwork } from '@/lib/artworks.types';
+import type { PortfolioArtwork } from '@/lib/shared/artworks.types';
 
 type DemoArtworkInput = {
   slug: string;

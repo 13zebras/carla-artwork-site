@@ -26,8 +26,8 @@ import {
   uploadBulkArtworks,
   type BulkArtworkUploadError,
   type BulkArtworkUploadResult,
-} from '@/lib/artwork-upload.functions';
-import type { ArtworkCategoryRecord } from '@/lib/categories.server';
+} from '@/lib/functions/artwork-upload.functions';
+import type { ArtworkCategoryRecord } from '@/lib/shared/categories.types';
 
 const sampleCsv = (
   <div className='flex flex-col gap-2'>

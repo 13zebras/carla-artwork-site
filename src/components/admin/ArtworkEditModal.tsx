@@ -23,10 +23,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { updateArtwork } from '@/lib/artwork-upload.functions';
-import type { ArtworkRecord } from '@/lib/artworks.server';
-import { buildBunnyCdnUrl } from '@/lib/bunny';
-import type { ArtworkCategoryRecord } from '@/lib/categories.server';
+import { updateArtwork } from '@/lib/functions/artwork-upload.functions';
+import type { ArtworkRecord } from '@/lib/shared/artworks.types';
+import { buildBunnyCdnUrl } from '@/lib/shared/bunny';
+import type { ArtworkCategoryRecord } from '@/lib/shared/categories.types';
 
 type ArtworkEditModalProps = {
   record: ArtworkRecord;
@@ -74,11 +74,7 @@ function RequiredLabel({ htmlFor, children }: { htmlFor: string; children: React
   );
 }
 
-export function ArtworkEditModal({
-  record,
-  activeCategories,
-  onClose,
-}: ArtworkEditModalProps) {
+export function ArtworkEditModal({ record, activeCategories, onClose }: ArtworkEditModalProps) {
   const router = useRouter();
   const [form, setForm] = useState(() => createArtworkEditForm(record));
   const [isSubmitting, setIsSubmitting] = useState(false);

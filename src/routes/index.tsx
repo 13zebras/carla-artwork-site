@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 
 import { Header } from '@/components/Header';
 import { Portfolio } from '@/components/Portfolio';
-import { listHomeArtworks } from '@/lib/artworks.functions';
+import { listHomeArtworks } from '@/lib/functions/artworks.functions';
 
 export const Route = createFileRoute('/')({
   loader: () => listHomeArtworks(),

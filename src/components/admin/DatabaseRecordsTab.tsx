@@ -15,11 +15,11 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { TabsContent } from '@/components/ui/tabs';
-import { updateArtwork, type AdminDashboard } from '@/lib/artwork-upload.functions';
-import type { ArtworkRecord } from '@/lib/artworks.server';
-import { buildBunnyCdnUrl } from '@/lib/bunny';
-import type { BunnyStorageFile } from '@/lib/bunny.server';
-import type { ArtworkCategoryRecord } from '@/lib/categories.server';
+import { updateArtwork, type AdminDashboard } from '@/lib/functions/artwork-upload.functions';
+import type { ArtworkRecord } from '@/lib/shared/artworks.types';
+import { buildBunnyCdnUrl } from '@/lib/shared/bunny';
+import type { BunnyStorageFile } from '@/lib/shared/bunny.types';
+import type { ArtworkCategoryRecord } from '@/lib/shared/categories.types';
 
 import { ArtworkDeleteModal } from './ArtworkDeleteModal';
 import { ArtworkEditModal } from './ArtworkEditModal';
@@ -47,9 +47,9 @@ export function DatabaseRecordsTab({
   const [deleteRecord, setDeleteRecord] = useState<ArtworkRecord | null>(null);
   const [editRecord, setEditRecord] = useState<ArtworkRecord | null>(null);
   const [updatingStatusIds, setUpdatingStatusIds] = useState<Set<string>>(() => new Set());
-  const [statusOverrides, setStatusOverrides] = useState<
-    Record<string, ArtworkRecord['status']>
-  >({});
+  const [statusOverrides, setStatusOverrides] = useState<Record<string, ArtworkRecord['status']>>(
+    {},
+  );
 
   useEffect(() => {
     setStatusOverrides((current) => {

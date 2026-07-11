@@ -1,25 +1,17 @@
 import { createServerFn } from '@tanstack/react-start';
 
-import type { ArtworkRecord } from './artworks.server';
-import type { BunnyStorageFile } from './bunny.server';
-import type { ArtworkCategoryRecord } from './categories.server';
-
-export type { BulkArtworkUploadError } from './artwork-upload.helpers';
 export type {
+  AdminDashboard,
   AdminDashboardData,
+  BulkArtworkUploadError,
   BulkArtworkUploadFailure,
   BulkArtworkUploadResult,
   BulkArtworkUploadSuccess,
-} from './artwork-upload.server';
-
-export type AdminDashboard = {
-  records: ArtworkRecord[];
-  storageFiles: BunnyStorageFile[];
-  activeCategories: ArtworkCategoryRecord[];
-};
+} from '../shared/artwork-upload.types';
 
 export const listAdminDashboard = createServerFn({ method: 'GET' }).handler(async () => {
-  const { listAdminDashboard: loadAdminDashboard } = await import('./artwork-upload.server');
+  const { listAdminDashboard: loadAdminDashboard } =
+    await import('../server/artwork-upload.server');
   return loadAdminDashboard();
 });
 
@@ -35,7 +27,7 @@ export const deleteArtwork = createServerFn({ method: 'POST' })
     return { id };
   })
   .handler(async ({ data }) => {
-    const { deleteArtwork: runDeleteArtwork } = await import('./artwork-upload.server');
+    const { deleteArtwork: runDeleteArtwork } = await import('../server/artwork-upload.server');
     return runDeleteArtwork({ data });
   });
 
@@ -47,7 +39,8 @@ export const uploadSingleArtwork = createServerFn({ method: 'POST' })
     return data;
   })
   .handler(async ({ data }) => {
-    const { uploadSingleArtwork: runUploadSingleArtwork } = await import('./artwork-upload.server');
+    const { uploadSingleArtwork: runUploadSingleArtwork } =
+      await import('../server/artwork-upload.server');
     return runUploadSingleArtwork({ data });
   });
 
@@ -59,7 +52,8 @@ export const uploadBulkArtworks = createServerFn({ method: 'POST' })
     return data;
   })
   .handler(async ({ data }) => {
-    const { uploadBulkArtworks: runUploadBulkArtworks } = await import('./artwork-upload.server');
+    const { uploadBulkArtworks: runUploadBulkArtworks } =
+      await import('../server/artwork-upload.server');
     return runUploadBulkArtworks({ data });
   });
 
@@ -82,7 +76,7 @@ export const registerExistingArtwork = createServerFn({ method: 'POST' })
   )
   .handler(async ({ data }) => {
     const { registerExistingArtwork: runRegisterExistingArtwork } =
-      await import('./artwork-upload.server');
+      await import('../server/artwork-upload.server');
     return runRegisterExistingArtwork({ data });
   });
 
@@ -104,6 +98,6 @@ export const updateArtwork = createServerFn({ method: 'POST' })
     },
   )
   .handler(async ({ data }) => {
-    const { updateArtwork: runUpdateArtwork } = await import('./artwork-upload.server');
+    const { updateArtwork: runUpdateArtwork } = await import('../server/artwork-upload.server');
     return runUpdateArtwork({ data });
   });

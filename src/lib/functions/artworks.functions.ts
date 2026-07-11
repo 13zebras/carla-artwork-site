@@ -2,8 +2,8 @@ import { createServerFn } from '@tanstack/react-start';
 
 export const listHomeArtworks = createServerFn({ method: 'GET' }).handler(async () => {
   const [{ ensureSchema }, { getSiteSettings }] = await Promise.all([
-    import('./db.server'),
-    import('./site-settings.server'),
+    import('../server/db.server'),
+    import('../server/site-settings.server'),
   ]);
 
   await ensureSchema();
@@ -14,6 +14,6 @@ export const listHomeArtworks = createServerFn({ method: 'GET' }).handler(async 
     return artworks;
   }
 
-  const { listPublishedArtworks } = await import('./artworks.server');
+  const { listPublishedArtworks } = await import('../server/artworks.server');
   return listPublishedArtworks();
 });

@@ -9,10 +9,10 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { TabsContent } from '@/components/ui/tabs';
-import type { AdminDashboard } from '@/lib/artwork-upload.functions';
-import type { ArtworkRecord } from '@/lib/artworks.server';
-import type { BunnyStorageFile } from '@/lib/bunny.server';
-import { dateFormatter } from '@/lib/utils';
+import type { AdminDashboard } from '@/lib/functions/artwork-upload.functions';
+import type { ArtworkRecord } from '@/lib/shared/artworks.types';
+import type { BunnyStorageFile } from '@/lib/shared/bunny.types';
+import { dateFormatter } from '@/lib/shared/utils';
 
 type BunnyStorageTabProps = {
   dashboard: AdminDashboard;

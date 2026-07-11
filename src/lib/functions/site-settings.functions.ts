@@ -10,9 +10,9 @@ export const setDemoMode = createServerFn({ method: 'POST' })
   })
   .handler(async ({ data }) => {
     const [{ requireAdminFromRequest }, { ensureSchema }, { updateDemoMode }] = await Promise.all([
-      import('./auth.server'),
-      import('./db.server'),
-      import('./site-settings.server'),
+      import('../server/auth-session.server'),
+      import('../server/db.server'),
+      import('../server/site-settings.server'),
     ]);
 
     await ensureSchema();

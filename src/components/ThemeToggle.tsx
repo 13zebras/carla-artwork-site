@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { useLocalStorage } from 'usehooks-ts';
 
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/shared/utils';
 
 type Theme = 'light' | 'dark';
 

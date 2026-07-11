@@ -4,6 +4,13 @@ import path from 'node:path';
 import { createServerFn } from '@tanstack/react-start';
 import { imageSize } from 'image-size';
 
+import type {
+  AdminDashboardData,
+  BulkArtworkUploadError,
+  BulkArtworkUploadResult,
+} from '../shared/artwork-upload.types';
+import type { ArtworkRecord, ArtworkStatus } from '../shared/artworks.types';
+import { buildBunnyCdnUrl } from '../shared/bunny';
 import {
   buildBulkErrors,
   buildCategoryResolver,
@@ -11,7 +18,6 @@ import {
   normalizeFilename,
   parseCsvRows,
   validateCsvHeaders,
-  type BulkArtworkUploadError,
   type ParsedCsvRow,
 } from './artwork-upload.helpers';
 import {
@@ -22,45 +28,18 @@ import {
   insertArtwork,
   listArtworkRecords,
   updateArtworkMetadata,
-  type ArtworkRecord,
-  type ArtworkStatus,
 } from './artworks.server';
-import { requireAdminFromRequest } from './auth.server';
-import { buildBunnyCdnUrl } from './bunny';
+import { requireAdminFromRequest } from './auth-session.server';
 import {
   deleteFromBunnyStorage,
   downloadFromBunnyStorage,
   listBunnyStorageFiles,
   uploadToBunnyStorage,
-  type BunnyStorageFile,
 } from './bunny.server';
-import { listCategories, type ArtworkCategoryRecord } from './categories.server';
+import { listCategories } from './categories.server';
 import { ensureSchema } from './db.server';
 import { getServerEnv } from './env.server';
 import { getSiteSettings } from './site-settings.server';
-
-export type AdminDashboardData = {
-  dashboard: {
-    records: ArtworkRecord[];
-    storageFiles: BunnyStorageFile[];
-    activeCategories: ArtworkCategoryRecord[];
-  };
-  archivedCategories: ArtworkCategoryRecord[];
-  demoMode: boolean;
-};
-
-export type BulkArtworkUploadSuccess = {
-  ok: true;
-  insertedCount: number;
-  records: ArtworkRecord[];
-};
-
-export type BulkArtworkUploadFailure = {
-  ok: false;
-  errors: BulkArtworkUploadError[];
-};
-
-export type BulkArtworkUploadResult = BulkArtworkUploadSuccess | BulkArtworkUploadFailure;
 
 type BulkPreparationResult =
   | {

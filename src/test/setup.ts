@@ -1,7 +1,7 @@
 import pg from 'pg';
 import { afterAll, beforeAll } from 'vitest';
 
-import { closeDb, ensureSchema } from '@/lib/db.server';
+import { closeDb, ensureSchema } from '@/lib/server/db.server';
 
 const envDefaults = {
   DATABASE_URL: 'postgres://postgres:postgres@localhost:5432/carla_test',

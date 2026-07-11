@@ -2,14 +2,9 @@ import path from 'node:path';
 
 import { parse } from 'csv-parse/sync';
 
+import type { BulkArtworkUploadError } from '../shared/artwork-upload.types';
+import type { ArtworkCategoryRecord } from '../shared/categories.types';
 import { slugExists } from './artworks.server';
-import type { ArtworkCategoryRecord } from './categories.server';
-
-export type BulkArtworkUploadError = {
-  row: number;
-  filename: string | null;
-  message: string;
-};
 
 export type ParsedCsvRow = {
   row: number;

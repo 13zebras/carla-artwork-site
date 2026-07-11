@@ -7,7 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import type { ArtworkRecord } from '@/lib/artworks.server';
+import type { ArtworkRecord } from '@/lib/shared/artworks.types';
 
 type DatabaseActionsProps = {
   record: ArtworkRecord;

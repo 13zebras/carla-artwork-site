@@ -4,7 +4,7 @@ import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { PortfolioCard } from '@/components/PortfolioCard';
-import type { PortfolioArtwork } from '@/lib/artworks.types';
+import type { PortfolioArtwork } from '@/lib/shared/artworks.types';
 
 const artwork: PortfolioArtwork = {
   slug: 'blue-garden',

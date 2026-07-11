@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 
-import { auth } from '@/lib/auth';
-import { ensureSchema } from '@/lib/db.server';
+import { auth } from '@/lib/server/auth-config.server';
+import { ensureSchema } from '@/lib/server/db.server';
 
 export const Route = createFileRoute('/api/auth/$')({
   server: {

@@ -1,4 +1,4 @@
-import type { PortfolioArtwork } from '@/lib/artworks.types';
+import type { PortfolioArtwork } from '@/lib/shared/artworks.types';
 
 type PortfolioCardProps = {
   artwork: PortfolioArtwork;

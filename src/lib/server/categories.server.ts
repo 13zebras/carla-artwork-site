@@ -1,21 +1,11 @@
 import { sql, type Kysely, type Transaction } from 'kysely';
 
-import { slugify } from '@/lib/utils';
+import { slugify } from '@/lib/shared/utils';
 
+import type { ArtworkCategoryRecord } from '../shared/categories.types';
 import { getKysely } from './db.server';
 
 type Executable = Kysely<Record<string, never>> | Transaction<Record<string, never>>;
-
-export type ArtworkCategoryRecord = {
-  id: string;
-  categorySlug: string;
-  label: string;
-  description: string | null;
-  sortOrder: number;
-  status: 'active' | 'archived';
-  createdAt: string;
-  updatedAt: string;
-};
 
 type CategoryRow = {
   id: string;
@@ -156,9 +146,8 @@ export async function addCategory(input: {
       throw new Error('Category slug already exists');
     }
 
-    const maxRow = await sql`select max(sort_order) as "maxSortOrder" from artwork_categories`.execute(
-      trx,
-    );
+    const maxRow =
+      await sql`select max(sort_order) as "maxSortOrder" from artwork_categories`.execute(trx);
     const maxSortOrder =
       (maxRow.rows[0] as { maxSortOrder: number | null } | undefined)?.maxSortOrder ?? 0;
     const nextSortOrder = sortOrder ?? maxSortOrder + 10;

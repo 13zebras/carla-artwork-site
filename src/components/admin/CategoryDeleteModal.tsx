@@ -12,9 +12,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { deleteAdminCategory } from '@/lib/categories.functions';
-import type { ArtworkCategoryRecord } from '@/lib/categories.server';
-import { cn } from '@/lib/utils';
+import { deleteAdminCategory } from '@/lib/functions/categories.functions';
+import type { ArtworkCategoryRecord } from '@/lib/shared/categories.types';
+import { cn } from '@/lib/shared/utils';
 
 type CategoryDeleteModalProps = {
   record: ArtworkCategoryRecord;

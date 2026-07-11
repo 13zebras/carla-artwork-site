@@ -14,10 +14,10 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
-import { listAdminDashboard, type AdminDashboard } from '@/lib/artwork-upload.functions';
-import { authClient } from '@/lib/auth-client';
-import { getSession, requireAdmin } from '@/lib/auth.functions';
-import { cn } from '@/lib/utils';
+import { authClient } from '@/lib/client/auth-client';
+import { listAdminDashboard, type AdminDashboard } from '@/lib/functions/artwork-upload.functions';
+import { getSession, requireAdmin } from '@/lib/functions/auth.functions';
+import { cn } from '@/lib/shared/utils';
 
 function mergeCategories(
   activeCategories: AdminDashboard['activeCategories'],

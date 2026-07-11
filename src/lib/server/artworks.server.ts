@@ -1,38 +1,14 @@
 import { sql, type Kysely, type Transaction } from 'kysely';
 
-import type { PortfolioArtwork } from './artworks.types';
+import type {
+  ArtworkMetadataUpdate,
+  ArtworkRecord,
+  ArtworkStatus,
+  PortfolioArtwork,
+} from '../shared/artworks.types';
 import { getKysely } from './db.server';
 
 type Executable = Kysely<Record<string, never>> | Transaction<Record<string, never>>;
-
-export type ArtworkCategorySummary = {
-  id: string;
-  label: string;
-};
-
-export type ArtworkStatus = 'draft' | 'published';
-
-export type ArtworkRecord = {
-  id: string;
-  slug: string;
-  title: string;
-  categoryId: string;
-  category: ArtworkCategorySummary;
-  description: string | null;
-  alt: string;
-  originalFilename: string;
-  storagePath: string;
-  cdnUrl: string;
-  contentType: string;
-  width: number;
-  height: number;
-  sizeBytes: number;
-  checksumSha256: string;
-  sortOrder: number;
-  status: ArtworkStatus;
-  createdAt: string;
-  updatedAt: string;
-};
 
 type ArtworkRow = {
   id: string;
@@ -241,16 +217,6 @@ export async function getArtworkById(id: string) {
 export async function deleteArtworkById(id: string) {
   await sql`delete from artworks where id = ${id}`.execute(getKysely());
 }
-
-export type ArtworkMetadataUpdate = {
-  id: string;
-  title: string;
-  categoryId: string;
-  description: string | null;
-  alt: string;
-  sortOrder: number;
-  status: ArtworkStatus;
-};
 
 export async function updateArtworkMetadata(input: ArtworkMetadataUpdate) {
   const updatedAt = new Date().toISOString();

@@ -12,9 +12,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { deleteArtwork } from '@/lib/artwork-upload.functions';
-import type { ArtworkRecord } from '@/lib/artworks.server';
-import { cn } from '@/lib/utils';
+import { deleteArtwork } from '@/lib/functions/artwork-upload.functions';
+import type { ArtworkRecord } from '@/lib/shared/artworks.types';
+import { cn } from '@/lib/shared/utils';
 
 type ArtworkDeleteModalProps = {
   record: ArtworkRecord;

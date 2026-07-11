@@ -21,8 +21,8 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/toast';
-import { updateAdminCategory } from '@/lib/categories.functions';
-import type { ArtworkCategoryRecord } from '@/lib/categories.server';
+import { updateAdminCategory } from '@/lib/functions/categories.functions';
+import type { ArtworkCategoryRecord } from '@/lib/shared/categories.types';
 
 type CategoryEditModalProps = {
   record: ArtworkCategoryRecord;

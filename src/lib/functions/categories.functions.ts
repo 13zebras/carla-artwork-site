@@ -1,7 +1,5 @@
 import { createServerFn } from '@tanstack/react-start';
 
-import { ensureSchema } from './db.server';
-
 function parseSortOrder(value: FormDataEntryValue | null) {
   if (value == null || value.toString().trim() === '') {
     return undefined;
@@ -23,12 +21,13 @@ export const createAdminCategory = createServerFn({ method: 'POST' })
     return data;
   })
   .handler(async ({ data }) => {
-    await ensureSchema();
-    const [{ requireAdminFromRequest }, { addCategory }] = await Promise.all([
-      import('./auth.server'),
-      import('./categories.server'),
+    const [{ requireAdminFromRequest }, { addCategory }, { ensureSchema }] = await Promise.all([
+      import('../server/auth-session.server'),
+      import('../server/categories.server'),
+      import('../server/db.server'),
     ]);
 
+    await ensureSchema();
     await requireAdminFromRequest();
 
     const label = data.get('label')?.toString() ?? '';
@@ -54,12 +53,13 @@ export const updateAdminCategory = createServerFn({ method: 'POST' })
     return data;
   })
   .handler(async ({ data }) => {
-    await ensureSchema();
-    const [{ requireAdminFromRequest }, { updateCategory }] = await Promise.all([
-      import('./auth.server'),
-      import('./categories.server'),
+    const [{ requireAdminFromRequest }, { updateCategory }, { ensureSchema }] = await Promise.all([
+      import('../server/auth-session.server'),
+      import('../server/categories.server'),
+      import('../server/db.server'),
     ]);
 
+    await ensureSchema();
     await requireAdminFromRequest();
 
     const id = data.get('id')?.toString().trim() ?? '';
@@ -87,12 +87,14 @@ export const deleteAdminCategory = createServerFn({ method: 'POST' })
     return { id };
   })
   .handler(async ({ data }) => {
-    await ensureSchema();
-    const [{ requireAdminFromRequest }, { deleteCategoryById }] = await Promise.all([
-      import('./auth.server'),
-      import('./categories.server'),
-    ]);
+    const [{ requireAdminFromRequest }, { deleteCategoryById }, { ensureSchema }] =
+      await Promise.all([
+        import('../server/auth-session.server'),
+        import('../server/categories.server'),
+        import('../server/db.server'),
+      ]);
 
+    await ensureSchema();
     await requireAdminFromRequest();
     return deleteCategoryById(data.id);
   });

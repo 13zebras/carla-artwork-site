@@ -12,8 +12,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { TabsContent } from '@/components/ui/tabs';
-import type { ArtworkCategoryRecord } from '@/lib/categories.server';
-import { dateFormatter } from '@/lib/utils';
+import type { ArtworkCategoryRecord } from '@/lib/shared/categories.types';
+import { dateFormatter } from '@/lib/shared/utils';
 
 import { AddCategoryModal } from './AddCategoryModal';
 import { CategoryDeleteModal } from './CategoryDeleteModal';

@@ -23,10 +23,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { registerExistingArtwork, uploadSingleArtwork } from '@/lib/artwork-upload.functions';
-import type { ArtworkRecord } from '@/lib/artworks.server';
-import type { BunnyStorageFile } from '@/lib/bunny.server';
-import type { ArtworkCategoryRecord } from '@/lib/categories.server';
+import {
+  registerExistingArtwork,
+  uploadSingleArtwork,
+} from '@/lib/functions/artwork-upload.functions';
+import type { ArtworkRecord } from '@/lib/shared/artworks.types';
+import type { BunnyStorageFile } from '@/lib/shared/bunny.types';
+import type { ArtworkCategoryRecord } from '@/lib/shared/categories.types';
 
 type ImageUploadModalProps = {
   activeCategories: ArtworkCategoryRecord[];

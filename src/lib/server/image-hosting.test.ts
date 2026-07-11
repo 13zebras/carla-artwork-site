@@ -8,22 +8,20 @@ import {
   buildCategoryResolver,
   getUniqueArtworkSlug,
   parseCsvRows,
-} from '@/lib/artwork-upload.helpers';
+} from '@/lib/server/artwork-upload.helpers';
 import {
   buildStoragePath,
   contentTypeFromExtension,
   deleteArtworkWithStorage,
   prepareExistingArtworkRecord,
   readImageMetaFromBuffer,
-} from '@/lib/artwork-upload.server';
+} from '@/lib/server/artwork-upload.server';
 import {
   getArtworkById,
   insertArtwork,
   listPublishedArtworks,
   updateArtworkMetadata,
-  type ArtworkRecord,
-} from '@/lib/artworks.server';
-import { buildBunnyCdnUrl } from '@/lib/bunny';
+} from '@/lib/server/artworks.server';
 import {
   addCategory,
   deleteCategoryById,
@@ -32,9 +30,11 @@ import {
   listCategories,
   resolveCategoryInput,
   updateCategory,
-} from '@/lib/categories.server';
-import { ensureSchema, getKysely } from '@/lib/db.server';
-import { getSiteSettings, updateDemoMode } from '@/lib/site-settings.server';
+} from '@/lib/server/categories.server';
+import { ensureSchema, getKysely } from '@/lib/server/db.server';
+import { getSiteSettings, updateDemoMode } from '@/lib/server/site-settings.server';
+import type { ArtworkRecord } from '@/lib/shared/artworks.types';
+import { buildBunnyCdnUrl } from '@/lib/shared/bunny';
 
 async function resetDatabase() {
   await ensureSchema();

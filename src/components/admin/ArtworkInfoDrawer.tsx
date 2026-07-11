@@ -9,9 +9,9 @@ import {
   DrawerClose,
 } from '@/components/ui/drawer';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
-import type { ArtworkRecord } from '@/lib/artworks.server';
-import { buildBunnyCdnUrl } from '@/lib/bunny';
-import { dateFormatter } from '@/lib/utils';
+import type { ArtworkRecord } from '@/lib/shared/artworks.types';
+import { buildBunnyCdnUrl } from '@/lib/shared/bunny';
+import { dateFormatter } from '@/lib/shared/utils';
 
 import { Dialog, DialogContent, DialogClose, DialogTrigger } from '../ui/dialog';
 

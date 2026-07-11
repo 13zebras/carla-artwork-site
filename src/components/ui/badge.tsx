@@ -3,7 +3,7 @@ import { useRender } from '@base-ui/react/use-render';
 import { cva, type VariantProps } from 'class-variance-authority';
 import * as React from 'react';
 
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/shared/utils';
 
 const badgeVariants = cva(
   'group/badge inline-flex justify-center items-center gap-1 px-2 py-0.5 has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 border border-transparent aria-invalid:border-destructive focus-visible:border-ring rounded-full aria-invalid:ring-destructive/20 focus-visible:ring-[3px] focus-visible:ring-ring/50 dark:aria-invalid:ring-destructive/40 w-fit h-5 [&>svg]:size-3! overflow-hidden font-medium text-xs whitespace-nowrap transition-all [&>svg]:pointer-events-none shrink-0',

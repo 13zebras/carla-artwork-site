@@ -14,8 +14,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/toast';
-import { createAdminCategory } from '@/lib/categories.functions';
-import { slugify } from '@/lib/utils';
+import { createAdminCategory } from '@/lib/functions/categories.functions';
+import { slugify } from '@/lib/shared/utils';
 
 type AddCategoryModalProps = {
   open: boolean;

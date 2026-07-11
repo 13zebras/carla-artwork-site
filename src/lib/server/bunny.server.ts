@@ -1,12 +1,5 @@
+import type { BunnyStorageFile } from '../shared/bunny.types';
 import { getServerEnv } from './env.server';
-
-export type BunnyStorageFile = {
-  path: string;
-  name: string;
-  isDirectory: boolean;
-  sizeBytes: number | null;
-  modifiedAt: string | null;
-};
 
 function getStorageUrl(storagePath: string) {
   const env = getServerEnv();

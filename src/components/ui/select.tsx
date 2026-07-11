@@ -2,7 +2,7 @@ import { Select as SelectPrimitive } from '@base-ui/react/select';
 import { ChevronDownIcon, CheckIcon, ChevronUpIcon } from 'lucide-react';
 import * as React from 'react';
 
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/shared/utils';
 
 type SelectProps<Value, Multiple extends boolean | undefined = false> = Omit<
   SelectPrimitive.Root.Props<Value, Multiple>,

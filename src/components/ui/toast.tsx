@@ -3,7 +3,7 @@ import { Bell, CircleCheckBig, CircleX, Info } from 'lucide-react';
 import type { ComponentType, SVGProps } from 'react';
 import { toast as sonnerToast } from 'sonner';
 
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/shared/utils';
 
 const toastVariants = cva(
   'flex items-center bg-popover shadow-lg p-4 rounded-lg ring-2 w-full md:max-w-100',

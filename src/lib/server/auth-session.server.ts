@@ -1,6 +1,6 @@
 import { getRequestHeader } from '@tanstack/react-start/server';
 
-import { auth } from './auth';
+import { auth } from './auth-config.server';
 import { getServerEnv } from './env.server';
 
 function getCookieHeaders(): HeadersInit {
