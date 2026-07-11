@@ -112,6 +112,19 @@ async function main() {
     );
 
     // app tables
+    await client.query(`
+      create table if not exists site_settings (
+        id text primary key check (id = 'site'),
+        demo_mode boolean not null default false,
+        updated_at text not null
+      )
+    `);
+    await client.query(`
+      insert into site_settings (id, demo_mode, updated_at)
+      values ('site', false, current_timestamp::text)
+      on conflict (id) do nothing
+    `);
+
     await client.query(`create sequence if not exists artwork_category_id_seq`);
     await client.query(`
       create table if not exists artwork_categories (
@@ -125,7 +138,9 @@ async function main() {
         updated_at text not null
       )
     `);
-    await client.query(`alter table artwork_categories add column if not exists category_slug text`);
+    await client.query(
+      `alter table artwork_categories add column if not exists category_slug text`,
+    );
     await client.query(`
       update artwork_categories
       set category_slug = id

@@ -37,6 +37,7 @@ import {
 import { listCategories, type ArtworkCategoryRecord } from './categories.server';
 import { ensureSchema } from './db.server';
 import { getServerEnv } from './env.server';
+import { getSiteSettings } from './site-settings.server';
 
 export type AdminDashboardData = {
   dashboard: {
@@ -45,6 +46,7 @@ export type AdminDashboardData = {
     activeCategories: ArtworkCategoryRecord[];
   };
   archivedCategories: ArtworkCategoryRecord[];
+  demoMode: boolean;
 };
 
 export type BulkArtworkUploadSuccess = {
@@ -315,10 +317,11 @@ export const listAdminDashboard = createServerFn({ method: 'GET' }).handler(asyn
   await ensureSchema();
   await requireAdminFromRequest();
 
-  const [records, storageFiles, allCategories] = await Promise.all([
+  const [records, storageFiles, allCategories, siteSettings] = await Promise.all([
     listArtworkRecords(),
     listBunnyStorageFiles(),
     listCategories({ includeArchived: true }),
+    getSiteSettings(),
   ]);
   const activeCategories = allCategories.filter((category) => category.status === 'active');
   const archivedCategories = allCategories.filter((category) => category.status === 'archived');
@@ -330,6 +333,7 @@ export const listAdminDashboard = createServerFn({ method: 'GET' }).handler(asyn
       activeCategories,
     },
     archivedCategories,
+    demoMode: siteSettings.demoMode,
   } satisfies AdminDashboardData;
 });
 

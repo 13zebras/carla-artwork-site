@@ -18,6 +18,8 @@ const buttonVariants = cva(
           'bg-positive/50 border-positive text-foreground hover:bg-positive/35 active:bg-positive/50 focus-visible:ring-positive/50 dark:bg-positive/60 dark:hover:bg-positive/80',
         brand:
           'bg-brand-500/50 border-brand-500 text-foreground hover:bg-brand-500/70 active:bg-brand-500/55 focus-visible:ring-brand-600/50',
+        vibrant:
+          'bg-fuchsia-700 hover:bg-fuchsia-700/70 text-neutral-200 dark:bg-fuchsia-600/65 dark:hover:bg-fuchsia-600/75 hover:border-fuchsia-500/75 active:bg-fuchsia-700 dark:active:bg-fuchsia-600/60',
         outline:
           'border-border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground aria-expanded:bg-accent aria-expanded:text-accent-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50',
         secondary:
@@ -28,7 +30,8 @@ const buttonVariants = cva(
       },
       size: {
         default: 'h-9 px-4 py-2 has-[>svg]:px-3',
-        xs: "h-6 gap-1 rounded-md px-2 text-xs has-[>svg]:px-1.5 [&_svg:not([class*='size-'])]:size-3",
+        xxs: "h-5.5 gap-1 rounded-full px-2 py-0.5 text-xs has-[>svg]:px-1.5 [&_svg:not([class*='size-'])]:size-3",
+        xs: "h-6 gap-1 rounded-lg px-2 text-xs has-[>svg]:px-1.5 [&_svg:not([class*='size-'])]:size-3",
         sm: 'h-8 gap-1.5 rounded-md px-3 has-[>svg]:px-2.5',
         lg: 'h-10 rounded-md px-6 has-[>svg]:px-4',
         icon: 'size-9',

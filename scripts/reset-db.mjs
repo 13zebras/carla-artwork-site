@@ -1,4 +1,4 @@
-// Drops the app tables (artworks, artwork_categories) and re-initializes them.
+// Drops the app tables (artworks, artwork_categories, site_settings) and re-initializes them.
 // Auth tables (user/session/account/verification) are left untouched, so logins persist.
 // Delegates the rebuild to scripts/init-db.mjs (idempotent) to keep one source of truth.
 // No categories are re-seeded; the categories table starts empty after a reset.
@@ -57,10 +57,13 @@ async function main() {
     await client.query('BEGIN');
     await client.query('drop table if exists artworks');
     await client.query('drop table if exists artwork_categories');
+    await client.query('drop table if exists site_settings');
     await client.query('drop sequence if exists artwork_category_id_seq');
     await client.query('COMMIT');
 
-    console.log('✓ Dropped artworks, artwork_categories, and category id sequence (auth tables untouched).');
+    console.log(
+      '✓ Dropped artworks, artwork_categories, site_settings, and category id sequence (auth tables untouched).',
+    );
   } finally {
     client.release();
   }

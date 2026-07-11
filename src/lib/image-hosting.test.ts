@@ -19,6 +19,7 @@ import {
 import {
   getArtworkById,
   insertArtwork,
+  listPublishedArtworks,
   updateArtworkMetadata,
   type ArtworkRecord,
 } from '@/lib/artworks.server';
@@ -33,6 +34,7 @@ import {
   updateCategory,
 } from '@/lib/categories.server';
 import { ensureSchema, getKysely } from '@/lib/db.server';
+import { getSiteSettings, updateDemoMode } from '@/lib/site-settings.server';
 
 async function resetDatabase() {
   await ensureSchema();
@@ -40,6 +42,7 @@ async function resetDatabase() {
   // does not block truncating the referenced table.
   await sql`truncate table artworks, artwork_categories`.execute(getKysely());
   await sql`alter sequence artwork_category_id_seq restart with 1`.execute(getKysely());
+  await updateDemoMode(false);
 }
 
 async function seedTestCategories() {
@@ -152,6 +155,78 @@ describe('artwork deletion', () => {
     );
 
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('public artwork listing', () => {
+  it('returns published artwork in active categories in portfolio order', async () => {
+    await updateCategory({
+      id: 'c003',
+      label: 'Botanical Illustration',
+      status: 'archived',
+    });
+
+    const records = [
+      createTestArtwork({
+        id: 'later-artwork',
+        slug: 'later-artwork',
+        storagePath: 'artworks/later-artwork.jpg',
+        cdnUrl: 'https://carla.b-cdn.net/artworks/later-artwork.jpg',
+        sortOrder: 20,
+      }),
+      createTestArtwork({
+        id: 'first-artwork',
+        slug: 'first-artwork',
+        storagePath: 'artworks/first-artwork.jpg',
+        cdnUrl: 'https://carla.b-cdn.net/artworks/first-artwork.jpg',
+        sortOrder: 10,
+      }),
+      createTestArtwork({
+        id: 'draft-artwork',
+        slug: 'draft-artwork',
+        storagePath: 'artworks/draft-artwork.jpg',
+        status: 'draft',
+      }),
+      createTestArtwork({
+        id: 'archived-category-artwork',
+        slug: 'archived-category-artwork',
+        categoryId: 'c003',
+        category: { id: 'c003', label: 'Botanical Illustration' },
+        storagePath: 'artworks/archived-category-artwork.jpg',
+      }),
+    ];
+
+    for (const record of records) {
+      await insertArtwork(record);
+    }
+
+    const artworks = await listPublishedArtworks();
+
+    expect(artworks.map((artwork) => artwork.slug)).toEqual(['first-artwork', 'later-artwork']);
+    expect(artworks[0]).toEqual({
+      slug: 'first-artwork',
+      title: 'Test Artwork',
+      category: {
+        id: 'c002',
+        categorySlug: 'fine-art-collage',
+        label: 'Fine Art Collage',
+      },
+      cdnUrl: 'https://carla.b-cdn.net/artworks/first-artwork.jpg',
+      alt: 'Test artwork alt text',
+      width: 800,
+      height: 600,
+    });
+  });
+});
+
+describe('site settings', () => {
+  it('persists demo mode changes', async () => {
+    await expect(getSiteSettings()).resolves.toMatchObject({ demoMode: false });
+
+    const settings = await updateDemoMode(true);
+
+    expect(settings.demoMode).toBe(true);
+    await expect(getSiteSettings()).resolves.toMatchObject({ demoMode: true });
   });
 });
 

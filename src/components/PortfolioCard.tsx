@@ -1,14 +1,11 @@
-import { ARTWORK_CATEGORIES } from '@/data/artworkCategories';
-import type { Artwork } from '@/data/artworks';
+import type { PortfolioArtwork } from '@/lib/artworks.types';
 
 type PortfolioCardProps = {
-  artwork: Artwork;
+  artwork: PortfolioArtwork;
   priority?: boolean;
 };
 
 export function PortfolioCard({ artwork, priority = false }: PortfolioCardProps) {
-  const categoryLabel = ARTWORK_CATEGORIES[artwork.category];
-
   return (
     <article className='mb-8 break-inside-avoid shadow-card'>
       <a
@@ -21,7 +18,7 @@ export function PortfolioCard({ artwork, priority = false }: PortfolioCardProps)
           style={{ aspectRatio: `${artwork.width} / ${artwork.height}` }}
         >
           <img
-            src={artwork.imageSrc}
+            src={artwork.cdnUrl}
             alt={artwork.alt}
             width={artwork.width}
             height={artwork.height}
@@ -33,7 +30,7 @@ export function PortfolioCard({ artwork, priority = false }: PortfolioCardProps)
         </div>
         <div className='absolute inset-0 flex flex-col items-center justify-center gap-4 bg-background/80 p-4 transition-opacity duration-300 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100'>
           <h3 className='text-2xl font-semibold text-foreground'>{artwork.title}</h3>
-          <p className='text-xl text-muted-foreground'>{categoryLabel}</p>
+          <p className='text-xl text-muted-foreground'>{artwork.category.label}</p>
         </div>
       </a>
     </article>

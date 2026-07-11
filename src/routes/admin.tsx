@@ -7,16 +7,14 @@ import { BunnyStorageTab } from '@/components/admin/BunnyStorageTab';
 import { CategoriesTab } from '@/components/admin/CategoriesTab';
 import { DashboardSummary } from '@/components/admin/DashboardSummary';
 import { DatabaseRecordsTab } from '@/components/admin/DatabaseRecordsTab';
+import { DemoModeSwitch } from '@/components/admin/DemoModeSwitch';
 import { ImageUploadModal } from '@/components/admin/ImageUploadModal';
 import { UploadActionButtons } from '@/components/admin/UploadActionButtons';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
-import {
-  listAdminDashboard,
-  type AdminDashboard,
-} from '@/lib/artwork-upload.functions';
+import { listAdminDashboard, type AdminDashboard } from '@/lib/artwork-upload.functions';
 import { authClient } from '@/lib/auth-client';
 import { getSession, requireAdmin } from '@/lib/auth.functions';
 import { cn } from '@/lib/utils';
@@ -50,7 +48,7 @@ export const Route = createFileRoute('/admin')({
 function AdminLayout() {
   const navigate = useNavigate();
 
-  const { dashboard, archivedCategories } = Route.useLoaderData();
+  const { dashboard, archivedCategories, demoMode } = Route.useLoaderData();
   const { activeCategories } = dashboard;
   const allCategories = mergeCategories(activeCategories, archivedCategories);
   console.log('%c>>> dashboard', 'color: red', dashboard);
@@ -76,6 +74,7 @@ function AdminLayout() {
             <h1 className='font-semibold text-3xl xl:text-3xl'>Artwork Admin Dashboard</h1>
           </div>
           <nav className='flex flex-wrap items-center gap-3 xl:gap-4'>
+            <DemoModeSwitch demoMode={demoMode} />
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -92,7 +91,7 @@ function AdminLayout() {
             </Tooltip>
             <ThemeToggle className='' />
             <Button
-              className='bg-black hover:bg-brand-600 dark:hover:bg-brand-800 ml-2 border-neutral-700 hover:border-brand-600 rounded-lg text-white text-sm cursor-pointer'
+              className='bg-black hover:bg-brand-600 dark:hover:bg-brand-800 ml-2 px-4 border-neutral-700 hover:border-brand-600 rounded-xl text-white text-sm cursor-pointer'
               variant='outline'
               size='sm'
               onClick={async () => {

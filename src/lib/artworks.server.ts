@@ -1,5 +1,6 @@
 import { sql, type Kysely, type Transaction } from 'kysely';
 
+import type { PortfolioArtwork } from './artworks.types';
 import { getKysely } from './db.server';
 
 type Executable = Kysely<Record<string, never>> | Transaction<Record<string, never>>;
@@ -159,6 +160,56 @@ export async function listArtworkRecords() {
   `.execute(getKysely());
 
   return (rows as ArtworkRow[]).map(mapRow);
+}
+
+type PortfolioArtworkRow = {
+  slug: string;
+  title: string;
+  category_id: string;
+  category_slug: string;
+  category_label: string;
+  cdn_url: string;
+  alt: string;
+  width: number;
+  height: number;
+};
+
+function mapPortfolioArtworkRow(row: PortfolioArtworkRow): PortfolioArtwork {
+  return {
+    slug: row.slug,
+    title: row.title,
+    category: {
+      id: row.category_id,
+      categorySlug: row.category_slug,
+      label: row.category_label,
+    },
+    cdnUrl: row.cdn_url,
+    alt: row.alt,
+    width: row.width,
+    height: row.height,
+  };
+}
+
+export async function listPublishedArtworks() {
+  const { rows } = await sql`
+    select
+      artworks.slug,
+      artworks.title,
+      artworks.category_id,
+      artwork_categories.category_slug,
+      artwork_categories.label as category_label,
+      artworks.cdn_url,
+      artworks.alt,
+      artworks.width,
+      artworks.height
+    from artworks
+    inner join artwork_categories on artwork_categories.id = artworks.category_id
+    where artworks.status = 'published'
+      and artwork_categories.status = 'active'
+    order by artworks.sort_order asc, artworks.created_at desc, artworks.title asc
+  `.execute(getKysely());
+  console.log('>>> rows', rows);
+  return (rows as PortfolioArtworkRow[]).map(mapPortfolioArtworkRow);
 }
 
 export async function getArtworkByStoragePath(storagePath: string) {

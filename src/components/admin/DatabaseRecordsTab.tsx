@@ -75,9 +75,8 @@ export function DatabaseRecordsTab({
                   <TableHead className='w-32 text-center'>Preview</TableHead>
                   <TableHead className='text-center'>Title / Storage Path</TableHead>
                   <TableHead className='text-center'>Category</TableHead>
-                  <TableHead className='w-26 lg:w-29 xl:w-32 text-center'>Status</TableHead>
-
-                  <TableHead className='w-26 lg:w-29 xl:w-32 text-center'>Actions</TableHead>
+                  <TableHead className='w-26 lg:w-30 text-center'>Status</TableHead>
+                  <TableHead className='w-34 lg:w-40 xl:w-50 text-center'>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -112,40 +111,40 @@ export function DatabaseRecordsTab({
                       </TableCell>
                       <TableCell className='px-3 whitespace-normal'>
                         <p className='pb-3 font-medium text-lg leading-tight'>{record.title}</p>
-                        <p className='pb-2 font-mono text-muted-foreground text-xs'>
+                        <p className='font-mono text-muted-foreground text-xs'>
                           {record.storagePath}
                         </p>
                       </TableCell>
-
                       <TableCell className='px-3 whitespace-normal'>
                         <p className='font-medium'>{record.category.label}</p>
                       </TableCell>
                       <TableCell>
                         <div className='flex flex-col items-center gap-4'>
-                          <Badge
-                            className='w-20'
-                            variant={record.status === 'published' ? 'info' : 'outline'}
+                          <Button
+                            variant={record.status === 'published' ? 'vibrant' : 'outline'}
+                            size='xs'
+                            className='rounded-lg w-21'
+                            onClick={(e) => e.stopPropagation()}
                           >
                             {record.status.charAt(0).toUpperCase() + record.status.slice(1)}
-                          </Badge>
+                          </Button>
                           <Badge
-                            className='w-20'
+                            className='w-21 cursor-default'
                             variant={hasStorageObject ? 'positive' : 'destructive'}
                           >
                             {hasStorageObject ? 'Tracked' : 'Missing'}
                           </Badge>
                         </div>
                       </TableCell>
-
                       <TableCell
                         className='text-center cursor-default'
                         onClick={(e) => e.stopPropagation()}
                       >
-                        <div className='flex flex-col items-center gap-3'>
+                        <div className='flex flex-col items-center gap-2.5'>
                           <Button
                             variant='information'
                             size='xs'
-                            className='w-18'
+                            className='w-20'
                             onClick={() => openInfo(record)}
                           >
                             Info
@@ -153,7 +152,7 @@ export function DatabaseRecordsTab({
                           <Button
                             variant='positive'
                             size='xs'
-                            className='w-18'
+                            className='w-20'
                             onClick={() => openEdit(record)}
                           >
                             Edit
@@ -161,17 +160,11 @@ export function DatabaseRecordsTab({
                           <Button
                             variant='destructive'
                             size='xs'
-                            className='w-18'
+                            className='w-20'
                             onClick={() => openDelete(record)}
                           >
                             Delete
                           </Button>
-                          {/* <DatabaseActions
-                            record={record}
-                            onInfo={openInfo}
-                            onEdit={openEdit}
-                            onDelete={openDelete}
-                          /> */}
                         </div>
                       </TableCell>
                     </TableRow>

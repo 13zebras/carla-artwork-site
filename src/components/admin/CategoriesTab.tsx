@@ -35,7 +35,12 @@ export function CategoriesTab({ allCategories }: CategoriesTabProps) {
 
   const AddCategoryBtn = () => {
     return (
-      <Button variant='brand' size='sm' onClick={() => setIsAddCategoryOpen(true)}>
+      <Button
+        variant='brand'
+        size='sm'
+        className='rounded-xl'
+        onClick={() => setIsAddCategoryOpen(true)}
+      >
         Add New Category
       </Button>
     );

@@ -1,10 +1,10 @@
 import { PortfolioCard } from '@/components/PortfolioCard';
-import type { Artwork } from '@/data/artworks';
+import type { PortfolioArtwork } from '@/lib/artworks.types';
 
 const eagerImageCount = 12;
 
 type PortfolioProps = {
-  artworks: Artwork[];
+  artworks: PortfolioArtwork[];
   title?: string;
   description?: string;
 };

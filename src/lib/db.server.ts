@@ -95,6 +95,19 @@ export async function initAppSchema(): Promise<void> {
       db,
     );
 
+    await sql`
+      create table if not exists site_settings (
+        id text primary key check (id = 'site'),
+        demo_mode boolean not null default false,
+        updated_at text not null
+      )
+    `.execute(db);
+    await sql`
+      insert into site_settings (id, demo_mode, updated_at)
+      values ('site', false, ${new Date().toISOString()})
+      on conflict (id) do nothing
+    `.execute(db);
+
     await sql`create sequence if not exists artwork_category_id_seq`.execute(db);
 
     await sql`
@@ -109,7 +122,9 @@ export async function initAppSchema(): Promise<void> {
         updated_at text not null
       )
     `.execute(db);
-    await sql`alter table artwork_categories add column if not exists category_slug text`.execute(db);
+    await sql`alter table artwork_categories add column if not exists category_slug text`.execute(
+      db,
+    );
     await sql`
       update artwork_categories
       set category_slug = id
