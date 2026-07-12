@@ -37,42 +37,7 @@ export function getArtworkCategoryBySlug(slug: string): ArtworkCategory | undefi
   return undefined;
 }
 
-export const artworkCategoryLinks = [
-  {
-    label: ARTWORK_CATEGORIES.illustration,
-    to: '/category/$category',
-    params: { category: ARTWORK_CATEGORY_SLUGS.illustration },
-  },
-  {
-    label: ARTWORK_CATEGORIES.fineArtCollage,
-    to: '/category/$category',
-    params: { category: ARTWORK_CATEGORY_SLUGS.fineArtCollage },
-  },
-  {
-    label: ARTWORK_CATEGORIES.graphicDesign,
-    to: '/category/$category',
-    params: { category: ARTWORK_CATEGORY_SLUGS.graphicDesign },
-  },
-  {
-    label: ARTWORK_CATEGORIES.food,
-    to: '/category/$category',
-    params: { category: ARTWORK_CATEGORY_SLUGS.food },
-  },
-  {
-    label: ARTWORK_CATEGORIES.botanicalIllustration,
-    to: '/category/$category',
-    params: { category: ARTWORK_CATEGORY_SLUGS.botanicalIllustration },
-  },
-  {
-    label: ARTWORK_CATEGORIES.specialProjects,
-    to: '/category/$category',
-    params: { category: ARTWORK_CATEGORY_SLUGS.specialProjects },
-  },
-] as const;
-
-export type ArtworkLink = (typeof artworkCategoryLinks)[number];
-
-// will be moved to database
+// Used as category page content in demo mode.
 export const artworkCategoryDescriptions = {
   illustration:
     'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',

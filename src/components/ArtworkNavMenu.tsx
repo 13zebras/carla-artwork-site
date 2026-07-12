@@ -8,12 +8,16 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from '@/components/ui/navigation-menu';
-import { artworkCategoryLinks } from '@/data/artworkCategories';
+import type { ArtworkCategoryNavItem } from '@/lib/shared/categories.types';
 import { cn } from '@/lib/shared/utils';
 
 import { linkClassName, activeLinkClassName } from './Header';
 
-export function ArtworkNavMenu() {
+type ArtworkNavMenuProps = {
+  categories: ArtworkCategoryNavItem[];
+};
+
+export function ArtworkNavMenu({ categories }: ArtworkNavMenuProps) {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
 
   return (
@@ -30,11 +34,11 @@ export function ArtworkNavMenu() {
           </NavigationMenuTrigger>
           <NavigationMenuContent className='z-50 shadow-shadow-card group-data-[viewport=false]/navigation-menu:shadow-xl group-data-[viewport=false]/navigation-menu:border border-border-2nd group-data-[viewport=false]/navigation-menu:rounded-xs w-max max-w-75'>
             <ul className='gap-1 grid p-0 min-w-40'>
-              {artworkCategoryLinks.map(({ label, params, to }) => {
-                const isActive = pathname === `/category/${params.category}`;
+              {categories.map(({ categorySlug, label }) => {
+                const isActive = pathname === `/category/${categorySlug}`;
 
                 return (
-                  <li key={label}>
+                  <li key={categorySlug}>
                     <NavigationMenuLink asChild>
                       {isActive ? (
                         <span
@@ -45,8 +49,8 @@ export function ArtworkNavMenu() {
                         </span>
                       ) : (
                         <Link
-                          to={to}
-                          params={params}
+                          to='/category/$category'
+                          params={{ category: categorySlug }}
                           className={cn(linkClassName, 'transition-colors')}
                         >
                           {label}

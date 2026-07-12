@@ -1,4 +1,4 @@
-import { Link, useRouterState } from '@tanstack/react-router';
+import { Link, useLoaderData, useRouterState } from '@tanstack/react-router';
 import type { ReactNode } from 'react';
 
 import { cn } from '@/lib/shared/utils';
@@ -27,6 +27,7 @@ function HomeLogoLink({ className, children }: { className: string; children: Re
 }
 
 export function Header() {
+  const categories = useLoaderData({ from: '__root__' });
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   return (
     <header className='z-20 fixed flex justify-center bg-background w-full h-50 sm:h-52 xl:h-38'>
@@ -53,7 +54,7 @@ export function Header() {
         </HomeLogoLink>
 
         <nav className='flex justify-between xs:justify-center xl:justify-end xs:gap-8 xl:gap-4 xl:mt-4 w-full xs:w-auto max-w-100 xs:max-w-full grow-0'>
-          <ArtworkNavMenu />
+          <ArtworkNavMenu categories={categories} />
           <a href='https://shopify.com' className={linkClassName}>
             Shop
           </a>

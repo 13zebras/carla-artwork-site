@@ -4,10 +4,12 @@ import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools';
 
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { listArtworkNavigationCategories } from '@/lib/functions/artworks.functions';
 
 import appCss from '../styles.css?url';
 
 export const Route = createRootRoute({
+  loader: () => listArtworkNavigationCategories(),
   head: () => ({
     meta: [
       {

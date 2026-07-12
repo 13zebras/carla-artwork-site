@@ -52,3 +52,7 @@ export type PortfolioArtwork = {
   width: number;
   height: number;
 };
+
+export type ArtworkPageArtwork = PortfolioArtwork & {
+  description: string | null;
+};

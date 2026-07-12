@@ -21,6 +21,7 @@ import {
   getArtworkById,
   insertArtwork,
   listPublishedArtworks,
+  listPublishedArtworksByCategoryId,
   updateArtworkMetadata,
 } from '@/lib/server/artworks.server';
 import {
@@ -227,6 +228,52 @@ describe('public artwork listing', () => {
       width: 800,
       height: 600,
     });
+  });
+
+  it('returns only published artwork from the requested active category', async () => {
+    const records = [
+      createTestArtwork({
+        id: 'target-later',
+        slug: 'target-later',
+        storagePath: 'artworks/target-later.jpg',
+        sortOrder: 20,
+      }),
+      createTestArtwork({
+        id: 'target-first',
+        slug: 'target-first',
+        storagePath: 'artworks/target-first.jpg',
+        sortOrder: 10,
+      }),
+      createTestArtwork({
+        id: 'target-draft',
+        slug: 'target-draft',
+        storagePath: 'artworks/target-draft.jpg',
+        status: 'draft',
+      }),
+      createTestArtwork({
+        id: 'other-category',
+        slug: 'other-category',
+        categoryId: 'c001',
+        category: { id: 'c001', label: 'Illustration' },
+        storagePath: 'artworks/other-category.jpg',
+      }),
+    ];
+
+    for (const record of records) {
+      await insertArtwork(record);
+    }
+
+    const artworks = await listPublishedArtworksByCategoryId('c002');
+
+    expect(artworks.map((artwork) => artwork.slug)).toEqual(['target-first', 'target-later']);
+    expect(artworks[0]?.category).toEqual({
+      id: 'c002',
+      categorySlug: 'fine-art-collage',
+      label: 'Fine Art Collage',
+    });
+
+    await updateCategory({ id: 'c002', label: 'Fine Art Collage', status: 'archived' });
+    await expect(listPublishedArtworksByCategoryId('c002')).resolves.toEqual([]);
   });
 });
 

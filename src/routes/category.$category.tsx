@@ -2,26 +2,19 @@ import { createFileRoute, notFound } from '@tanstack/react-router';
 
 import { Header } from '@/components/Header';
 import { Portfolio } from '@/components/Portfolio';
-import {
-  ARTWORK_CATEGORIES,
-  getArtworkCategoryBySlug,
-  artworkCategoryDescriptions,
-} from '@/data/artworkCategories';
-import { getArtworksByCategory } from '@/data/artworks';
+import { getCategoryPage } from '@/lib/functions/artworks.functions';
 
 export const Route = createFileRoute('/category/$category')({
-  loader: ({ params }) => {
-    const category = getArtworkCategoryBySlug(params.category);
+  loader: async ({ params }) => {
+    const categoryPage = await getCategoryPage({
+      data: { categorySlug: params.category },
+    });
 
-    if (!category) {
+    if (!categoryPage) {
       throw notFound();
     }
 
-    return {
-      artworks: getArtworksByCategory(category),
-      title: ARTWORK_CATEGORIES[category],
-      description: artworkCategoryDescriptions[category],
-    };
+    return categoryPage;
   },
   component: CategoryComponent,
 });

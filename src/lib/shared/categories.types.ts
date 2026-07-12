@@ -1,3 +1,8 @@
+export type ArtworkCategoryNavItem = {
+  categorySlug: string;
+  label: string;
+};
+
 export type ArtworkCategoryRecord = {
   id: string;
   categorySlug: string;

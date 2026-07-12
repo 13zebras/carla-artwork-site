@@ -2,6 +2,7 @@ import { sql, type Kysely, type Transaction } from 'kysely';
 
 import type {
   ArtworkMetadataUpdate,
+  ArtworkPageArtwork,
   ArtworkRecord,
   ArtworkStatus,
   PortfolioArtwork,
@@ -181,6 +182,63 @@ export async function listPublishedArtworks() {
     from artworks
     inner join artwork_categories on artwork_categories.id = artworks.category_id
     where artworks.status = 'published'
+      and artwork_categories.status = 'active'
+    order by artworks.sort_order asc, artworks.created_at desc, artworks.title asc
+  `.execute(getKysely());
+
+  return (rows as PortfolioArtworkRow[]).map(mapPortfolioArtworkRow);
+}
+
+export async function getPublishedArtworkBySlug(
+  slug: string,
+): Promise<ArtworkPageArtwork | undefined> {
+  const { rows } = await sql`
+    select
+      artworks.slug,
+      artworks.title,
+      artworks.description,
+      artworks.category_id,
+      artwork_categories.category_slug,
+      artwork_categories.label as category_label,
+      artworks.cdn_url,
+      artworks.alt,
+      artworks.width,
+      artworks.height
+    from artworks
+    inner join artwork_categories on artwork_categories.id = artworks.category_id
+    where artworks.slug = ${slug}
+      and artworks.status = 'published'
+      and artwork_categories.status = 'active'
+    limit 1
+  `.execute(getKysely());
+
+  const row = rows[0] as (PortfolioArtworkRow & { description: string | null }) | undefined;
+  if (!row) {
+    return undefined;
+  }
+
+  return {
+    ...mapPortfolioArtworkRow(row),
+    description: row.description,
+  };
+}
+
+export async function listPublishedArtworksByCategoryId(categoryId: string) {
+  const { rows } = await sql`
+    select
+      artworks.slug,
+      artworks.title,
+      artworks.category_id,
+      artwork_categories.category_slug,
+      artwork_categories.label as category_label,
+      artworks.cdn_url,
+      artworks.alt,
+      artworks.width,
+      artworks.height
+    from artworks
+    inner join artwork_categories on artwork_categories.id = artworks.category_id
+    where artworks.category_id = ${categoryId}
+      and artworks.status = 'published'
       and artwork_categories.status = 'active'
     order by artworks.sort_order asc, artworks.created_at desc, artworks.title asc
   `.execute(getKysely());
