@@ -32,3 +32,37 @@ export function slugify(value: string) {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
 }
+
+export function normalizeArtworkStatus(value: unknown) {
+  const status = typeof value === 'string' ? value.trim().toLowerCase() : '';
+  if (status === '' || status === 'draft') {
+    return 'draft' as const;
+  }
+  if (status === 'published') {
+    return 'published' as const;
+  }
+  throw new Error('Artwork status must be draft or published');
+}
+
+type IntegerOptions = {
+  errorMessage: string;
+  fallback?: number;
+};
+
+export function parseInteger(
+  value: unknown,
+  options: IntegerOptions & { fallback: number },
+): number;
+export function parseInteger(value: unknown, options: IntegerOptions): number | undefined;
+export function parseInteger(value: unknown, { errorMessage, fallback }: IntegerOptions) {
+  if (value == null || String(value).trim() === '') {
+    return fallback;
+  }
+
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed)) {
+    throw new Error(errorMessage);
+  }
+
+  return parsed;
+}

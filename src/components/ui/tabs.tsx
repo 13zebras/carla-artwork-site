@@ -9,14 +9,14 @@ function Tabs({ className, orientation = 'horizontal', ...props }: TabsPrimitive
       data-slot='tabs'
       data-orientation={orientation}
       orientation={orientation}
-      className={cn('group/tabs flex gap-2 data-[orientation=horizontal]:flex-col', className)}
+      className={cn('group/tabs flex data-[orientation=horizontal]:flex-col gap-2', className)}
       {...props}
     />
   );
 }
 
 const tabsListVariants = cva(
-  'group/tabs-list inline-flex w-fit items-center justify-center rounded-lg p-[3px] text-muted-foreground group-data-[orientation=horizontal]/tabs:h-9 group-data-[orientation=vertical]/tabs:h-fit group-data-[orientation=vertical]/tabs:flex-col data-[variant=line]:rounded-none',
+  'group/tabs-list inline-flex group-data-[orientation=vertical]/tabs:flex-col justify-center items-center p-[3px] rounded-lg data-[variant=line]:rounded-none w-fit group-data-[orientation=horizontal]/tabs:h-9 group-data-[orientation=vertical]/tabs:h-fit text-muted-foreground',
   {
     variants: {
       variant: {
@@ -54,6 +54,7 @@ function TabsTrigger({ className, ...props }: TabsPrimitive.Tab.Props) {
         'group-data-[variant=line]/tabs-list:bg-transparent group-data-[variant=line]/tabs-list:data-active:bg-transparent dark:group-data-[variant=line]/tabs-list:data-active:border-transparent dark:group-data-[variant=line]/tabs-list:data-active:bg-transparent',
         'group-data-[variant=default]/tabs-list:data-active:bg-background data-active:text-foreground dark:group-data-[variant=default]/tabs-list:data-active:border-input dark:group-data-[variant=default]/tabs-list:data-active:bg-input/30 dark:data-active:text-foreground',
         'after:absolute after:bg-brand-500 after:opacity-0 after:transition-opacity group-data-[orientation=horizontal]/tabs:after:inset-x-0 group-data-[orientation=horizontal]/tabs:after:bottom-[-5px] group-data-[orientation=horizontal]/tabs:after:h-0.5 group-data-[orientation=vertical]/tabs:after:inset-y-0 group-data-[orientation=vertical]/tabs:after:-right-1 group-data-[orientation=vertical]/tabs:after:w-0.5 group-data-[variant=line]/tabs-list:data-active:after:opacity-100',
+        'cursor-pointer group-data-[variant=line]/tabs-list:data-active:cursor-default group-data-[variant=default]/tabs-list:data-active:cursor-default',
         className,
       )}
       {...props}
@@ -66,7 +67,7 @@ function TabsContent({ className, ...props }: TabsPrimitive.Panel.Props) {
     <TabsPrimitive.Panel
       data-slot='tabs-content'
       className={cn(
-        'flex-1 outline-none data-active:animate-in data-active:fade-in data-active:duration-300',
+        'flex-1 outline-none data-active:animate-in data-active:duration-300 data-active:fade-in',
         className,
       )}
       {...props}

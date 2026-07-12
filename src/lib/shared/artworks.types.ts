@@ -37,6 +37,11 @@ export type ArtworkMetadataUpdate = {
   status: ArtworkStatus;
 };
 
+export type ExistingArtworkInput = Omit<ArtworkMetadataUpdate, 'id' | 'alt'> & {
+  storagePath: string;
+  alt: string | null;
+};
+
 export type PortfolioArtworkCategory = {
   id: string;
   categorySlug: string;

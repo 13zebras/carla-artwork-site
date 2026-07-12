@@ -59,10 +59,11 @@ async function main() {
     await client.query('drop table if exists artwork_categories');
     await client.query('drop table if exists site_settings');
     await client.query('drop sequence if exists artwork_category_id_seq');
+    await client.query('drop table if exists schema_migrations');
     await client.query('COMMIT');
 
     console.log(
-      '✓ Dropped artworks, artwork_categories, site_settings, and category id sequence (auth tables untouched).',
+      '✓ Dropped app tables, migration history, and category id sequence (auth tables untouched).',
     );
   } finally {
     client.release();

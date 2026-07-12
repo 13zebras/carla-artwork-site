@@ -1,5 +1,11 @@
+import { buildBunnyCdnUrl, type BunnyCdnOptions } from '../shared/bunny';
 import type { BunnyStorageFile } from '../shared/bunny.types';
 import { getServerEnv } from './env.server';
+
+export function getBunnyCdnUrl(storagePath: string, options?: BunnyCdnOptions) {
+  const path = storagePath.replace(/^\/+/, '');
+  return buildBunnyCdnUrl(`${getServerEnv().BUNNY_CDN_BASE_URL}/${path}`, options);
+}
 
 function getStorageUrl(storagePath: string) {
   const env = getServerEnv();

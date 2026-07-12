@@ -20,7 +20,7 @@ function filenameFromPath(path: string) {
   return path.split('/').at(-1) ?? path;
 }
 
-export function AboutTab({ about }: AboutTabProps) {
+export function AboutPageTab({ about }: AboutTabProps) {
   const router = useRouter();
   const mobileInputRef = useRef<HTMLInputElement>(null);
   const desktopInputRef = useRef<HTMLInputElement>(null);
@@ -112,7 +112,7 @@ export function AboutTab({ about }: AboutTabProps) {
             </div>
 
             <div className='gap-6 grid lg:grid-cols-2'>
-              <div className='gap-3 grid content-start'>
+              <div className='content-start gap-3 grid'>
                 <Label htmlFor='about-mobile-image'>
                   {about.mobileImagePath ? 'Replace mobile about photo' : 'Mobile about photo'}
                 </Label>
@@ -135,7 +135,7 @@ export function AboutTab({ about }: AboutTabProps) {
                       setRemoveMobile(false);
                     }
                   }}
-                  className='p-0 border-0 file:mr-3 file:px-3 file:rounded-md hover:file:bg-accent-c active:file:bg-accent-c/70 file:bg-accent-c/80 file:cursor-pointer'
+                  className='file:mr-3 p-0 file:px-3 border-0 file:rounded-md hover:file:bg-accent-c active:file:bg-accent-c/70 file:bg-accent-c/80 file:cursor-pointer'
                 />
                 <p className='text-muted-foreground text-xs'>
                   Used below the sm breakpoint. Upload a landscape crop.
@@ -157,7 +157,7 @@ export function AboutTab({ about }: AboutTabProps) {
                 ) : null}
               </div>
 
-              <div className='gap-3 grid content-start'>
+              <div className='content-start gap-3 grid'>
                 <Label htmlFor='about-desktop-image'>
                   {about.desktopImagePath ? 'Replace desktop about photo' : 'Desktop about photo'}
                 </Label>
@@ -180,7 +180,7 @@ export function AboutTab({ about }: AboutTabProps) {
                       setRemoveDesktop(false);
                     }
                   }}
-                  className='p-0 border-0 file:mr-3 file:px-3 file:rounded-md hover:file:bg-accent-c active:file:bg-accent-c/70 file:bg-accent-c/80 file:cursor-pointer'
+                  className='file:mr-3 p-0 file:px-3 border-0 file:rounded-md hover:file:bg-accent-c active:file:bg-accent-c/70 file:bg-accent-c/80 file:cursor-pointer'
                 />
                 <p className='text-muted-foreground text-xs'>
                   Used from the sm breakpoint upward and floated beside the text.

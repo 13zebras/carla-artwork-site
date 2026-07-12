@@ -1,5 +1,8 @@
 import { createServerFn } from '@tanstack/react-start';
 
+import type { ArtworkMetadataUpdate, ExistingArtworkInput } from '../shared/artworks.types';
+import { normalizeArtworkStatus, parseInteger } from '../shared/utils';
+
 export type {
   AdminDashboard,
   AdminDashboardData,
@@ -9,6 +12,84 @@ export type {
   BulkArtworkUploadSuccess,
 } from '../shared/artwork-upload.types';
 
+function getInputObject(data: unknown) {
+  if (!data || typeof data !== 'object') {
+    throw new Error('Invalid request');
+  }
+  return data as Record<string, unknown>;
+}
+
+function getString(input: Record<string, unknown>, key: string) {
+  return typeof input[key] === 'string' ? input[key].trim() : '';
+}
+
+function parseExistingArtworkInput(data: unknown): ExistingArtworkInput {
+  const input = getInputObject(data);
+  const storagePath = getString(input, 'storagePath');
+  const title = getString(input, 'title');
+  const categoryId = getString(input, 'categoryId');
+
+  if (!storagePath) {
+    throw new Error('Storage path is required');
+  }
+  if (!title) {
+    throw new Error('Title is required');
+  }
+  if (!categoryId) {
+    throw new Error('Category is required');
+  }
+
+  return {
+    storagePath,
+    title,
+    categoryId,
+    alt: getString(input, 'alt') || null,
+    description: getString(input, 'description') || null,
+    sortOrder: parseInteger(input.sortOrder, {
+      fallback: 0,
+      errorMessage: 'Artwork sort order must be an integer',
+    }),
+    status: normalizeArtworkStatus(input.status),
+  };
+}
+
+function parseArtworkUpdate(data: unknown): ArtworkMetadataUpdate {
+  const input = getInputObject(data);
+  const id = getString(input, 'id');
+  const title = getString(input, 'title');
+  const categoryId = getString(input, 'categoryId');
+
+  if (!id) {
+    throw new Error('Artwork id is required');
+  }
+  if (!title) {
+    throw new Error('Title is required');
+  }
+  if (!categoryId) {
+    throw new Error('Category is required');
+  }
+
+  return {
+    id,
+    title,
+    categoryId,
+    alt: getString(input, 'alt') || title,
+    description: getString(input, 'description') || null,
+    sortOrder: parseInteger(input.sortOrder, {
+      fallback: 0,
+      errorMessage: 'Artwork sort order must be an integer',
+    }),
+    status: normalizeArtworkStatus(input.status),
+  };
+}
+
+function validateFormData(data: unknown) {
+  if (!(data instanceof FormData)) {
+    throw new Error('Expected FormData');
+  }
+  return data;
+}
+
 export const listAdminDashboard = createServerFn({ method: 'GET' }).handler(async () => {
   const { listAdminDashboard: loadAdminDashboard } =
     await import('../server/artwork-upload.server');
@@ -17,87 +98,44 @@ export const listAdminDashboard = createServerFn({ method: 'GET' }).handler(asyn
 
 export const deleteArtwork = createServerFn({ method: 'POST' })
   .validator((data) => {
-    const id =
-      data && typeof data === 'object' && 'id' in data && typeof data.id === 'string'
-        ? data.id.trim()
-        : '';
-    if (id.length === 0) {
+    const id = getString(getInputObject(data), 'id');
+    if (!id) {
       throw new Error('Artwork id is required');
     }
     return { id };
   })
   .handler(async ({ data }) => {
     const { deleteArtwork: runDeleteArtwork } = await import('../server/artwork-upload.server');
-    return runDeleteArtwork({ data });
+    return runDeleteArtwork(data.id);
   });
 
 export const uploadSingleArtwork = createServerFn({ method: 'POST' })
-  .validator((data) => {
-    if (!(data instanceof FormData)) {
-      throw new Error('Expected FormData');
-    }
-    return data;
-  })
+  .validator(validateFormData)
   .handler(async ({ data }) => {
     const { uploadSingleArtwork: runUploadSingleArtwork } =
       await import('../server/artwork-upload.server');
-    return runUploadSingleArtwork({ data });
+    return runUploadSingleArtwork(data);
   });
 
 export const uploadBulkArtworks = createServerFn({ method: 'POST' })
-  .validator((data) => {
-    if (!(data instanceof FormData)) {
-      throw new Error('Expected FormData');
-    }
-    return data;
-  })
+  .validator(validateFormData)
   .handler(async ({ data }) => {
     const { uploadBulkArtworks: runUploadBulkArtworks } =
       await import('../server/artwork-upload.server');
-    return runUploadBulkArtworks({ data });
+    return runUploadBulkArtworks(data);
   });
 
 export const registerExistingArtwork = createServerFn({ method: 'POST' })
-  .validator(
-    (data: {
-      storagePath: string;
-      title: string;
-      categoryId: string;
-      alt?: string | null;
-      description?: string | null;
-      sortOrder?: number | string;
-      status?: string;
-    }) => {
-      if (!data || typeof data !== 'object') {
-        throw new Error('Invalid request');
-      }
-      return data;
-    },
-  )
+  .validator(parseExistingArtworkInput)
   .handler(async ({ data }) => {
     const { registerExistingArtwork: runRegisterExistingArtwork } =
       await import('../server/artwork-upload.server');
-    return runRegisterExistingArtwork({ data });
+    return runRegisterExistingArtwork(data);
   });
 
 export const updateArtwork = createServerFn({ method: 'POST' })
-  .validator(
-    (data: {
-      id: string;
-      title: string;
-      categoryId: string;
-      alt?: string | null;
-      description?: string | null;
-      sortOrder?: number | string;
-      status?: string;
-    }) => {
-      if (!data || typeof data !== 'object') {
-        throw new Error('Invalid request');
-      }
-      return data;
-    },
-  )
+  .validator(parseArtworkUpdate)
   .handler(async ({ data }) => {
     const { updateArtwork: runUpdateArtwork } = await import('../server/artwork-upload.server');
-    return runUpdateArtwork({ data });
+    return runUpdateArtwork(data);
   });

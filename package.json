@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev --port 3000",
-    "db:init": "node scripts/init-db.mjs",
+    "db:init": "pnpm run db:migrate",
+    "db:migrate": "node scripts/init-db.mjs",
     "db:reset": "node scripts/reset-db.mjs",
     "format": "oxfmt",
     "lint": "oxlint",

@@ -3,7 +3,7 @@ import { sql, type Kysely, type Transaction } from 'kysely';
 import { slugify } from '@/lib/shared/utils';
 
 import type { ArtworkCategoryRecord } from '../shared/categories.types';
-import { getKysely } from './db.server';
+import { getKysely, toIsoTimestamp } from './db.server';
 
 type Executable = Kysely<Record<string, never>> | Transaction<Record<string, never>>;
 
@@ -14,8 +14,8 @@ type CategoryRow = {
   description: string | null;
   sort_order: number;
   status: 'active' | 'archived';
-  created_at: string;
-  updated_at: string;
+  created_at: Date | string;
+  updated_at: Date | string;
 };
 
 const CATEGORY_SELECT = sql`
@@ -37,8 +37,8 @@ function toRecord(row: CategoryRow): ArtworkCategoryRecord {
     description: row.description,
     sortOrder: row.sort_order,
     status: row.status,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
+    createdAt: toIsoTimestamp(row.created_at),
+    updatedAt: toIsoTimestamp(row.updated_at),
   };
 }
 

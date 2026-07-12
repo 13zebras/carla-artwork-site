@@ -55,7 +55,7 @@ export function Header() {
 
         <nav className='flex justify-between xs:justify-center xl:justify-end xs:gap-8 xl:gap-4 xl:mt-4 w-full xs:w-auto max-w-100 xs:max-w-full grow-0'>
           <ArtworkNavMenu categories={categories} />
-          <a href='https://shopify.com' className={linkClassName}>
+          <a href='/coming-soon' className={linkClassName}>
             Shop
           </a>
           <Link

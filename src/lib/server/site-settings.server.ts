@@ -1,6 +1,6 @@
 import { sql } from 'kysely';
 
-import { getKysely } from './db.server';
+import { getKysely, toIsoTimestamp } from './db.server';
 
 export type SiteSettings = {
   demoMode: boolean;
@@ -17,7 +17,7 @@ type SiteSettingsRow = {
   about_mobile_image_path: string | null;
   about_desktop_image_path: string | null;
   about_image_alt: string;
-  updated_at: string;
+  updated_at: Date | string;
 };
 
 function toSiteSettings(row: SiteSettingsRow): SiteSettings {
@@ -27,7 +27,7 @@ function toSiteSettings(row: SiteSettingsRow): SiteSettings {
     aboutMobileImagePath: row.about_mobile_image_path,
     aboutDesktopImagePath: row.about_desktop_image_path,
     aboutImageAlt: row.about_image_alt,
-    updatedAt: row.updated_at,
+    updatedAt: toIsoTimestamp(row.updated_at),
   };
 }
 

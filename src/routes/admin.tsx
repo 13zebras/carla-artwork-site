@@ -2,7 +2,7 @@ import { Link, createFileRoute, redirect, useNavigate } from '@tanstack/react-ro
 import { ExternalLink } from 'lucide-react';
 import { useState } from 'react';
 
-import { AboutTab } from '@/components/admin/AboutTab';
+import { AboutPageTab } from '@/components/admin/AboutPageTab';
 import { BulkImageUploadModal } from '@/components/admin/BulkImageUploadModal';
 import { BunnyStorageTab } from '@/components/admin/BunnyStorageTab';
 import { CategoriesTab } from '@/components/admin/CategoriesTab';
@@ -108,7 +108,7 @@ function AdminLayout() {
 
       <div
         className={cn(
-          'hidden min-[950px]:block mx-auto px-12 pt-20 pb-6 w-full max-w-384',
+          'hidden min-[1000px]:block mx-auto px-12 pt-20 pb-6 w-full max-w-384',
           dashboard.records.length === 0 && 'max-w-250',
         )}
       >
@@ -151,11 +151,11 @@ function AdminLayout() {
 
             <CategoriesTab allCategories={allCategories} />
 
-            <AboutTab key={about.updatedAt} about={about} />
+            <AboutPageTab key={about.updatedAt} about={about} />
           </Tabs>
         </div>
       </div>
-      <div className='min-[950px]:hidden flex justify-center items-center mx-auto px-12 pt-64 lg:pt-20 pb-6 w-full'>
+      <div className='min-[1000px]:hidden flex justify-center items-center mx-auto px-12 pt-64 lg:pt-20 pb-6 w-full'>
         <h2 className='font-semibold text-3xl text-center'>Best viewed on larger screen</h2>
       </div>
 

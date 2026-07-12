@@ -1,7 +1,13 @@
+import { execFile } from 'node:child_process';
+import path from 'node:path';
+import { promisify } from 'node:util';
+
 import pg from 'pg';
 import { afterAll, beforeAll } from 'vitest';
 
 import { closeDb, ensureSchema } from '@/lib/server/db.server';
+
+const execFileAsync = promisify(execFile);
 
 const envDefaults = {
   DATABASE_URL: 'postgres://postgres:postgres@localhost:5432/carla_test',
@@ -65,6 +71,10 @@ async function ensureTestDatabase() {
 
 beforeAll(async () => {
   await ensureTestDatabase();
+  await execFileAsync(process.execPath, [path.resolve('scripts/init-db.mjs')], {
+    cwd: process.cwd(),
+    env: process.env,
+  });
   await ensureSchema();
 });
 

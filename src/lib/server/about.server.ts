@@ -3,11 +3,9 @@ import { createHash } from 'node:crypto';
 import { imageSize } from 'image-size';
 
 import type { AboutContent } from '../shared/about.types';
-import { buildBunnyCdnUrl } from '../shared/bunny';
 import { requireAdminFromRequest } from './auth-session.server';
-import { deleteFromBunnyStorage, uploadToBunnyStorage } from './bunny.server';
+import { deleteFromBunnyStorage, getBunnyCdnUrl, uploadToBunnyStorage } from './bunny.server';
 import { ensureSchema } from './db.server';
-import { getServerEnv } from './env.server';
 import { getSiteSettings, updateAboutSettings } from './site-settings.server';
 
 const MAX_IMAGE_SIZE = 50_000_000;
@@ -24,7 +22,7 @@ function getVersionedImageUrl(storagePath: string | null, updatedAt: string) {
     return null;
   }
 
-  const cdnUrl = buildBunnyCdnUrl(`${getServerEnv().BUNNY_CDN_BASE_URL}/${storagePath}`);
+  const cdnUrl = getBunnyCdnUrl(storagePath);
   const url = new URL(cdnUrl);
   url.searchParams.set('v', updatedAt);
   return url.toString();

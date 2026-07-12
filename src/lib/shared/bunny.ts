@@ -1,12 +1,11 @@
-export function buildBunnyCdnUrl(
-  cdnUrl: string,
-  options?: {
-    width?: number;
-    height?: number;
-    format?: 'webp' | 'jpeg' | 'png' | 'gif' | 'avif';
-    quality?: number;
-  },
-) {
+export type BunnyCdnOptions = {
+  width?: number;
+  height?: number;
+  format?: 'webp' | 'jpeg' | 'png' | 'gif' | 'avif';
+  quality?: number;
+};
+
+export function buildBunnyCdnUrl(cdnUrl: string, options?: BunnyCdnOptions) {
   const url = new URL(cdnUrl);
 
   if (options?.width !== undefined) {

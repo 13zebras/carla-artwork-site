@@ -39,23 +39,18 @@ export function buildCategoryResolver(categories: ArtworkCategoryRecord[]): Cate
   };
 }
 
-function collectCategoryOrError(
+export function resolveActiveCategory(
   input: string,
-  row: number,
-  filename: string | null,
-  errors: BulkArtworkUploadError[],
   resolveCategory: CategoryResolver,
-) {
+): { category: ArtworkCategoryRecord } | { message: string } {
   const category = resolveCategory(input);
   if (!category) {
-    errors.push({ row, filename, message: `Unknown category: ${input}` });
-    return undefined;
+    return { message: `Unknown category: ${input}` };
   }
   if (category.status !== 'active') {
-    errors.push({ row, filename, message: `Category ${input} is archived` });
-    return undefined;
+    return { message: `Category ${input} is archived` };
   }
-  return category;
+  return { category };
 }
 
 export function parseCsvRows(csvText: string): RawCsvRow[] {
@@ -81,14 +76,14 @@ export function validateCsvHeaders(rows: RawCsvRow[]) {
   }
 }
 
-export async function getUniqueArtworkSlug(baseSlug: string, takenSlugs: Set<string>) {
+export async function getUniqueArtworkSlug(baseSlug: string, reservedSlugs = new Set<string>()) {
   let candidate = baseSlug;
   let suffix = 2;
-  while (takenSlugs.has(candidate) || (await slugExists(candidate))) {
+  while (reservedSlugs.has(candidate) || (await slugExists(candidate))) {
     candidate = `${baseSlug}-${suffix}`;
     suffix += 1;
   }
-  takenSlugs.add(candidate);
+  reservedSlugs.add(candidate);
   return candidate;
 }
 
@@ -119,9 +114,10 @@ export function buildBulkErrors(
     if (row.categoryId.trim().length === 0) {
       errors.push({ row: row.row, filename, message: 'Category is required' });
     }
-    if (!row.status) {
+    const status = row.status?.trim().toLowerCase();
+    if (!status) {
       errors.push({ row: row.row, filename, message: 'Status is required' });
-    } else if (row.status !== 'draft' && row.status !== 'published') {
+    } else if (status !== 'draft' && status !== 'published') {
       errors.push({ row: row.row, filename, message: 'Status must be draft or published' });
     }
     if (!row.alt || row.alt.trim().length === 0) {
@@ -136,8 +132,9 @@ export function buildBulkErrors(
       errors.push({ row: row.row, filename, message: 'Sort order must be an integer' });
     }
 
-    if (!collectCategoryOrError(row.categoryId, row.row, filename, errors, resolveCategory)) {
-      continue;
+    const categoryResult = resolveActiveCategory(row.categoryId, resolveCategory);
+    if (!('category' in categoryResult)) {
+      errors.push({ row: row.row, filename, message: categoryResult.message });
     }
   }
 

@@ -1,17 +1,6 @@
 import { createServerFn } from '@tanstack/react-start';
 
-function parseSortOrder(value: FormDataEntryValue | null) {
-  if (value == null || value.toString().trim() === '') {
-    return undefined;
-  }
-
-  const parsed = Number(value.toString());
-  if (!Number.isInteger(parsed)) {
-    throw new Error('Category sort order must be an integer');
-  }
-
-  return parsed;
-}
+import { parseInteger } from '../shared/utils';
 
 export const createAdminCategory = createServerFn({ method: 'POST' })
   .validator((data) => {
@@ -32,7 +21,9 @@ export const createAdminCategory = createServerFn({ method: 'POST' })
 
     const label = data.get('label')?.toString() ?? '';
     const description = data.get('description')?.toString() ?? undefined;
-    const sortOrder = parseSortOrder(data.get('sort_order'));
+    const sortOrder = parseInteger(data.get('sort_order'), {
+      errorMessage: 'Category sort order must be an integer',
+    });
 
     return addCategory({ label, description, sortOrder });
   });
@@ -69,7 +60,9 @@ export const updateAdminCategory = createServerFn({ method: 'POST' })
 
     const label = data.get('label')?.toString() ?? '';
     const description = data.get('description')?.toString().trim() || undefined;
-    const sortOrder = parseSortOrder(data.get('sort_order'));
+    const sortOrder = parseInteger(data.get('sort_order'), {
+      errorMessage: 'Category sort order must be an integer',
+    });
     const status = parseStatus(data.get('status'));
 
     return updateCategory({ id, label, description, sortOrder, status });

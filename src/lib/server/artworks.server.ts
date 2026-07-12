@@ -7,7 +7,7 @@ import type {
   ArtworkStatus,
   PortfolioArtwork,
 } from '../shared/artworks.types';
-import { getKysely } from './db.server';
+import { getKysely, toIsoTimestamp } from './db.server';
 
 type Executable = Kysely<Record<string, never>> | Transaction<Record<string, never>>;
 
@@ -29,8 +29,8 @@ type ArtworkRow = {
   checksum_sha256: string;
   sort_order: number;
   status: ArtworkStatus;
-  created_at: string;
-  updated_at: string;
+  created_at: Date | string;
+  updated_at: Date | string;
 };
 
 function mapRow(row: ArtworkRow): ArtworkRecord {
@@ -55,8 +55,8 @@ function mapRow(row: ArtworkRow): ArtworkRecord {
     checksumSha256: row.checksum_sha256,
     sortOrder: row.sort_order,
     status: row.status,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
+    createdAt: toIsoTimestamp(row.created_at),
+    updatedAt: toIsoTimestamp(row.updated_at),
   };
 }
 
@@ -82,49 +82,52 @@ const SELECT_COLUMNS = sql`
   artworks.updated_at
 `;
 
-export async function insertArtwork(record: ArtworkRecord, conn: Executable = getKysely()) {
-  await sql`
-    insert into artworks (
-      id,
-      slug,
-      title,
-      category_id,
-      description,
-      alt,
-      original_filename,
-      storage_path,
-      cdn_url,
-      content_type,
-      width,
-      height,
-      size_bytes,
-      checksum_sha256,
-      sort_order,
-      status,
-      created_at,
-      updated_at
-    ) values (
-      ${record.id},
-      ${record.slug},
-      ${record.title},
-      ${record.categoryId},
-      ${record.description},
-      ${record.alt},
-      ${record.originalFilename},
-      ${record.storagePath},
-      ${record.cdnUrl},
-      ${record.contentType},
-      ${record.width},
-      ${record.height},
-      ${record.sizeBytes},
-      ${record.checksumSha256},
-      ${record.sortOrder},
-      ${record.status},
-      ${record.createdAt},
-      ${record.updatedAt}
-    )
-  `.execute(conn);
+const INSERT_COLUMNS = sql`
+  id,
+  slug,
+  title,
+  category_id,
+  description,
+  alt,
+  original_filename,
+  storage_path,
+  cdn_url,
+  content_type,
+  width,
+  height,
+  size_bytes,
+  checksum_sha256,
+  sort_order,
+  status,
+  created_at,
+  updated_at
+`;
 
+function artworkValues(record: ArtworkRecord) {
+  return sql`(
+    ${record.id},
+    ${record.slug},
+    ${record.title},
+    ${record.categoryId},
+    ${record.description},
+    ${record.alt},
+    ${record.originalFilename},
+    ${record.storagePath},
+    ${record.cdnUrl},
+    ${record.contentType},
+    ${record.width},
+    ${record.height},
+    ${record.sizeBytes},
+    ${record.checksumSha256},
+    ${record.sortOrder},
+    ${record.status},
+    ${record.createdAt},
+    ${record.updatedAt}
+  )`;
+}
+
+export async function insertArtwork(record: ArtworkRecord, conn: Executable = getKysely()) {
+  await sql`insert into artworks (${INSERT_COLUMNS}) values ${artworkValues(record)}`.execute(conn);
   return record;
 }
 
@@ -308,11 +311,10 @@ export async function slugExists(slug: string) {
 }
 
 export async function bulkInsertArtworks(records: ArtworkRecord[]) {
-  await getKysely()
-    .transaction()
-    .execute(async (trx) => {
-      for (const record of records) {
-        await insertArtwork(record, trx);
-      }
-    });
+  if (records.length === 0) {
+    return;
+  }
+
+  const values = sql.join(records.map(artworkValues));
+  await sql`insert into artworks (${INSERT_COLUMNS}) values ${values}`.execute(getKysely());
 }

@@ -207,7 +207,7 @@ body {
 }
 
 .ph {
-  @apply placeholder:text-neutral-600 dark:placeholder:text-neutral-300/80 data-placeholder:text-neutral-600 dark:data-placeholder:text-neutral-300/80;
+  @apply placeholder:text-neutral-600 dark:placeholder:text-neutral-400/80 data-placeholder:text-neutral-600 dark:data-placeholder:text-neutral-400/80;
 }
 
 .admin-button {

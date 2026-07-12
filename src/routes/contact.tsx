@@ -111,16 +111,23 @@ function ContactComponent() {
           </div>
 
           <form
-            className='space-y-6 bg-background-2nd shadow-card p-5 sm:p-8 border border-border/60 rounded-xl'
+            className='relative space-y-6 bg-background-2nd shadow-card p-5 sm:p-8 border border-border/60 rounded-xl'
             onSubmit={handleSubmit}
           >
+            <div className='top-2 right-4 absolute flex items-start gap-1.5 text-muted-foreground/80 text-xs'>
+              <span className='text-red-500 text-base scale-120'>*</span>
+              <span>required</span>
+            </div>
             <div className='space-y-3'>
-              <Label htmlFor='contact-name'>Name</Label>
+              <Label htmlFor='contact-name'>
+                Name<span className='-ml-1 text-red-500'>*</span>
+              </Label>
               <Input
                 id='contact-name'
                 name='name'
                 autoComplete='name'
-                className='bg-background h-9 md:h-11 text-sm md:text-base'
+                placeholder='Your name'
+                className='bg-background h-9 md:h-11 text-sm md:text-base ph'
                 maxLength={100}
                 value={name}
                 onChange={(event) => setName(event.target.value)}
@@ -129,13 +136,16 @@ function ContactComponent() {
             </div>
 
             <div className='space-y-3'>
-              <Label htmlFor='contact-email'>Email</Label>
+              <Label htmlFor='contact-email'>
+                Email<span className='-ml-1 text-red-500'>*</span>
+              </Label>
               <Input
                 id='contact-email'
                 name='email'
                 type='email'
                 autoComplete='email'
-                className='bg-background h-9 md:h-11 text-sm md:text-base'
+                placeholder='Your email address'
+                className='bg-background h-9 md:h-11 text-sm md:text-base ph'
                 maxLength={254}
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
@@ -143,12 +153,15 @@ function ContactComponent() {
               />
             </div>
 
-            <div className='space-y-2'>
-              <Label htmlFor='contact-message'>Message</Label>
+            <div className='space-y-3'>
+              <Label htmlFor='contact-message'>
+                Message<span className='-ml-1 text-red-500'>*</span>
+              </Label>
               <Textarea
                 id='contact-message'
                 name='message'
-                className='bg-background min-h-30 sm:min-h-40 text-sm md:text-base resize-y'
+                placeholder='Your message to Carla'
+                className='bg-background min-h-30 sm:min-h-40 text-sm md:text-base resize-y ph'
                 maxLength={5000}
                 value={message}
                 onChange={(event) => setMessage(event.target.value)}
