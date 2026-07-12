@@ -1,5 +1,6 @@
 import { PortfolioCard } from '@/components/PortfolioCard';
 import type { PortfolioArtwork } from '@/lib/shared/artworks.types';
+import { getParagraphs } from '@/lib/shared/utils';
 
 const eagerImageCount = 12;
 
@@ -9,6 +10,8 @@ type PortfolioProps = {
   description?: string;
 };
 export function Portfolio({ artworks, title, description }: PortfolioProps) {
+  const descriptionParagraphs = description ? getParagraphs(description) : [];
+
   return (
     <main
       aria-label='Artwork portfolio'
@@ -19,10 +22,14 @@ export function Portfolio({ artworks, title, description }: PortfolioProps) {
           {title}
         </h1>
       ) : null}
-      {description ? (
-        <p className='mx-auto px-2 pb-8 sm:pb-12 max-w-190 text-muted-foreground text-base sm:text-lg'>
-          {description}
-        </p>
+      {descriptionParagraphs.length > 0 ? (
+        <div className='space-y-5 mx-auto px-2 pb-8 sm:pb-12 max-w-190 text-muted-foreground text-base sm:text-lg'>
+          {descriptionParagraphs.map((paragraph) => (
+            <p key={paragraph.id} className='whitespace-pre-line'>
+              {paragraph.text}
+            </p>
+          ))}
+        </div>
       ) : null}
       <div className='gap-8 columns-1 sm:columns-2 lg:columns-3'>
         {artworks.map((artwork, index) => (

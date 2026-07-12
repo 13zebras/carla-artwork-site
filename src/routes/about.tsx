@@ -2,24 +2,12 @@ import { createFileRoute } from '@tanstack/react-router';
 
 import { Header } from '@/components/Header';
 import { getAboutContent } from '@/lib/functions/about.functions';
+import { getParagraphs } from '@/lib/shared/utils';
 
 export const Route = createFileRoute('/about')({
   loader: () => getAboutContent(),
   component: AboutComponent,
 });
-
-function getParagraphs(text: string) {
-  let position = 0;
-  return text
-    .split(/\r?\n[\t ]*\r?\n+/)
-    .map((value) => {
-      const paragraph = value.trim();
-      const id = `${position}-${paragraph.length}`;
-      position += value.length;
-      return { id, text: paragraph };
-    })
-    .filter((paragraph) => Boolean(paragraph.text));
-}
 
 function AboutComponent() {
   const about = Route.useLoaderData();

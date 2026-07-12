@@ -39,7 +39,7 @@ export function ArtworkNavMenu({ categories }: ArtworkNavMenuProps) {
 
                 return (
                   <li key={categorySlug}>
-                    <NavigationMenuLink asChild>
+                    <NavigationMenuLink asChild closeOnClick>
                       {isActive ? (
                         <span
                           aria-current='page'

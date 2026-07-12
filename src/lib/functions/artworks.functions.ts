@@ -31,20 +31,28 @@ export const listArtworkNavigationCategories = createServerFn({ method: 'GET' })
     const { demoMode } = await getSiteSettings();
 
     if (demoMode) {
-      const { ARTWORK_CATEGORIES, ARTWORK_CATEGORY_SLUGS } =
-        await import('@/data/artworkCategories');
+      const [{ ARTWORK_CATEGORIES, ARTWORK_CATEGORY_SLUGS }, { artworks }] = await Promise.all([
+        import('@/data/artworkCategories'),
+        import('@/data/artworks'),
+      ]);
+      const populatedCategorySlugs = new Set(
+        artworks.map((artwork) => artwork.category.categorySlug),
+      );
 
-      return Object.keys(ARTWORK_CATEGORIES).map((category) => {
+      return Object.keys(ARTWORK_CATEGORIES).flatMap((category) => {
         const key = category as keyof typeof ARTWORK_CATEGORIES;
-        return {
-          categorySlug: ARTWORK_CATEGORY_SLUGS[key],
-          label: ARTWORK_CATEGORIES[key],
-        };
+        const categorySlug = ARTWORK_CATEGORY_SLUGS[key];
+
+        if (!populatedCategorySlugs.has(categorySlug)) {
+          return [];
+        }
+
+        return [{ categorySlug, label: ARTWORK_CATEGORIES[key] }];
       });
     }
 
-    const { listCategories } = await import('../server/categories.server');
-    const categories = await listCategories();
+    const { listCategoriesWithPublishedArtworks } = await import('../server/categories.server');
+    const categories = await listCategoriesWithPublishedArtworks();
     return categories.map(({ categorySlug, label }) => ({ categorySlug, label }));
   },
 );

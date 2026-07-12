@@ -100,6 +100,23 @@ export async function listCategories({
   return (rows as CategoryRow[]).map(toRecord);
 }
 
+export async function listCategoriesWithPublishedArtworks() {
+  const { rows } = await sql`
+    select ${CATEGORY_SELECT}
+    from artwork_categories
+    where artwork_categories.status = 'active'
+      and exists (
+        select 1
+        from artworks
+        where artworks.category_id = artwork_categories.id
+          and artworks.status = 'published'
+      )
+    order by artwork_categories.sort_order asc, artwork_categories.label asc
+  `.execute(getKysely());
+
+  return (rows as CategoryRow[]).map(toRecord);
+}
+
 export async function resolveCategoryInput(input: string) {
   const value = input.trim();
   if (value.length === 0) {
