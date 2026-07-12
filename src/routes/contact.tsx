@@ -1,6 +1,6 @@
 import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile';
 import { createFileRoute } from '@tanstack/react-router';
-import { useRef, useState, type FormEvent } from 'react';
+import { useRef, useState, type SubmitEvent } from 'react';
 
 import { Header } from '@/components/Header';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -67,7 +67,7 @@ function ContactComponent() {
     setError('Human verification failed. Please try again.');
   }
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!turnstileToken) {
       setError('Complete the human verification before sending.');

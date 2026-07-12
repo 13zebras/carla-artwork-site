@@ -85,17 +85,17 @@ function LoginPage() {
       </Card>
       <div className='mx-auto'>
         {error ? (
-          <Alert className='bg-destructive/30 p-4 border border-destructive'>
-            <AlertTitle className='pb-2 font-bold text-foreground text-xl'>
+          <Alert className='bg-destructive/30 p-4 border border-destructive w-110'>
+            <AlertTitle className='pb-2 font-bold text-foreground text-lg'>
               Sign in failed!
             </AlertTitle>
             <AlertDescription className='text-foreground text-base'>{error}</AlertDescription>
           </Alert>
         ) : null}
         {success ? (
-          <Alert className='bg-positive/30 p-4 border border-positive'>
-            <AlertTitle className='pb-2 font-bold text-foreground text-xl'>Success!</AlertTitle>
-            <AlertDescription className='text-foreground text-lg'>
+          <Alert className='bg-positive/30 p-4 border border-positive w-110'>
+            <AlertTitle className='pb-2 font-bold text-foreground text-lg'>Success!</AlertTitle>
+            <AlertDescription className='text-foreground text-base'>
               Check your email for the sign-in link.
             </AlertDescription>
           </Alert>
