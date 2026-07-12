@@ -7,7 +7,7 @@ import { ArtworkNavMenu } from './ArtworkNavMenu';
 import { ThemeToggle } from './ThemeToggle';
 
 export const linkClassName =
-  'font-hand-rendered text-muted-foreground text-sm xs:text-base px-1 xxs:px-2 pt-1 pb-1 rounded-md hover:text-foreground hover:bg-brand-200/60 active:text-foreground active:bg-brand-300/60 dark:hover:bg-brand-700/80 dark:active:bg-brand-700/70' as const;
+  'font-hand-rendered text-muted-foreground text-sm xs:text-base px-1 xxs:px-2 pt-1 pb-1 rounded-md hover:text-foreground hover:bg-brand-200/80 active:text-foreground active:bg-brand-300/60 dark:hover:bg-brand-700/80 dark:active:bg-brand-700/70' as const;
 
 export const activeLinkClassName =
   'text-muted-foreground/60 pointer-events-none cursor-default transition-colors hover:bg-transparent hover:text-muted-foreground/60 focus:bg-transparent focus:text-muted-foreground/60 dark:hover:bg-transparent' as const;
@@ -55,7 +55,7 @@ export function Header() {
 
         <nav className='flex justify-between xs:justify-center xl:justify-end xs:gap-8 xl:gap-4 xl:mt-4 w-full xs:w-auto max-w-100 xs:max-w-full grow-0'>
           <ArtworkNavMenu categories={categories} />
-          <a href='/coming-soon' className={linkClassName}>
+          <a href='/coming-soon' className={linkClassName} target='_blank'>
             Shop
           </a>
           <Link

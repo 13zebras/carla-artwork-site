@@ -26,33 +26,16 @@ function LoginPage() {
   return (
     <main className='flex flex-col justify-start items-center gap-8 to-bg-gradient bg-linear-to-b from-background w-full min-h-screen text-foreground'>
       <ThemeToggle className='top-4 right-4 z-50 fixed' />
-      <Card className='bg-background-2nd shadow-card backdrop-blur mt-48 border-border/60 w-100 text-foreground'>
+      <Card className='bg-background-2nd shadow-card backdrop-blur mt-48 px-4 py-10 border-border/30 w-110 text-foreground'>
         <CardHeader>
-          <CardTitle className='pb-4 font-semibold text-2xl'>Admin Sign-in</CardTitle>
+          <CardTitle className='pb-3 font-semibold text-3xl'>Admin Sign-in</CardTitle>
           <CardDescription className='text-muted-foreground text-base'>
-            Enter email to receive a magic link to the artist dashboard.
+            Enter your admin email to receive a magic link to the artist dashboard.
           </CardDescription>
         </CardHeader>
         <CardContent className='space-y-4'>
-          {/* {error ? (
-            <Alert className='p-2 border-0'>
-              <AlertTitle className='font-semibold text-red-500 text-lg'>
-                Sign in failed!
-              </AlertTitle>
-              <AlertDescription className='text-red-500 text-base'>{error}</AlertDescription>
-            </Alert>
-          ) : null}
-          {success ? (
-            <Alert className='p-2 border-0'>
-              <AlertTitle className='pb-2 text-green-400 text-lg'>Success!</AlertTitle>
-              <AlertDescription className='text-green-400 text-base'>
-                Check your email for the sign-in link.
-              </AlertDescription>
-            </Alert>
-          ) : null} */}
-
           <form
-            className='space-y-6 pt-2'
+            className='space-y-7 pt-1'
             onSubmit={async (event) => {
               event.preventDefault();
               setPending(true);
@@ -77,7 +60,7 @@ function LoginPage() {
               }
             }}
           >
-            <div className='space-y-2'>
+            <div className='space-y-3'>
               <Label htmlFor='email'>Email</Label>
               <Input
                 id='email'
