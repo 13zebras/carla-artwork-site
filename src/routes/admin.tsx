@@ -11,7 +11,6 @@ import { DatabaseRecordsTab } from '@/components/admin/DatabaseRecordsTab';
 import { DemoModeSwitch } from '@/components/admin/DemoModeSwitch';
 import { ImageUploadModal } from '@/components/admin/ImageUploadModal';
 import { UploadActionButtons } from '@/components/admin/UploadActionButtons';
-import { ThemeToggle } from '@/components/ThemeToggle';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
@@ -90,7 +89,6 @@ function AdminLayout() {
               </TooltipTrigger>
               <TooltipContent side='bottom'>Open website in new tab</TooltipContent>
             </Tooltip>
-            <ThemeToggle className='' />
             <Button
               className='bg-black hover:bg-brand-600 dark:hover:bg-brand-800 ml-2 px-4 border-neutral-700 hover:border-brand-600 rounded-xl text-white text-sm cursor-pointer'
               variant='outline'

@@ -10,7 +10,17 @@
   font-display: swap;
 }
 
-@custom-variant dark (&:where(.dark, .dark *));
+@custom-variant dark {
+  &:where(.dark, .dark *) {
+    @slot;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not(.light):not(.dark), :root:not(.light):not(.dark) *) {
+      @slot;
+    }
+  }
+}
 
 @theme {
   /* #f64e0f is Carla's original logo color
@@ -157,6 +167,8 @@ body {
     --popover: var(--theme-dark-popover);
     --popover-foreground: var(--theme-dark-popover-foreground);
     --popover-border: var(--theme-dark-popover-border);
+    --card: var(--theme-dark-card);
+    --card-foreground: var(--theme-dark-card-foreground);
     --ring: var(--theme-dark-ring);
     --card-shadow-color: var(--theme-dark-card-shadow-color);
     --card-shadow: var(--theme-dark-card-shadow);

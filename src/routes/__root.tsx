@@ -2,14 +2,24 @@ import { TanStackDevtools } from '@tanstack/react-devtools';
 import { HeadContent, Outlet, Link, Scripts, createRootRoute } from '@tanstack/react-router';
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools';
 
+import { ThemeProvider, useTheme } from '@/components/ThemeProvider';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { listArtworkNavigationCategories } from '@/lib/functions/artworks.functions';
+import { getThemePreference } from '@/lib/functions/theme.functions';
+import { cn } from '@/lib/shared/utils';
 
 import appCss from '../styles.css?url';
 
 export const Route = createRootRoute({
-  loader: () => listArtworkNavigationCategories(),
+  loader: async () => {
+    const [categories, themePreference] = await Promise.all([
+      listArtworkNavigationCategories(),
+      getThemePreference(),
+    ]);
+
+    return { categories, themePreference };
+  },
   head: () => ({
     meta: [
       {
@@ -41,41 +51,30 @@ export const Route = createRootRoute({
   notFoundComponent: NotFound,
 });
 
-const themeScript = `
-(function () {
-  try {
-    var storedTheme = window.localStorage.getItem('carla-theme');
-    var theme =
-      storedTheme === 'dark' || storedTheme === 'light'
-        ? storedTheme
-        : window.matchMedia('(prefers-color-scheme: dark)').matches
-          ? 'dark'
-          : 'light';
-
-    document.documentElement.classList.add(theme);
-  } catch (_) {}
-})();
-`;
-
 function RootComponent() {
+  const { themePreference } = Route.useLoaderData();
+
   return (
-    <RootDocument>
-      <Outlet />
-    </RootDocument>
+    <ThemeProvider initialPreference={themePreference}>
+      <RootDocument>
+        <Outlet />
+      </RootDocument>
+    </ThemeProvider>
   );
 }
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+  const { effectiveTheme } = useTheme();
+
   return (
-    <html lang='en' className='min-h-full'>
+    <html lang='en' className={cn('min-h-full', effectiveTheme)}>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <HeadContent />
       </head>
       <body className='bg-background to-bg-gradient bg-linear-to-b from-bg-background m-0 min-h-full text-foreground'>
         <TooltipProvider>
           {children}
-          <Toaster richColors position='bottom-left' />
+          <Toaster theme={effectiveTheme ?? 'system'} richColors position='bottom-left' />
         </TooltipProvider>
         <TanStackDevtools
           config={{

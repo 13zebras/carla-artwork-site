@@ -27,7 +27,7 @@ function HomeLogoLink({ className, children }: { className: string; children: Re
 }
 
 export function Header() {
-  const categories = useLoaderData({ from: '__root__' });
+  const { categories } = useLoaderData({ from: '__root__' });
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   return (
     <header className='z-20 fixed flex justify-center bg-background w-full h-50 sm:h-52 xl:h-38'>

@@ -1,7 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useState } from 'react';
 
-import { ThemeToggle } from '@/components/ThemeToggle';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,7 +24,6 @@ function LoginPage() {
 
   return (
     <main className='flex flex-col justify-start items-center gap-8 to-bg-gradient bg-linear-to-b from-background w-full min-h-screen text-foreground'>
-      <ThemeToggle className='top-4 right-4 z-50 fixed' />
       <Card className='bg-background-2nd shadow-card backdrop-blur mt-48 px-4 py-10 border-border/30 w-110 text-foreground'>
         <CardHeader>
           <CardTitle className='pb-3 font-semibold text-3xl'>Admin Sign-in</CardTitle>
