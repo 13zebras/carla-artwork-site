@@ -176,13 +176,6 @@ body {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  body,
-  header {
-    transition-duration: 200ms;
-    transition-property: background-color;
-    transition-timing-function: ease;
-  }
-
   ::view-transition-old(root) {
     animation: 400ms ease both page-fade-out;
   }

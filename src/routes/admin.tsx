@@ -68,7 +68,7 @@ function AdminLayout() {
 
   return (
     <main className='bg-background-2nd min-h-screen'>
-      <header className='z-10 fixed px-12 pt-6 pb-4 w-full bg-accent-2/60'>
+      <header className='z-10 fixed px-12 pt-6 pb-4 w-full bg-neutral-800'>
         <div className='flex flex-row justify-between items-center md:gap-12 xl:gap-16 mx-auto max-w-300'>
           <div className='flex items-center gap-8 xl:gap-16'>
             <h1 className='font-semibold text-3xl xl:text-3xl'>Artwork Admin Dashboard</h1>

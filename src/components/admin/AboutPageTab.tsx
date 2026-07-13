@@ -81,7 +81,7 @@ export function AboutPageTab({ about }: AboutTabProps) {
     <TabsContent value='about' className='mx-auto mt-4 w-full max-w-300'>
       <Card className='rounded-sm'>
         <CardHeader>
-          <CardTitle className='font-semibold text-xl'>About Page</CardTitle>
+          <CardTitle className='font-semibold text-2xl'>About Page</CardTitle>
           <CardDescription>
             Update the page copy and its responsive photos. Blank lines create new paragraphs.
           </CardDescription>
@@ -96,26 +96,33 @@ export function AboutPageTab({ about }: AboutTabProps) {
 
           <form className='gap-7 grid' encType='multipart/form-data' onSubmit={handleSubmit}>
             <div className='gap-3 grid'>
-              <Label htmlFor='about-text'>About text</Label>
+              <Label htmlFor='about-text' className='font-semibold text-base'>
+                About page text
+              </Label>
               <Textarea
                 id='about-text'
                 name='text'
                 value={text}
                 onChange={(event) => setText(event.target.value)}
                 placeholder='Write the About page copy…'
-                className='bg-background min-h-80 md:text-base resize-y ph'
+                className='bg-background min-h-70 md:text-base resize-y ph'
               />
-              <p className='text-muted-foreground text-xs'>
+              <p className='text-muted-foreground text-xs italic'>
                 Press Enter twice to begin a new paragraph. Line breaks and paragraphs are
                 preserved.
               </p>
             </div>
 
             <div className='gap-6 grid lg:grid-cols-2'>
-              <div className='content-start gap-3 grid'>
-                <Label htmlFor='about-mobile-image'>
-                  {about.mobileImagePath ? 'Replace mobile about photo' : 'Mobile about photo'}
+              <div className='content-start gap-2 grid'>
+                <Label htmlFor='about-mobile-image' className='font-semibold text-base'>
+                  {about.mobileImagePath
+                    ? 'Replace or remove mobile about photo'
+                    : 'Add mobile about photo'}
                 </Label>
+                <p className='text-muted-foreground text-xs pb-1 italic'>
+                  Used below the sm breakpoint. Upload a landscape crop.
+                </p>
                 {about.mobileImagePath ? (
                   <p className='text-muted-foreground text-sm'>
                     Current: {filenameFromPath(about.mobileImagePath)}
@@ -137,9 +144,7 @@ export function AboutPageTab({ about }: AboutTabProps) {
                   }}
                   className='file:mr-3 p-0 file:px-3 border-0 file:rounded-md hover:file:bg-accent-c active:file:bg-accent-c/70 file:bg-accent-c/80 file:cursor-pointer'
                 />
-                <p className='text-muted-foreground text-xs'>
-                  Used below the sm breakpoint. Upload a landscape crop.
-                </p>
+
                 {about.mobileImagePath ? (
                   <div className='flex items-center gap-2 mt-1'>
                     <input
@@ -151,16 +156,21 @@ export function AboutPageTab({ about }: AboutTabProps) {
                       className='size-4 accent-destructive cursor-pointer'
                     />
                     <Label htmlFor='remove-mobile-image' className='font-normal cursor-pointer'>
-                      Remove mobile photo when saved
+                      Remove current mobile photo when saved?
                     </Label>
                   </div>
                 ) : null}
               </div>
 
-              <div className='content-start gap-3 grid'>
-                <Label htmlFor='about-desktop-image'>
-                  {about.desktopImagePath ? 'Replace desktop about photo' : 'Desktop about photo'}
+              <div className='content-start gap-2 grid'>
+                <Label htmlFor='about-desktop-image' className='font-semibold text-base'>
+                  {about.desktopImagePath
+                    ? 'Replace or remove desktop about photo'
+                    : 'Add desktop about photo'}
                 </Label>
+                <p className='text-muted-foreground text-xs pb-1 italic'>
+                  Used above mobile sizes. Upload a square or portrait image.
+                </p>
                 {about.desktopImagePath ? (
                   <p className='text-muted-foreground text-sm'>
                     Current: {filenameFromPath(about.desktopImagePath)}
@@ -182,9 +192,7 @@ export function AboutPageTab({ about }: AboutTabProps) {
                   }}
                   className='file:mr-3 p-0 file:px-3 border-0 file:rounded-md hover:file:bg-accent-c active:file:bg-accent-c/70 file:bg-accent-c/80 file:cursor-pointer'
                 />
-                <p className='text-muted-foreground text-xs'>
-                  Used from the sm breakpoint upward and floated beside the text.
-                </p>
+
                 {about.desktopImagePath ? (
                   <div className='flex items-center gap-2 mt-1'>
                     <input
@@ -196,7 +204,7 @@ export function AboutPageTab({ about }: AboutTabProps) {
                       className='size-4 accent-destructive cursor-pointer'
                     />
                     <Label htmlFor='remove-desktop-image' className='font-normal cursor-pointer'>
-                      Remove desktop photo when saved
+                      Remove current desktop photo when saved?
                     </Label>
                   </div>
                 ) : null}
@@ -204,7 +212,9 @@ export function AboutPageTab({ about }: AboutTabProps) {
             </div>
 
             <div className='gap-3 grid'>
-              <Label htmlFor='about-image-alt'>Photo alt text</Label>
+              <Label htmlFor='about-image-alt' className='font-semibold text-base'>
+                Photo alt text
+              </Label>
               <Input
                 id='about-image-alt'
                 name='image_alt'
@@ -215,7 +225,7 @@ export function AboutPageTab({ about }: AboutTabProps) {
                 placeholder='Describe the photo for visitors using screen readers'
                 className='bg-background md:text-base ph'
               />
-              <p className='text-muted-foreground text-xs'>
+              <p className='text-muted-foreground text-xs italic'>
                 Shared by both photos and required whenever either photo is present.
               </p>
             </div>
@@ -224,9 +234,9 @@ export function AboutPageTab({ about }: AboutTabProps) {
               type='submit'
               variant='brand'
               disabled={isSubmitting}
-              className='justify-self-start rounded-lg'
+              className='justify-self-start rounded-lg w-40'
             >
-              {isSubmitting ? 'Saving…' : 'Save'}
+              {isSubmitting ? 'Updating…' : 'Update about page'}
             </Button>
           </form>
         </CardContent>
