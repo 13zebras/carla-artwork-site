@@ -202,7 +202,7 @@ export function CategoryEditModal({ record, onClose }: CategoryEditModalProps) {
                     readOnly
                     value={record.id}
                     placeholder='auto-generated-from-name'
-                    className='border-border/80 w-24 text-fg ph'
+                    className='border-border/80 w-24 text-muted-foreground/70 ph'
                     disabled
                   />
                   <span className='text-muted-foreground/70 text-xs italic'>read-only</span>

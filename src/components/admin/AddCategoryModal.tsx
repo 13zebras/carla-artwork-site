@@ -109,7 +109,8 @@ export function AddCategoryModal({ open, onOpenChange }: AddCategoryModalProps) 
                 readOnly
                 value={slugify(categoryLabel)}
                 placeholder='auto-generated-from-name'
-                className='border-neutral-300 dark:border-neutral-700 text-dim-fg/80 ph'
+                className='border-border/80 text-muted-foreground/70 ph'
+                disabled
               />
             </div>
 
