@@ -25,7 +25,22 @@ export default defineConfig(({ mode }) => {
       tailwindcss(),
       tanstackStart(),
       viteReact(),
-      nitro(),
+      nitro({
+        routeRules: {
+          '/assets/**': {
+            headers: { 'cache-control': 'public, max-age=31536000, immutable' },
+          },
+          '/fonts/**': {
+            headers: { 'cache-control': 'public, max-age=2592000' },
+          },
+          '/header-logos/**': {
+            headers: { 'cache-control': 'public, max-age=604800' },
+          },
+          '/**': {
+            headers: { 'cache-control': 'public, max-age=0, must-revalidate' },
+          },
+        },
+      }),
     ],
   };
 });

@@ -105,7 +105,7 @@ export function AboutPageTab({ about }: AboutTabProps) {
                 value={text}
                 onChange={(event) => setText(event.target.value)}
                 placeholder='Write the About page copy…'
-                className='bg-background min-h-70 md:text-base resize-y ph'
+                className='bg-background min-h-70 text-base resize-y ph'
               />
               <p className='text-muted-foreground text-xs italic'>
                 Press Enter twice to begin a new paragraph. Line breaks and paragraphs are
@@ -223,7 +223,7 @@ export function AboutPageTab({ about }: AboutTabProps) {
                 onChange={(event) => setImageAlt(event.target.value)}
                 required={hasRemainingImage}
                 placeholder='Describe the photo for visitors using screen readers'
-                className='bg-background md:text-base ph'
+                className='bg-background text-base ph'
               />
               <p className='text-muted-foreground text-xs italic'>
                 Shared by both photos and required whenever either photo is present.
