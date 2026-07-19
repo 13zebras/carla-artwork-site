@@ -1,4 +1,10 @@
-import { Link, createFileRoute, redirect, useNavigate } from '@tanstack/react-router';
+import {
+  Link,
+  createFileRoute,
+  redirect,
+  useLoaderData,
+  useNavigate,
+} from '@tanstack/react-router';
 import { ExternalLink } from 'lucide-react';
 import { useState } from 'react';
 
@@ -17,7 +23,7 @@ import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip
 import { authClient } from '@/lib/client/auth-client';
 import { listAdminDashboard, type AdminDashboard } from '@/lib/functions/artwork-upload.functions';
 import { getSession, requireAdmin } from '@/lib/functions/auth.functions';
-import { getRailwayEnvironmentName } from '@/lib/functions/environment.functions';
+// import { getRailwayEnvironmentName } from '@/lib/functions/environment.functions';
 import { cn } from '@/lib/shared/utils';
 
 function mergeCategories(
@@ -45,20 +51,17 @@ export const Route = createFileRoute('/admin')({
     }
   },
   loader: async () => {
-    const [dashboardData, railwayEnvironmentName] = await Promise.all([
-      listAdminDashboard(),
-      getRailwayEnvironmentName(),
-    ]);
-    return { ...dashboardData, railwayEnvironmentName };
+    const dashboardData = await listAdminDashboard();
+    return { ...dashboardData };
   },
   component: AdminLayout,
 });
 
 function AdminLayout() {
+  const { railwayEnvironmentName } = useLoaderData({ from: '__root__' });
   const navigate = useNavigate();
 
-  const { dashboard, archivedCategories, demoMode, about, railwayEnvironmentName } =
-    Route.useLoaderData();
+  const { dashboard, archivedCategories, demoMode, about } = Route.useLoaderData();
   const { activeCategories } = dashboard;
   const isStaging = railwayEnvironmentName === 'staging';
   const allCategories = mergeCategories(activeCategories, archivedCategories);
@@ -78,7 +81,7 @@ function AdminLayout() {
   );
 
   return (
-    <main className='bg-background-2nd min-h-screen w-full'>
+    <main className='bg-background-2nd min-h-screen w-full overflow-x-hidden'>
       <header
         className={cn(
           'z-10 fixed px-6 lg:px-12 pt-6 pb-4 w-full bg-neutral-800',

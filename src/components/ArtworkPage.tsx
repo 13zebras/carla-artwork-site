@@ -37,9 +37,9 @@ export function ArtworkPage({ artwork }: ArtworkPageProps) {
   return (
     <main
       aria-label={`${artwork.title} artwork`}
-      className='mx-auto px-6 xxs:px-8 sm:px-12 pt-50 sm:pt-52 xl:pt-44 pb-12 max-w-7xl'
+      className='mx-auto px-6 xxs:px-8 sm:px-12 pt-48 xxs:pt-46 xs:pt-44 sm:pt-46 xl:pt-44 pb-12 max-w-7xl'
     >
-      <h1 className='md:pt-2 xl:pt-6 pb-6 sm:pb-10 font-hand-rendered font-semibold text-3xl/10 min-[700px]:text-4xl/12 min-[950px]:text-5xl/15 text-center'>
+      <h1 className='md:pt-2 xl:pt-6 pb-6 sm:pb-8 font-hand-rendered font-semibold text-3xl/10 min-[700px]:text-4xl/12 min-[950px]:text-5xl/15 text-center'>
         {artwork.title}
       </h1>
       {descriptionParagraphs.length > 0 ? (
