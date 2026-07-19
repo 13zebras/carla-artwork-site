@@ -2,7 +2,7 @@ type ServerEnv = {
   DATABASE_URL: string;
   BETTER_AUTH_SECRET: string;
   BETTER_AUTH_URL: string;
-  ADMIN_EMAIL: string;
+  ADMIN_EMAILS: string[];
   RESEND_API_KEY: string;
   AUTH_EMAIL_FROM: string;
   CONTACT_EMAIL_TO: string;
@@ -19,7 +19,7 @@ function normalizeOrigin(value: string): string {
   return value.trim().replace(/\/+$/, '');
 }
 
-function requiredEnv(name: keyof ServerEnv): string | undefined {
+function requiredEnv(name: string): string | undefined {
   const value = process.env[name];
   if (value == null || value.trim() === '') {
     return undefined;
@@ -27,11 +27,19 @@ function requiredEnv(name: keyof ServerEnv): string | undefined {
   return value.trim();
 }
 
-function collectRequiredEnv(name: keyof ServerEnv, value: string | undefined, missing: string[]) {
+function collectRequiredEnv(name: string, value: string | undefined, missing: string[]) {
   if (!value) {
     missing.push(name);
   }
   return value ?? '';
+}
+
+function parseAdminEmails(value: string): string[] {
+  return value
+    .toLowerCase()
+    .split(',')
+    .map((email) => email.trim())
+    .filter(Boolean);
 }
 
 export function getServerEnv(): ServerEnv {
@@ -97,7 +105,7 @@ export function getServerEnv(): ServerEnv {
     DATABASE_URL: databaseUrl,
     BETTER_AUTH_SECRET: betterAuthSecret,
     BETTER_AUTH_URL: normalizeOrigin(betterAuthUrlRaw),
-    ADMIN_EMAIL: adminEmailRaw.toLowerCase(),
+    ADMIN_EMAILS: parseAdminEmails(adminEmailRaw),
     RESEND_API_KEY: resendApiKey,
     AUTH_EMAIL_FROM: authEmailFrom,
     CONTACT_EMAIL_TO: contactEmailTo,

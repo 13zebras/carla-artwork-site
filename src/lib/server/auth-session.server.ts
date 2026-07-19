@@ -20,7 +20,7 @@ export async function requireAdminFromRequest() {
   const session = await getSessionFromRequest();
   const email = session?.user?.email?.toLowerCase();
 
-  if (email !== getServerEnv().ADMIN_EMAIL) {
+  if (!email || !getServerEnv().ADMIN_EMAILS.includes(email)) {
     throw new Error('Unauthorized');
   }
 

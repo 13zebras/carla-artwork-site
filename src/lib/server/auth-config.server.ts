@@ -16,7 +16,7 @@ export const auth = betterAuth({
   plugins: [
     magicLink({
       async sendMagicLink({ email, url }) {
-        if (email.toLowerCase() !== env.ADMIN_EMAIL) {
+        if (!env.ADMIN_EMAILS.includes(email.toLowerCase())) {
           throw new Error('Unauthorized email');
         }
 
