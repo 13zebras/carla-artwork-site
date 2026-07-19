@@ -17,6 +17,7 @@ import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip
 import { authClient } from '@/lib/client/auth-client';
 import { listAdminDashboard, type AdminDashboard } from '@/lib/functions/artwork-upload.functions';
 import { getSession, requireAdmin } from '@/lib/functions/auth.functions';
+import { getRailwayEnvironmentName } from '@/lib/functions/environment.functions';
 import { cn } from '@/lib/shared/utils';
 
 function mergeCategories(
@@ -27,6 +28,8 @@ function mergeCategories(
     (a, b) => a.sortOrder - b.sortOrder || a.label.localeCompare(b.label),
   );
 }
+
+const stagingBorder = 'border-3 border-red-600';
 
 export const Route = createFileRoute('/admin')({
   beforeLoad: async ({ location }) => {
@@ -41,15 +44,23 @@ export const Route = createFileRoute('/admin')({
       throw redirect({ to: '/login', search: { redirect: location.href } });
     }
   },
-  loader: async () => listAdminDashboard(),
+  loader: async () => {
+    const [dashboardData, railwayEnvironmentName] = await Promise.all([
+      listAdminDashboard(),
+      getRailwayEnvironmentName(),
+    ]);
+    return { ...dashboardData, railwayEnvironmentName };
+  },
   component: AdminLayout,
 });
 
 function AdminLayout() {
   const navigate = useNavigate();
 
-  const { dashboard, archivedCategories, demoMode, about } = Route.useLoaderData();
+  const { dashboard, archivedCategories, demoMode, about, railwayEnvironmentName } =
+    Route.useLoaderData();
   const { activeCategories } = dashboard;
+  const isStaging = railwayEnvironmentName === 'staging';
   const allCategories = mergeCategories(activeCategories, archivedCategories);
 
   const [isImageUploadOpen, setIsImageUploadOpen] = useState(false);
@@ -67,47 +78,58 @@ function AdminLayout() {
   );
 
   return (
-    <main className='bg-background-2nd min-h-screen'>
-      <header className='z-10 fixed px-12 pt-6 pb-4 w-full bg-neutral-800'>
-        <div className='flex flex-row justify-between items-center md:gap-12 xl:gap-16 mx-auto max-w-300'>
-          <div className='flex items-center gap-8 xl:gap-16'>
-            <h1 className='font-semibold text-3xl xl:text-3xl'>Artwork Admin Dashboard</h1>
+    <main className='bg-background-2nd min-h-screen w-full'>
+      <header
+        className={cn(
+          'z-10 fixed px-6 lg:px-12 pt-6 pb-4 w-full bg-neutral-800',
+          isStaging && stagingBorder,
+        )}
+      >
+        <div className='flex flex-col md:flex-row justify-between items-center gap-4 lg:gap-16 mx-auto max-w-300'>
+          <div className='flex flex-col md:flex-row items-center gap-2 md:gap-6 lg:gap-8 xl:gap-16'>
+            <h1 className='font-semibold text-xl lg:text-3xl'>Artwork Admin Dashboard</h1>
+            {isStaging && (
+              <span className='text-red-600 font-semibold text-xl lg:text-3xl'>Staging</span>
+            )}
           </div>
-          <nav className='flex flex-wrap items-center gap-3 xl:gap-4'>
+          <nav className='flex flex-col md:flex-row flex-wrap items-center gap-1 lg:gap-3 xl:gap-4'>
             <DemoModeSwitch demoMode={demoMode} />
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  asChild
-                  variant='ghost'
-                  className='group dark:hover:bg-neutral-700/80 dark:active:opacity-85 text-base hover:scale-[1.07] focus-visible:scale-[1.07] active:scale-[1] transition duration-100'
-                >
-                  <Link to='/' target='_blank'>
-                    <ExternalLink className='size-5.25 text-brand-600 dark:text-brand-500/90 group-hover:text-brand-500' />
-                  </Link>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side='bottom'>Open website in new tab</TooltipContent>
-            </Tooltip>
-            <Button
-              className='bg-black hover:bg-brand-600 dark:hover:bg-brand-800 ml-2 px-4 border-neutral-700 hover:border-brand-600 rounded-xl text-white text-sm cursor-pointer'
-              variant='outline'
-              size='sm'
-              onClick={async () => {
-                await authClient.signOut();
-                navigate({ to: '/login', search: { redirect: '/admin' } });
-              }}
-            >
-              Sign out
-            </Button>
+            <div className='flex items-center'>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    asChild
+                    variant='ghost'
+                    className='group dark:hover:bg-neutral-700/80 dark:active:opacity-85 text-base hover:scale-[1.07] focus-visible:scale-[1.07] active:scale-[1] transition duration-100'
+                  >
+                    <Link to='/' target='_blank'>
+                      <ExternalLink className='size-5.25 text-brand-600 dark:text-brand-500/90 group-hover:text-brand-500' />
+                    </Link>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side='bottom'>Open website in new tab</TooltipContent>
+              </Tooltip>
+              <Button
+                className='bg-black hover:bg-brand-600 dark:hover:bg-brand-800 ml-2 px-4 border-neutral-700 hover:border-brand-600 rounded-xl text-white text-sm cursor-pointer'
+                variant='outline'
+                size='sm'
+                onClick={async () => {
+                  await authClient.signOut();
+                  navigate({ to: '/login', search: { redirect: '/admin' } });
+                }}
+              >
+                Sign out
+              </Button>
+            </div>
           </nav>
         </div>
       </header>
 
       <div
         className={cn(
-          'hidden min-[1000px]:block mx-auto px-12 pt-20 pb-6 w-full max-w-384',
+          'hidden lg:block mx-auto px-12 pt-20 pb-6 w-full max-w-384',
           dashboard.records.length === 0 && 'max-w-250',
+          isStaging && stagingBorder,
         )}
       >
         <div className='space-y-12 py-6'>
@@ -153,7 +175,12 @@ function AdminLayout() {
           </Tabs>
         </div>
       </div>
-      <div className='min-[1000px]:hidden flex justify-center items-center mx-auto px-12 pt-64 lg:pt-20 pb-6 w-full'>
+      <div
+        className={cn(
+          'lg:hidden flex justify-center items-center mx-auto px-12 pt-64 lg:pt-20 pb-6 w-full',
+          isStaging && stagingBorder,
+        )}
+      >
         <h2 className='font-semibold text-3xl text-center'>Best viewed on larger screen</h2>
       </div>
 
