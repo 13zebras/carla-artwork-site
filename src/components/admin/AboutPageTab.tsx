@@ -80,8 +80,8 @@ export function AboutPageTab({ about }: AboutTabProps) {
   return (
     <TabsContent value='about' className='mx-auto mt-4 w-full max-w-300'>
       <Card className='rounded-sm'>
-        <CardHeader>
-          <CardTitle className='font-semibold text-2xl'>About Page</CardTitle>
+        <CardHeader className='flex flex-col gap-2'>
+          <CardTitle className='font-semibold text-xl'>About Page</CardTitle>
           <CardDescription>
             Update the page copy and its responsive photos. Blank lines create new paragraphs.
           </CardDescription>

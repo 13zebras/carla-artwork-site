@@ -59,7 +59,7 @@ export function CategoriesTab({ allCategories }: CategoriesTabProps) {
           </CardContent>
         </Card>
       ) : (
-        <Card className='gap-5 pt-5 pb-0 border-b-0 rounded-sm min-w-0 overflow-hidden'>
+        <Card className='gap-5 pt-5 pb-0 border-b-0 rounded-sm max-w-300 overflow-hidden'>
           <CardHeader className='flex justify-start items-center gap-12'>
             <div className='flex flex-col gap-2'>
               <CardTitle className='pb-1 font-semibold text-xl'>Artwork Categories</CardTitle>
