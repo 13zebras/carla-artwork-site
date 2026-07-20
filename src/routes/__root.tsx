@@ -6,6 +6,7 @@ import { ThemeProvider, useTheme } from '@/components/ThemeProvider';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { listArtworkNavigationCategories } from '@/lib/functions/artworks.functions';
+import { getRailwayEnvironmentName } from '@/lib/functions/environment.functions';
 import { getThemePreference } from '@/lib/functions/theme.functions';
 import { cn } from '@/lib/shared/utils';
 
@@ -13,12 +14,13 @@ import appCss from '../styles.css?url';
 
 export const Route = createRootRoute({
   loader: async () => {
-    const [categories, themePreference] = await Promise.all([
+    const [categories, themePreference, railwayEnvironmentName] = await Promise.all([
       listArtworkNavigationCategories(),
       getThemePreference(),
+      getRailwayEnvironmentName(),
     ]);
 
-    return { categories, themePreference };
+    return { categories, themePreference, railwayEnvironmentName };
   },
   head: () => ({
     meta: [
@@ -64,6 +66,9 @@ function RootComponent() {
 }
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+  const { railwayEnvironmentName } = Route.useLoaderData();
+  const isStaging = railwayEnvironmentName === 'staging';
+
   const { effectiveTheme } = useTheme();
 
   return (
@@ -71,7 +76,12 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <head>
         <HeadContent />
       </head>
-      <body className='bg-background to-bg-gradient/50 bg-linear-to-b from-bg-background m-0 min-h-full text-foreground'>
+      <body
+        className={cn(
+          'bg-background to-bg-gradient/50 bg-linear-to-b from-bg-background m-0 min-h-full text-foreground',
+          isStaging && 'border border-red-600',
+        )}
+      >
         <TooltipProvider>
           {children}
           <Toaster theme={effectiveTheme ?? 'system'} richColors position='bottom-left' />

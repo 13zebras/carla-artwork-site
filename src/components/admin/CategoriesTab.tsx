@@ -59,7 +59,7 @@ export function CategoriesTab({ allCategories }: CategoriesTabProps) {
           </CardContent>
         </Card>
       ) : (
-        <Card className='gap-5 pt-5 pb-0 border-b-0 rounded-sm min-w-0 overflow-hidden'>
+        <Card className='gap-5 pt-5 pb-0 border-b-0 rounded-sm max-w-300 overflow-hidden'>
           <CardHeader className='flex justify-start items-center gap-12'>
             <div className='flex flex-col gap-2'>
               <CardTitle className='pb-1 font-semibold text-xl'>Artwork Categories</CardTitle>
@@ -72,10 +72,10 @@ export function CategoriesTab({ allCategories }: CategoriesTabProps) {
             <Table className='w-full min-w-200'>
               <TableHeader>
                 <TableRow className='h-14 whitespace-normal'>
-                  <TableHead className='min-w-46'>Category Name</TableHead>
+                  <TableHead className='min-w-48'>Category Name / ID</TableHead>
                   <TableHead className='min-w-0 max-w-100'>Description</TableHead>
-                  <TableHead className='w-16 text-center whitespace-normal'>Sort Order</TableHead>
-                  <TableHead className='w-20 text-center'>Status</TableHead>
+                  <TableHead className='w-15 text-center whitespace-normal'>Sort Order</TableHead>
+                  <TableHead className='w-21 text-center'>Status</TableHead>
                   <TableHead className='w-39 text-center whitespace-normal'>
                     Created / Updated
                   </TableHead>
@@ -86,7 +86,10 @@ export function CategoriesTab({ allCategories }: CategoriesTabProps) {
                 {allCategories.map((category) => (
                   <TableRow key={category.id}>
                     <TableCell className='font-semibold whitespace-normal'>
-                      {category.label}
+                      <div className='flex flex-col justify-center items-start gap-3'>
+                        <span className='text-base'>{category.label}</span>
+                        <span className='font-mono'>{category.id}</span>
+                      </div>
                     </TableCell>
                     <TableCell className='pr-0 whitespace-normal'>
                       <div className='pr-3 max-h-23 overflow-y-scroll'>

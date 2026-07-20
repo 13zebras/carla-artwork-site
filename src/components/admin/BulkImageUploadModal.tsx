@@ -139,7 +139,7 @@ export function BulkImageUploadModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='w-[92vw] max-w-6xl min-h-150'>
+      <DialogContent className='w-[92vw] max-w-6xl min-h-150 px-10 py-8'>
         <DialogHeader>
           <DialogTitle className='mb-3 font-semibold text-2xl'>
             Bulk Add Images to Database / Storage
@@ -187,26 +187,28 @@ export function BulkImageUploadModal({
           </div>
 
           <div className='gap-3 grid'>
-            <div className='flex justify-between items-center gap-3'>
+            <div className='flex justify-between items-center gap-10'>
               <Label>Sample CSV (each row must be in the exact order shown)</Label>
+              <span className='pl-3 text-muted-foreground text-sm italic'>
+                tip: use a spreadsheet, export as a csv file
+              </span>
             </div>
             <pre className='bg-muted/50 p-4 border border-border-2nd rounded-lg overflow-x-auto text-sm leading-6'>
               {sampleCsv}
             </pre>
-            <p className='pl-3 text-muted-foreground text-sm italic'>
-              tip: use a spreadsheet, export as a csv file
-            </p>
           </div>
 
           <div className='gap-3 grid'>
             <div className='flex justify-start items-center gap-3'>
-              <Label className='text-base'>Active categories to use in CSV</Label>
+              <Label className='text-base'>Active category IDs to use in CSV</Label>
               <Badge variant='positive'>{activeCategories.length}</Badge>
             </div>
             {activeCategories.length > 0 ? (
-              <ul className='flex flex-col flex-wrap gap-x-16 gap-y-2 pl-7 max-w-fit max-h-20 font-mono text-sm list-disc'>
+              <ul className='flex flex-col flex-wrap gap-x-16 gap-y-2 pl-7 max-w-fit max-h-26 font-mono text-sm list-disc'>
                 {activeCategories.map((category) => (
-                  <li key={category.id}>{category.id}</li>
+                  <li key={category.id}>
+                    {category.id}: {category.label}
+                  </li>
                 ))}
               </ul>
             ) : (
