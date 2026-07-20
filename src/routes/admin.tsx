@@ -34,7 +34,7 @@ function mergeCategories(
   );
 }
 
-const stagingHeader = 'border-3 border-rose-600 bg-rose-600/20';
+const stagingHeader = 'border-3 border-rose-600 bg-rose-950';
 
 export const Route = createFileRoute('/admin')({
   beforeLoad: async ({ location }) => {
@@ -85,7 +85,7 @@ function AdminLayout() {
     <main className='bg-background-2nd h-screen w-full overflow-x-hidden'>
       <header
         className={cn(
-          'z-10 fixed px-6 lg:px-12 pt-6 pb-4 w-full bg-neutral-800',
+          'z-20 fixed px-6 lg:px-12 pt-6 pb-4 w-full bg-neutral-800',
           isStaging && stagingHeader,
         )}
       >
