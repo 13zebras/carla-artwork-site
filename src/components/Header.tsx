@@ -27,10 +27,11 @@ function HomeLogoLink({ className, children }: { className: string; children: Re
 }
 
 export function Header() {
-  const { categories } = useLoaderData({ from: '__root__' });
+  const { categories, railwayEnvironmentName } = useLoaderData({ from: '__root__' });
+	const isStaging = railwayEnvironmentName === 'staging';
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   return (
-    <header className='z-20 fixed flex justify-center bg-background w-[calc(100%-2px)] h-44 xxs:h-42 xs:h-40 sm:h-42 xl:h-38 pb-4 xs:pb-6 '>
+    <header className={cn('z-20 fixed flex justify-center bg-background w-full h-44 xxs:h-42 xs:h-40 sm:h-42 xl:h-38 pb-4 xs:pb-6', isStaging && 'border-3 border-rose-600')}>
       <div className='relative flex xl:flex-row flex-col justify-end xl:justify-between items-center sm:items-start xl:items-center gap-7 xl:gap-20 px-4 xs:px-10 xxs:px-6 sm:px-12 w-full max-w-7xl h-full'>
         <HomeLogoLink className='hidden xs:block w-full max-w-162.5 h-auto'>
           <img

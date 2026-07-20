@@ -66,9 +66,6 @@ function RootComponent() {
 }
 
 function RootDocument({ children }: { children: React.ReactNode }) {
-  const { railwayEnvironmentName } = Route.useLoaderData();
-  const isStaging = railwayEnvironmentName === 'staging';
-
   const { effectiveTheme } = useTheme();
 
   return (
@@ -79,7 +76,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <body
         className={cn(
           'bg-background to-bg-gradient/50 bg-linear-to-b from-bg-background m-0 min-h-full text-foreground',
-          isStaging && 'border border-red-600',
         )}
       >
         <TooltipProvider>

@@ -23,7 +23,6 @@ import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip
 import { authClient } from '@/lib/client/auth-client';
 import { listAdminDashboard, type AdminDashboard } from '@/lib/functions/artwork-upload.functions';
 import { getSession, requireAdmin } from '@/lib/functions/auth.functions';
-// import { getRailwayEnvironmentName } from '@/lib/functions/environment.functions';
 import { cn } from '@/lib/shared/utils';
 
 function mergeCategories(
@@ -35,7 +34,7 @@ function mergeCategories(
   );
 }
 
-const stagingBorder = 'border-3 border-red-600';
+const stagingHeader = 'border-3 border-rose-600 bg-rose-600/20';
 
 export const Route = createFileRoute('/admin')({
   beforeLoad: async ({ location }) => {
@@ -59,11 +58,13 @@ export const Route = createFileRoute('/admin')({
 
 function AdminLayout() {
   const { railwayEnvironmentName } = useLoaderData({ from: '__root__' });
+  const isStaging = railwayEnvironmentName === 'staging';
+
   const navigate = useNavigate();
 
   const { dashboard, archivedCategories, demoMode, about } = Route.useLoaderData();
   const { activeCategories } = dashboard;
-  const isStaging = railwayEnvironmentName === 'staging';
+
   const allCategories = mergeCategories(activeCategories, archivedCategories);
 
   const [isImageUploadOpen, setIsImageUploadOpen] = useState(false);
@@ -81,11 +82,11 @@ function AdminLayout() {
   );
 
   return (
-    <main className='bg-background-2nd min-h-screen w-full overflow-x-hidden'>
+    <main className='bg-background-2nd h-screen w-full overflow-x-hidden'>
       <header
         className={cn(
           'z-10 fixed px-6 lg:px-12 pt-6 pb-4 w-full bg-neutral-800',
-          isStaging && stagingBorder,
+          isStaging && stagingHeader,
         )}
       >
         <div className='flex flex-col md:flex-row justify-between items-center gap-4 lg:gap-16 mx-auto max-w-300'>
@@ -132,7 +133,6 @@ function AdminLayout() {
         className={cn(
           'hidden lg:block mx-auto px-12 pt-20 pb-6 w-full max-w-384',
           dashboard.records.length === 0 && 'max-w-250',
-          isStaging && stagingBorder,
         )}
       >
         <div className='space-y-12 py-6'>
@@ -178,12 +178,7 @@ function AdminLayout() {
           </Tabs>
         </div>
       </div>
-      <div
-        className={cn(
-          'lg:hidden flex justify-center items-center mx-auto px-12 pt-64 lg:pt-20 pb-6 w-full',
-          isStaging && stagingBorder,
-        )}
-      >
+      <div className='lg:hidden flex justify-center items-center mx-auto px-12 w-full h-1/2'>
         <h2 className='font-semibold text-3xl text-center'>Best viewed on larger screen</h2>
       </div>
 
