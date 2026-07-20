@@ -151,7 +151,7 @@ export function ImageUploadModal({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className='bg-background-2nd opacity-95 p-12 border-border-2nd max-w-2xl min-h-180'>
+      <DialogContent className='bg-background-2nd opacity-95 px-10 py-8 border-border-2nd max-w-2xl min-h-160'>
         <DialogHeader>
           <DialogTitle className='font-semibold text-2xl'>Add Single Image to Database</DialogTitle>
           <DialogDescription>All fields are required</DialogDescription>
@@ -268,49 +268,49 @@ export function ImageUploadModal({
                 className='ph'
               />
             </Field.Root>
+            <div className='flex gap-16 items-start'>
+              <Field.Root name='category_id' className='gap-3 grid'>
+                <RequiredLabel htmlFor='category_id'>Category</RequiredLabel>
+                <Select
+                  name='category_id'
+                  required
+                  items={categoryItems}
+                  value={categoryId}
+                  onValueChange={setCategoryId}
+                  disabled={activeCategories.length === 0}
+                >
+                  <SelectTrigger id='category_id' className='min-w-48'>
+                    <SelectValue placeholder='Select a category' className='ph' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {activeCategories.map((category) => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Field.Root>
 
-            <Field.Root name='category_id' className='gap-3 grid'>
-              <RequiredLabel htmlFor='category_id'>Category</RequiredLabel>
-              <Select
-                name='category_id'
-                required
-                items={categoryItems}
-                value={categoryId}
-                onValueChange={setCategoryId}
-                disabled={activeCategories.length === 0}
-              >
-                <SelectTrigger id='category_id' className='min-w-44'>
-                  <SelectValue placeholder='Select a category' className='ph' />
-                </SelectTrigger>
-                <SelectContent>
-                  {activeCategories.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
-                      {category.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field.Root>
-
-            <Field.Root name='status' className='gap-3 grid'>
-              <RequiredLabel htmlFor='status'>Status</RequiredLabel>
-              <Select
-                name='status'
-                required
-                items={statusItems}
-                value={status}
-                onValueChange={setStatus}
-              >
-                <SelectTrigger id='status' className='min-w-44'>
-                  <SelectValue placeholder='Select a status' className='ph' />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='draft'>Draft</SelectItem>
-                  <SelectItem value='published'>Published</SelectItem>
-                </SelectContent>
-              </Select>
-            </Field.Root>
-
+              <Field.Root name='status' className='gap-3 grid'>
+                <RequiredLabel htmlFor='status'>Status</RequiredLabel>
+                <Select
+                  name='status'
+                  required
+                  items={statusItems}
+                  value={status}
+                  onValueChange={setStatus}
+                >
+                  <SelectTrigger id='status' className='min-w-40'>
+                    <SelectValue placeholder='Select a status' className='ph' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value='draft'>Draft</SelectItem>
+                    <SelectItem value='published'>Published</SelectItem>
+                  </SelectContent>
+                </Select>
+              </Field.Root>
+            </div>
             <Field.Root name='alt' className='gap-3 grid'>
               <RequiredLabel htmlFor='alt'>Alt text</RequiredLabel>
               <Field.Control
@@ -333,35 +333,36 @@ export function ImageUploadModal({
                 required
               />
             </Field.Root>
+            <div className='flex flex-col items-start gap-3 w-full'>
+              <div className='w-full flex flex-row justify-between items-end gap-24'>
+                <Field.Root name='sort_order' className='gap-3 grid'>
+                  <RequiredLabel htmlFor='sort_order'>Sort order</RequiredLabel>
 
-            <Field.Root name='sort_order' className='gap-3 grid'>
-              <RequiredLabel htmlFor='sort_order'>Sort order</RequiredLabel>
-              <div className='flex flex-row items-center gap-3'>
-                <Field.Control
-                  render={<Input />}
-                  id='sort_order'
-                  type='number'
-                  min='0'
-                  step='1'
-                  defaultValue='0'
-                  placeholder='Numbers only'
-                  className='w-24 h-8 ph'
-                  required
-                />
-                <span className='text-muted-foreground text-xs italic'>
-                  Lower numbers appear higher up on pages.
-                </span>
+                  <Field.Control
+                    render={<Input />}
+                    id='sort_order'
+                    type='number'
+                    min='0'
+                    step='1'
+                    defaultValue='0'
+                    placeholder='Numbers only'
+                    className='w-24 h-8 ph'
+                    required
+                  />
+                </Field.Root>
+
+                <Button
+                  type='submit'
+                  variant='brand'
+                  disabled={isSubmitting || activeCategories.length === 0}
+                  className='rounded-lg w-50'
+                >
+                  {getSubmitLabel(isSubmitting, mode)}
+                </Button>
               </div>
-            </Field.Root>
-            <div className='flex flex-wrap items-center gap-3'>
-              <Button
-                type='submit'
-                variant='brand'
-                disabled={isSubmitting || activeCategories.length === 0}
-                className='rounded-lg'
-              >
-                {getSubmitLabel(isSubmitting, mode)}
-              </Button>
+              <span className='text-muted-foreground text-xs italic'>
+                Lower numbers appear higher on pages.
+              </span>
             </div>
           </Form>
         </section>
