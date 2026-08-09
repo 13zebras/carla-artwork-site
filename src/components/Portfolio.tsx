@@ -15,7 +15,7 @@ export function Portfolio({ artworks, title, description }: PortfolioProps) {
   return (
     <main
       aria-label='Artwork portfolio'
-      className='mx-auto px-6 xxs:px-8 sm:px-12 pt-48 xxs:pt-46 xs:pt-44 sm:pt-46 xl:pt-44 pb-12 max-w-7xl'
+      className='mx-auto px-8 xxs:px-12 md:px-16 pt-48 xxs:pt-46 xs:pt-44 sm:pt-46 xl:pt-44 pb-12 max-w-7xl'
     >
       {title ? (
         <h1 className='md:pt-2 xl:pt-6 pb-6 sm:pb-8 font-hand-rendered font-semibold text-3xl/10 min-[700px]:text-4xl/12 min-[950px]:text-5xl/15 text-center'>
@@ -31,7 +31,7 @@ export function Portfolio({ artworks, title, description }: PortfolioProps) {
           ))}
         </div>
       ) : null}
-      <div className='gap-8 columns-1 sm:columns-2 lg:columns-3'>
+      <div className='gap-10 columns-1 sm:columns-2 lg:columns-3'>
         {artworks.map((artwork, index) => (
           <PortfolioCard key={artwork.slug} artwork={artwork} priority={index < eagerImageCount} />
         ))}

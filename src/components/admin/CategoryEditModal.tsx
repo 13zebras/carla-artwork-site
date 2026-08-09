@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { DialogBody } from '@/components/ui/dialog-body';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -116,15 +117,15 @@ export function CategoryEditModal({ record, onClose }: CategoryEditModalProps) {
 
   return (
     <Dialog open onOpenChange={handleOpenChange}>
-      <DialogContent className='pb-8 max-w-140'>
-        <DialogHeader>
+      <DialogContent className='max-w-140'>
+        <DialogHeader className='px-10 pt-10 shrink-0'>
           <DialogTitle className='font-semibold text-2xl'>Edit category</DialogTitle>
           <DialogDescription>
             Update the category details. The category ID cannot be changed.
           </DialogDescription>
         </DialogHeader>
 
-        <div className='space-y-5 mt-2'>
+        <DialogBody className='space-y-5 mt-2'>
           <form className='space-y-5 pb-2' onSubmit={handleSubmit}>
             <div className='space-y-3'>
               <Label htmlFor='edit-category-label'>
@@ -220,7 +221,7 @@ export function CategoryEditModal({ record, onClose }: CategoryEditModalProps) {
               <AlertDescription>{errorMessage}</AlertDescription>
             </Alert>
           )}
-        </div>
+        </DialogBody>
       </DialogContent>
     </Dialog>
   );

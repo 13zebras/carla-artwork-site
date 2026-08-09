@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { DialogBody } from '@/components/ui/dialog-body';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -49,14 +50,14 @@ export function AddCategoryModal({ open, onOpenChange }: AddCategoryModalProps) 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className='max-w-140'>
-        <DialogHeader>
+        <DialogHeader className='px-10 pt-10 shrink-0'>
           <DialogTitle>Add category</DialogTitle>
           <DialogDescription>
             Register a new category in the database and refresh the dashboard instantly.
           </DialogDescription>
         </DialogHeader>
 
-        <div className='space-y-5'>
+        <DialogBody className='space-y-5'>
           <form
             className='space-y-4'
             onSubmit={async (event) => {
@@ -153,7 +154,7 @@ export function AddCategoryModal({ open, onOpenChange }: AddCategoryModalProps) 
               <AlertDescription>{categoryError}</AlertDescription>
             </Alert>
           )}
-        </div>
+        </DialogBody>
       </DialogContent>
     </Dialog>
   );

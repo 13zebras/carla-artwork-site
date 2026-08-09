@@ -1,10 +1,7 @@
 import { useRouterState } from '@tanstack/react-router';
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
 
-import {
-  setThemePreference,
-  type Theme,
-} from '@/lib/functions/theme.functions';
+import { setThemePreference, type Theme } from '@/lib/functions/theme.functions';
 
 type ThemeContextValue = {
   effectiveTheme: Theme | null;

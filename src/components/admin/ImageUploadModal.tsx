@@ -13,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { DialogBody } from '@/components/ui/dialog-body';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -151,221 +152,223 @@ export function ImageUploadModal({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className='bg-background-2nd opacity-95 px-10 py-8 border-border-2nd max-w-2xl min-h-160'>
-        <DialogHeader>
+      <DialogContent className='bg-background-2nd opacity-95 border-border-2nd max-w-2xl'>
+        <DialogHeader className='px-10 pt-10 shrink-0'>
           <DialogTitle className='font-semibold text-2xl'>Add Single Image to Database</DialogTitle>
           <DialogDescription>All fields are required</DialogDescription>
         </DialogHeader>
 
-        {errorMessage && (
-          <Alert variant='destructive'>
-            <AlertTitle>Upload failed</AlertTitle>
-            <AlertDescription>{errorMessage}</AlertDescription>
-          </Alert>
-        )}
-
-        <section className='space-y-6'>
-          {activeCategories.length === 0 ? (
+        <DialogBody>
+          {errorMessage && (
             <Alert variant='destructive'>
-              <AlertTitle className='font-semibold text-lg'>No active categories</AlertTitle>
-              <AlertDescription>
-                Add a category from the dashboard before adding images.
-              </AlertDescription>
+              <AlertTitle>Upload failed</AlertTitle>
+              <AlertDescription>{errorMessage}</AlertDescription>
             </Alert>
-          ) : null}
+          )}
 
-          <Form className='gap-6 grid mt-3' encType='multipart/form-data' onSubmit={handleSubmit}>
-            <div className='gap-3 grid'>
-              <Label>Image Source</Label>
-              <div className='flex gap-6'>
-                <div className='flex items-center gap-2'>
-                  <input
-                    type='radio'
-                    id='source-upload'
-                    name='source-mode'
-                    value='upload'
-                    checked={mode === 'upload'}
-                    onChange={() => setMode('upload')}
-                    aria-label='Upload new file'
-                    className='size-4 accent-brand-500 cursor-pointer'
-                  />
-                  <Label htmlFor='source-upload' className='font-normal cursor-pointer'>
-                    Upload new file
-                  </Label>
-                </div>
-                <div className='flex items-center gap-2'>
-                  <input
-                    type='radio'
-                    id='source-link'
-                    name='source-mode'
-                    value='link'
-                    checked={mode === 'link'}
-                    onChange={() => setMode('link')}
-                    disabled={untrackedFiles.length === 0}
-                    aria-label='Link existing Bunny image'
-                    className='size-4 accent-brand-500 cursor-pointer disabled:cursor-not-allowed'
-                  />
-                  <Label
-                    htmlFor='source-link'
-                    className={
-                      untrackedFiles.length === 0
-                        ? 'cursor-not-allowed font-normal text-muted-foreground/60'
-                        : 'cursor-pointer font-normal'
-                    }
-                  >
-                    Link existing Bunny image
-                  </Label>
+          <section className='space-y-6'>
+            {activeCategories.length === 0 ? (
+              <Alert variant='destructive'>
+                <AlertTitle className='font-semibold text-lg'>No active categories</AlertTitle>
+                <AlertDescription>
+                  Add a category from the dashboard before adding images.
+                </AlertDescription>
+              </Alert>
+            ) : null}
+
+            <Form className='gap-6 grid mt-3' encType='multipart/form-data' onSubmit={handleSubmit}>
+              <div className='gap-3 grid'>
+                <Label>Image Source</Label>
+                <div className='flex gap-6'>
+                  <div className='flex items-center gap-2'>
+                    <input
+                      type='radio'
+                      id='source-upload'
+                      name='source-mode'
+                      value='upload'
+                      checked={mode === 'upload'}
+                      onChange={() => setMode('upload')}
+                      aria-label='Upload new file'
+                      className='size-4 accent-brand-500 cursor-pointer'
+                    />
+                    <Label htmlFor='source-upload' className='font-normal cursor-pointer'>
+                      Upload new file
+                    </Label>
+                  </div>
+                  <div className='flex items-center gap-2'>
+                    <input
+                      type='radio'
+                      id='source-link'
+                      name='source-mode'
+                      value='link'
+                      checked={mode === 'link'}
+                      onChange={() => setMode('link')}
+                      disabled={untrackedFiles.length === 0}
+                      aria-label='Link existing Bunny image'
+                      className='size-4 accent-brand-500 cursor-pointer disabled:cursor-not-allowed'
+                    />
+                    <Label
+                      htmlFor='source-link'
+                      className={
+                        untrackedFiles.length === 0
+                          ? 'cursor-not-allowed font-normal text-muted-foreground/60'
+                          : 'cursor-pointer font-normal'
+                      }
+                    >
+                      Link existing Bunny image
+                    </Label>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {mode === 'upload' ? (
-              <Field.Root name='file' className='gap-3 grid'>
-                <RequiredLabel htmlFor='file'>Image file</RequiredLabel>
-                <Field.Control
-                  render={<Input />}
-                  id='file'
-                  type='file'
-                  accept='image/jpeg,image/png,image/webp'
-                  required
-                  className='aria-invalid:hover:file:bg-destructive/80 aria-invalid:active:file:bg-destructive/60 aria-invalid:file:bg-destructive/65 file:mr-3 p-0 file:px-3 border-0 file:border-0 file:rounded-md hover:file:bg-accent-c active:file:bg-accent-c/70 file:bg-accent-c/80 file:cursor-pointer'
-                />
-              </Field.Root>
-            ) : (
-              <Field.Root name='storage_path' className='gap-3 grid'>
-                <RequiredLabel htmlFor='storage_path'>Existing Bunny image</RequiredLabel>
-                <Select
-                  name='storage_path'
-                  required
-                  value={storagePath}
-                  onValueChange={setStoragePath}
-                >
-                  <SelectTrigger id='storage_path' className='min-w-94'>
-                    <SelectValue
-                      placeholder='Select an image stored in Bunny but not in database'
-                      className='ph'
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {untrackedFiles.map((file) => (
-                      <SelectItem key={file.path} value={file.path}>
-                        {file.path}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </Field.Root>
-            )}
-
-            <Field.Root name='title' className='gap-3 grid'>
-              <RequiredLabel htmlFor='title'>Title</RequiredLabel>
-              <Field.Control
-                render={<Input />}
-                id='title'
-                type='text'
-                placeholder='Image title'
-                required
-                className='ph'
-              />
-            </Field.Root>
-            <div className='flex gap-16 items-start'>
-              <Field.Root name='category_id' className='gap-3 grid'>
-                <RequiredLabel htmlFor='category_id'>Category</RequiredLabel>
-                <Select
-                  name='category_id'
-                  required
-                  items={categoryItems}
-                  value={categoryId}
-                  onValueChange={setCategoryId}
-                  disabled={activeCategories.length === 0}
-                >
-                  <SelectTrigger id='category_id' className='min-w-48'>
-                    <SelectValue placeholder='Select a category' className='ph' />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {activeCategories.map((category) => (
-                      <SelectItem key={category.id} value={category.id}>
-                        {category.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </Field.Root>
-
-              <Field.Root name='status' className='gap-3 grid'>
-                <RequiredLabel htmlFor='status'>Status</RequiredLabel>
-                <Select
-                  name='status'
-                  required
-                  items={statusItems}
-                  value={status}
-                  onValueChange={setStatus}
-                >
-                  <SelectTrigger id='status' className='min-w-40'>
-                    <SelectValue placeholder='Select a status' className='ph' />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value='draft'>Draft</SelectItem>
-                    <SelectItem value='published'>Published</SelectItem>
-                  </SelectContent>
-                </Select>
-              </Field.Root>
-            </div>
-            <Field.Root name='alt' className='gap-3 grid'>
-              <RequiredLabel htmlFor='alt'>Alt text</RequiredLabel>
-              <Field.Control
-                render={<Input />}
-                id='alt'
-                type='text'
-                placeholder='Alt text for image'
-                required
-                className='ph'
-              />
-            </Field.Root>
-
-            <Field.Root name='description' className='gap-3 grid'>
-              <RequiredLabel htmlFor='description'>Image description</RequiredLabel>
-              <Field.Control
-                render={<Textarea />}
-                id='description'
-                placeholder='Artwork description displayed on page'
-                className='ph'
-                required
-              />
-            </Field.Root>
-            <div className='flex flex-col items-start gap-3 w-full'>
-              <div className='w-full flex flex-row justify-between items-end gap-24'>
-                <Field.Root name='sort_order' className='gap-3 grid'>
-                  <RequiredLabel htmlFor='sort_order'>Sort order</RequiredLabel>
-
+              {mode === 'upload' ? (
+                <Field.Root name='file' className='gap-3 grid'>
+                  <RequiredLabel htmlFor='file'>Image file</RequiredLabel>
                   <Field.Control
                     render={<Input />}
-                    id='sort_order'
-                    type='number'
-                    min='0'
-                    step='1'
-                    defaultValue='0'
-                    placeholder='Numbers only'
-                    className='w-24 h-8 ph'
+                    id='file'
+                    type='file'
+                    accept='image/jpeg,image/png,image/webp'
                     required
+                    className='aria-invalid:hover:file:bg-destructive/80 aria-invalid:active:file:bg-destructive/60 aria-invalid:file:bg-destructive/65 file:mr-3 p-0 file:px-3 border-0 file:border-0 file:rounded-md hover:file:bg-accent-c active:file:bg-accent-c/70 file:bg-accent-c/80 file:cursor-pointer'
                   />
                 </Field.Root>
+              ) : (
+                <Field.Root name='storage_path' className='gap-3 grid'>
+                  <RequiredLabel htmlFor='storage_path'>Existing Bunny image</RequiredLabel>
+                  <Select
+                    name='storage_path'
+                    required
+                    value={storagePath}
+                    onValueChange={setStoragePath}
+                  >
+                    <SelectTrigger id='storage_path' className='min-w-94'>
+                      <SelectValue
+                        placeholder='Select an image stored in Bunny but not in database'
+                        className='ph'
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {untrackedFiles.map((file) => (
+                        <SelectItem key={file.path} value={file.path}>
+                          {file.path}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field.Root>
+              )}
 
-                <Button
-                  type='submit'
-                  variant='brand'
-                  disabled={isSubmitting || activeCategories.length === 0}
-                  className='rounded-lg w-50'
-                >
-                  {getSubmitLabel(isSubmitting, mode)}
-                </Button>
+              <Field.Root name='title' className='gap-3 grid'>
+                <RequiredLabel htmlFor='title'>Title</RequiredLabel>
+                <Field.Control
+                  render={<Input />}
+                  id='title'
+                  type='text'
+                  placeholder='Image title'
+                  required
+                  className='ph'
+                />
+              </Field.Root>
+              <div className='flex gap-16 items-start'>
+                <Field.Root name='category_id' className='gap-3 grid'>
+                  <RequiredLabel htmlFor='category_id'>Category</RequiredLabel>
+                  <Select
+                    name='category_id'
+                    required
+                    items={categoryItems}
+                    value={categoryId}
+                    onValueChange={setCategoryId}
+                    disabled={activeCategories.length === 0}
+                  >
+                    <SelectTrigger id='category_id' className='min-w-48'>
+                      <SelectValue placeholder='Select a category' className='ph' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {activeCategories.map((category) => (
+                        <SelectItem key={category.id} value={category.id}>
+                          {category.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field.Root>
+
+                <Field.Root name='status' className='gap-3 grid'>
+                  <RequiredLabel htmlFor='status'>Status</RequiredLabel>
+                  <Select
+                    name='status'
+                    required
+                    items={statusItems}
+                    value={status}
+                    onValueChange={setStatus}
+                  >
+                    <SelectTrigger id='status' className='min-w-40'>
+                      <SelectValue placeholder='Select a status' className='ph' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value='draft'>Draft</SelectItem>
+                      <SelectItem value='published'>Published</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </Field.Root>
               </div>
-              <span className='text-muted-foreground text-xs italic'>
-                Lower numbers appear higher on pages.
-              </span>
-            </div>
-          </Form>
-        </section>
+              <Field.Root name='alt' className='gap-3 grid'>
+                <RequiredLabel htmlFor='alt'>Alt text</RequiredLabel>
+                <Field.Control
+                  render={<Input />}
+                  id='alt'
+                  type='text'
+                  placeholder='Alt text for image'
+                  required
+                  className='ph'
+                />
+              </Field.Root>
+
+              <Field.Root name='description' className='gap-3 grid'>
+                <RequiredLabel htmlFor='description'>Image description</RequiredLabel>
+                <Field.Control
+                  render={<Textarea />}
+                  id='description'
+                  placeholder='Artwork description displayed on page'
+                  className='ph'
+                  required
+                />
+              </Field.Root>
+              <div className='flex flex-col items-start gap-3 w-full'>
+                <div className='w-full flex flex-row justify-between items-end gap-24'>
+                  <Field.Root name='sort_order' className='gap-3 grid'>
+                    <RequiredLabel htmlFor='sort_order'>Sort order</RequiredLabel>
+
+                    <Field.Control
+                      render={<Input />}
+                      id='sort_order'
+                      type='number'
+                      min='0'
+                      step='1'
+                      defaultValue='0'
+                      placeholder='Numbers only'
+                      className='w-24 h-8 ph'
+                      required
+                    />
+                  </Field.Root>
+
+                  <Button
+                    type='submit'
+                    variant='brand'
+                    disabled={isSubmitting || activeCategories.length === 0}
+                    className='rounded-lg w-50'
+                  >
+                    {getSubmitLabel(isSubmitting, mode)}
+                  </Button>
+                </div>
+                <span className='text-muted-foreground text-xs italic'>
+                  Lower numbers appear higher on pages.
+                </span>
+              </div>
+            </Form>
+          </section>
+        </DialogBody>
       </DialogContent>
     </Dialog>
   );

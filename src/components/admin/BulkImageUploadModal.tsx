@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { DialogBody } from '@/components/ui/dialog-body';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -139,8 +140,8 @@ export function BulkImageUploadModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='w-[92vw] max-w-6xl min-h-150 px-10 py-8'>
-        <DialogHeader>
+      <DialogContent className='w-[92vw] max-w-6xl'>
+        <DialogHeader className='px-10 pt-10 shrink-0'>
           <DialogTitle className='mb-3 font-semibold text-2xl'>
             Bulk Add Images to Database / Storage
           </DialogTitle>
@@ -159,92 +160,96 @@ export function BulkImageUploadModal({
           </DialogDescription>
         </DialogHeader>
 
-        <form className='gap-7 grid' encType='multipart/form-data' onSubmit={handleSubmit}>
-          <div className='gap-4 grid lg:grid-cols-2'>
+        <DialogBody>
+          <form className='gap-7 grid' encType='multipart/form-data' onSubmit={handleSubmit}>
+            <div className='gap-4 grid lg:grid-cols-2'>
+              <div className='gap-3 grid'>
+                <Label htmlFor='bulk-csv'>CSV file</Label>
+                <Input
+                  id='bulk-csv'
+                  name='csv'
+                  type='file'
+                  accept='.csv,text/csv'
+                  required
+                  className='hover:file:bg-positive/80 active:file:bg-positive/70 file:bg-positive/60 file:mr-3 p-0 file:px-3 border-0 file:border-0 file:rounded-md file:cursor-pointer'
+                />
+              </div>
+              <div className='gap-3 grid'>
+                <Label htmlFor='bulk-files'>Image files</Label>
+                <Input
+                  id='bulk-files'
+                  name='files'
+                  type='file'
+                  accept='image/jpeg,image/png,image/webp'
+                  multiple
+                  required
+                  className='file:mr-3 p-0 file:px-3 border-0 file:border-0 file:rounded-md hover:file:bg-accent-c/90 active:file:bg-accent-c/80 file:bg-accent-c/70 file:cursor-pointer'
+                />
+              </div>
+            </div>
+
             <div className='gap-3 grid'>
-              <Label htmlFor='bulk-csv'>CSV file</Label>
-              <Input
-                id='bulk-csv'
-                name='csv'
-                type='file'
-                accept='.csv,text/csv'
-                required
-                className='hover:file:bg-positive/80 active:file:bg-positive/70 file:bg-positive/60 file:mr-3 p-0 file:px-3 border-0 file:border-0 file:rounded-md file:cursor-pointer'
-              />
+              <div className='flex justify-between items-center gap-10'>
+                <Label>Sample CSV (each row must be in the exact order shown)</Label>
+                <span className='pl-3 text-muted-foreground text-sm italic'>
+                  tip: use a spreadsheet, export as a csv file
+                </span>
+              </div>
+              <pre className='bg-muted/50 p-4 border border-border-2nd rounded-lg overflow-x-auto text-sm leading-6'>
+                {sampleCsv}
+              </pre>
             </div>
+
             <div className='gap-3 grid'>
-              <Label htmlFor='bulk-files'>Image files</Label>
-              <Input
-                id='bulk-files'
-                name='files'
-                type='file'
-                accept='image/jpeg,image/png,image/webp'
-                multiple
-                required
-                className='file:mr-3 p-0 file:px-3 border-0 file:border-0 file:rounded-md hover:file:bg-accent-c/90 active:file:bg-accent-c/80 file:bg-accent-c/70 file:cursor-pointer'
-              />
+              <div className='flex justify-start items-center gap-3'>
+                <Label className='text-base'>Active category IDs to use in CSV</Label>
+                <Badge variant='positive'>{activeCategories.length}</Badge>
+              </div>
+              {activeCategories.length > 0 ? (
+                <ul className='flex flex-col flex-wrap gap-x-18 gap-y-2 pl-7 max-w-fit max-h-26 font-mono text-sm list-disc'>
+                  {activeCategories
+                    .toSorted((a, b) => a.id.localeCompare(b.id))
+                    .map((category) => (
+                      <li key={category.id}>
+                        {category.id} <span className='text-xs'>({category.label})</span>
+                      </li>
+                    ))}
+                </ul>
+              ) : (
+                <Alert>
+                  <AlertTitle>No active categories</AlertTitle>
+                  <AlertDescription>
+                    Add a category first so bulk rows can resolve category id or label values.
+                  </AlertDescription>
+                </Alert>
+              )}
             </div>
-          </div>
 
-          <div className='gap-3 grid'>
-            <div className='flex justify-between items-center gap-10'>
-              <Label>Sample CSV (each row must be in the exact order shown)</Label>
-              <span className='pl-3 text-muted-foreground text-sm italic'>
-                tip: use a spreadsheet, export as a csv file
-              </span>
+            <div className='flex items-center gap-3'>
+              <Button disabled={isSubmitting} type='submit' variant='brand'>
+                {isSubmitting ? 'Uploading…' : 'Upload bulk images'}
+              </Button>
+              {isSubmitting ? (
+                <p className='text-muted-foreground text-sm'>
+                  Validating the CSV and matching image files…
+                </p>
+              ) : null}
             </div>
-            <pre className='bg-muted/50 p-4 border border-border-2nd rounded-lg overflow-x-auto text-sm leading-6'>
-              {sampleCsv}
-            </pre>
-          </div>
+          </form>
 
-          <div className='gap-3 grid'>
-            <div className='flex justify-start items-center gap-3'>
-              <Label className='text-base'>Active category IDs to use in CSV</Label>
-              <Badge variant='positive'>{activeCategories.length}</Badge>
+          {submitError ? (
+            <Alert variant='destructive'>
+              <AlertTitle>Upload failed</AlertTitle>
+              <AlertDescription>{submitError}</AlertDescription>
+            </Alert>
+          ) : null}
+
+          {hasValidationErrors && result ? (
+            <div>
+              <ErrorTable errors={result.errors} />
             </div>
-            {activeCategories.length > 0 ? (
-              <ul className='flex flex-col flex-wrap gap-x-16 gap-y-2 pl-7 max-w-fit max-h-26 font-mono text-sm list-disc'>
-                {activeCategories.map((category) => (
-                  <li key={category.id}>
-                    {category.id}: {category.label}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <Alert>
-                <AlertTitle>No active categories</AlertTitle>
-                <AlertDescription>
-                  Add a category first so bulk rows can resolve category id or label values.
-                </AlertDescription>
-              </Alert>
-            )}
-          </div>
-
-          <div className='flex items-center gap-3'>
-            <Button disabled={isSubmitting} type='submit' variant='brand'>
-              {isSubmitting ? 'Uploading…' : 'Upload bulk images'}
-            </Button>
-            {isSubmitting ? (
-              <p className='text-muted-foreground text-sm'>
-                Validating the CSV and matching image files…
-              </p>
-            ) : null}
-          </div>
-        </form>
-
-        {submitError ? (
-          <Alert variant='destructive'>
-            <AlertTitle>Upload failed</AlertTitle>
-            <AlertDescription>{submitError}</AlertDescription>
-          </Alert>
-        ) : null}
-
-        {hasValidationErrors && result ? (
-          <div className='max-h-[55vh] overflow-y-auto'>
-            <ErrorTable errors={result.errors} />
-          </div>
-        ) : null}
+          ) : null}
+        </DialogBody>
       </DialogContent>
     </Dialog>
   );

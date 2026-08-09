@@ -7,5 +7,20 @@
   },
   "files.readonlyInclude": {
     "**/routeTree.gen.ts": true
+  },
+  "workbench.colorCustomizations": {
+    "activityBar.background": "#001300",
+    "activityBar.foreground": "#fff",
+    "activityBar.inactiveForeground": "#999",
+    "sideBySideEditor.horizontalBorder": "#0a0",
+    "sideBySideEditor.verticalBorder": "#090",
+    "statusBar.background": "#001200",
+    "tab.border": "#070",
+    "titleBar.activeBackground": "#072f00",
+    "titleBar.activeForeground": "#eed",
+    "titleBar.border": "#070",
+    "titleBar.inactiveBackground": "#071f00",
+    "titleBar.inactiveForeground": "#bbb",
+    "window.activeBorder": "#3b0"
   }
 }

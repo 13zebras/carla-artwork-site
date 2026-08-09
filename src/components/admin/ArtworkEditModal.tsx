@@ -13,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { DialogBody } from '@/components/ui/dialog-body';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -181,147 +182,149 @@ export function ArtworkEditModal({ record, activeCategories, onClose }: ArtworkE
 
   return (
     <Dialog open onOpenChange={handleOpenChange}>
-      <DialogContent className='opacity-95 p-12 border-border-2nd max-w-2xl min-h-180'>
-        <DialogHeader>
+      <DialogContent className='opacity-95 border-border-2nd max-w-2xl'>
+        <DialogHeader className='px-10 pt-10 shrink-0'>
           <DialogTitle className='font-semibold text-2xl'>Edit artwork</DialogTitle>
           <DialogDescription>
             Update database metadata. The image file and storage path cannot be changed.
           </DialogDescription>
         </DialogHeader>
 
-        <section className='space-y-6'>
-          <div className='flex gap-6 p-4 border border-border-2nd rounded-lg'>
-            <div className='flex justify-center w-30 h-30'>
-              {previewUrl ? (
-                <img
-                  alt={record.alt}
-                  className='max-w-full max-h-30 object-contain'
-                  decoding='async'
-                  loading='lazy'
-                  src={previewUrl}
+        <DialogBody>
+          <section className='space-y-6'>
+            <div className='flex gap-6 p-4 border border-border-2nd rounded-lg'>
+              <div className='flex justify-center w-30 h-30'>
+                {previewUrl ? (
+                  <img
+                    alt={record.alt}
+                    className='max-w-full max-h-30 object-contain'
+                    decoding='async'
+                    loading='lazy'
+                    src={previewUrl}
+                  />
+                ) : null}
+              </div>
+              <div className='flex flex-col justify-center gap-3 text-sm'>
+                <span className='text-muted-foreground text-lg'>Bunny storage path:</span>
+                <span className='font-mono text-foreground break-all'>{record.storagePath}</span>
+              </div>
+            </div>
+
+            <Form className='gap-6 grid' onSubmit={handleSubmit}>
+              <Field.Root name='title' className='gap-2 grid'>
+                <RequiredLabel htmlFor='edit-title'>Title</RequiredLabel>
+                <Field.Control
+                  render={<Input />}
+                  id='edit-title'
+                  type='text'
+                  value={form.title}
+                  onChange={(event) => updateField('title', event.target.value)}
+                  required
                 />
-              ) : null}
-            </div>
-            <div className='flex flex-col justify-center gap-3 text-sm'>
-              <span className='text-muted-foreground text-lg'>Bunny storage path:</span>
-              <span className='font-mono text-foreground break-all'>{record.storagePath}</span>
-            </div>
-          </div>
+              </Field.Root>
 
-          <Form className='gap-6 grid' onSubmit={handleSubmit}>
-            <Field.Root name='title' className='gap-2 grid'>
-              <RequiredLabel htmlFor='edit-title'>Title</RequiredLabel>
-              <Field.Control
-                render={<Input />}
-                id='edit-title'
-                type='text'
-                value={form.title}
-                onChange={(event) => updateField('title', event.target.value)}
-                required
-              />
-            </Field.Root>
+              <Field.Root name='category_id' className='gap-2 grid'>
+                <RequiredLabel htmlFor='edit-category-id'>Category</RequiredLabel>
+                <Select
+                  name='category_id'
+                  required
+                  items={categoryItems}
+                  value={form.categoryId}
+                  onValueChange={(value) => updateField('categoryId', value)}
+                >
+                  <SelectTrigger id='edit-category-id'>
+                    <SelectValue placeholder='Select a category' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {selectableCategories.map((category) => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Field.Root>
 
-            <Field.Root name='category_id' className='gap-2 grid'>
-              <RequiredLabel htmlFor='edit-category-id'>Category</RequiredLabel>
-              <Select
-                name='category_id'
-                required
-                items={categoryItems}
-                value={form.categoryId}
-                onValueChange={(value) => updateField('categoryId', value)}
-              >
-                <SelectTrigger id='edit-category-id'>
-                  <SelectValue placeholder='Select a category' />
-                </SelectTrigger>
-                <SelectContent>
-                  {selectableCategories.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
-                      {category.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field.Root>
+              <Field.Root name='status' className='gap-2 grid'>
+                <RequiredLabel htmlFor='edit-status'>Status</RequiredLabel>
+                <Select
+                  name='status'
+                  required
+                  items={statusItems}
+                  value={form.status}
+                  onValueChange={(value) =>
+                    updateField('status', value === 'published' ? 'published' : 'draft')
+                  }
+                >
+                  <SelectTrigger id='edit-status'>
+                    <SelectValue placeholder='Select a status' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value='draft'>Draft</SelectItem>
+                    <SelectItem value='published'>Published</SelectItem>
+                  </SelectContent>
+                </Select>
+              </Field.Root>
 
-            <Field.Root name='status' className='gap-2 grid'>
-              <RequiredLabel htmlFor='edit-status'>Status</RequiredLabel>
-              <Select
-                name='status'
-                required
-                items={statusItems}
-                value={form.status}
-                onValueChange={(value) =>
-                  updateField('status', value === 'published' ? 'published' : 'draft')
-                }
-              >
-                <SelectTrigger id='edit-status'>
-                  <SelectValue placeholder='Select a status' />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='draft'>Draft</SelectItem>
-                  <SelectItem value='published'>Published</SelectItem>
-                </SelectContent>
-              </Select>
-            </Field.Root>
+              <Field.Root name='alt' className='gap-2 grid'>
+                <RequiredLabel htmlFor='edit-alt'>Alt text</RequiredLabel>
+                <Field.Control
+                  render={<Input />}
+                  id='edit-alt'
+                  type='text'
+                  value={form.alt}
+                  onChange={(event) => updateField('alt', event.target.value)}
+                  required
+                />
+              </Field.Root>
 
-            <Field.Root name='alt' className='gap-2 grid'>
-              <RequiredLabel htmlFor='edit-alt'>Alt text</RequiredLabel>
-              <Field.Control
-                render={<Input />}
-                id='edit-alt'
-                type='text'
-                value={form.alt}
-                onChange={(event) => updateField('alt', event.target.value)}
-                required
-              />
-            </Field.Root>
+              <Field.Root name='description' className='gap-2 grid'>
+                <RequiredLabel htmlFor='edit-description'>Description</RequiredLabel>
+                <Field.Control
+                  render={<Textarea />}
+                  id='edit-description'
+                  value={form.description}
+                  onChange={(event) => updateField('description', event.target.value)}
+                  required
+                />
+              </Field.Root>
 
-            <Field.Root name='description' className='gap-2 grid'>
-              <RequiredLabel htmlFor='edit-description'>Description</RequiredLabel>
-              <Field.Control
-                render={<Textarea />}
-                id='edit-description'
-                value={form.description}
-                onChange={(event) => updateField('description', event.target.value)}
-                required
-              />
-            </Field.Root>
+              <Field.Root name='sort_order' className='gap-2 grid'>
+                <RequiredLabel htmlFor='edit-sort-order'>Sort order</RequiredLabel>
+                <Field.Control
+                  render={<Input />}
+                  id='edit-sort-order'
+                  type='number'
+                  min='0'
+                  step='1'
+                  value={form.sortOrder}
+                  onChange={(event) => updateField('sortOrder', event.target.value)}
+                  required
+                />
+              </Field.Root>
 
-            <Field.Root name='sort_order' className='gap-2 grid'>
-              <RequiredLabel htmlFor='edit-sort-order'>Sort order</RequiredLabel>
-              <Field.Control
-                render={<Input />}
-                id='edit-sort-order'
-                type='number'
-                min='0'
-                step='1'
-                value={form.sortOrder}
-                onChange={(event) => updateField('sortOrder', event.target.value)}
-                required
-              />
-            </Field.Root>
-
-            <div className='flex flex-wrap items-center gap-3'>
-              <Button variant='positive' type='submit' disabled={!canSubmit}>
-                {isSubmitting ? 'Saving…' : 'Save changes'}
-              </Button>
-              <Button
-                type='button'
-                variant='outline'
-                disabled={isSubmitting}
-                onClick={() => handleOpenChange(false)}
-              >
-                Cancel
-              </Button>
-            </div>
-          </Form>
-        </section>
-        {errorMessage && (
-          <Alert variant='destructive' className='bg-background mt-2'>
-            <AlertTitle>Update failed</AlertTitle>
-            <AlertDescription>{errorMessage}</AlertDescription>
-          </Alert>
-        )}
+              <div className='flex flex-wrap items-center gap-3'>
+                <Button variant='positive' type='submit' disabled={!canSubmit}>
+                  {isSubmitting ? 'Saving…' : 'Save changes'}
+                </Button>
+                <Button
+                  type='button'
+                  variant='outline'
+                  disabled={isSubmitting}
+                  onClick={() => handleOpenChange(false)}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </Form>
+          </section>
+          {errorMessage && (
+            <Alert variant='destructive' className='bg-background mt-2'>
+              <AlertTitle>Update failed</AlertTitle>
+              <AlertDescription>{errorMessage}</AlertDescription>
+            </Alert>
+          )}
+        </DialogBody>
       </DialogContent>
     </Dialog>
   );

@@ -118,7 +118,7 @@ function ArtworkInfoDrawerContent({ record }: { record: ArtworkRecord }) {
           <DialogContent
             showCloseButton={false}
             overlayClassName='bg-black/70 backdrop-blur-xs'
-            className='bg-transparent p-0 border-0 rounded-none w-screen h-screen'
+            className='bg-transparent p-0 border-0 rounded-none w-screen h-screen max-h-none'
           >
             <DialogClose className='flex justify-center items-center w-full h-full'>
               <img
