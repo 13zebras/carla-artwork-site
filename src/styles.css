@@ -242,7 +242,7 @@ body {
   position: absolute;
   top: var(--top);
   left: var(--left);
-  transform: translate(calc(var(--left) * -1), calc(var(--top) * -1));
+  /* transform: translate(calc(var(--left) * -1), calc(var(--top) * -1)); */
   opacity: 0;
   will-change: opacity;
   animation:
