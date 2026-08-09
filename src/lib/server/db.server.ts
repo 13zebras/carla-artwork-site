@@ -5,7 +5,7 @@ import { getServerEnv } from './env.server';
 
 type AppDatabase = Record<string, never>;
 
-const LATEST_MIGRATION = '002_native_timestamps.sql';
+const LATEST_MIGRATION = '003_animation_grayscale.sql';
 
 let pool: pg.Pool | undefined;
 let db: Kysely<AppDatabase> | undefined;

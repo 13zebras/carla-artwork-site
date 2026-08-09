@@ -4,6 +4,7 @@ import { getKysely, toIsoTimestamp } from './db.server';
 
 export type SiteSettings = {
   demoMode: boolean;
+  animationGrayscale: boolean;
   aboutText: string;
   aboutMobileImagePath: string | null;
   aboutDesktopImagePath: string | null;
@@ -13,6 +14,7 @@ export type SiteSettings = {
 
 type SiteSettingsRow = {
   demo_mode: boolean;
+  animation_grayscale: boolean;
   about_text: string;
   about_mobile_image_path: string | null;
   about_desktop_image_path: string | null;
@@ -23,6 +25,7 @@ type SiteSettingsRow = {
 function toSiteSettings(row: SiteSettingsRow): SiteSettings {
   return {
     demoMode: row.demo_mode,
+    animationGrayscale: row.animation_grayscale,
     aboutText: row.about_text,
     aboutMobileImagePath: row.about_mobile_image_path,
     aboutDesktopImagePath: row.about_desktop_image_path,
@@ -33,6 +36,7 @@ function toSiteSettings(row: SiteSettingsRow): SiteSettings {
 
 const siteSettingsColumns = sql`
   demo_mode,
+  animation_grayscale,
   about_text,
   about_mobile_image_path,
   about_desktop_image_path,
@@ -61,6 +65,23 @@ export async function updateDemoMode(demoMode: boolean) {
   const { rows } = await sql`
     update site_settings
     set demo_mode = ${demoMode}, updated_at = ${updatedAt}
+    where id = 'site'
+    returning ${siteSettingsColumns}
+  `.execute(getKysely());
+
+  const row = rows[0] as SiteSettingsRow | undefined;
+  if (!row) {
+    throw new Error('Site settings are not initialized');
+  }
+
+  return toSiteSettings(row);
+}
+
+export async function updateAnimationGrayscale(animationGrayscale: boolean) {
+  const updatedAt = new Date().toISOString();
+  const { rows } = await sql`
+    update site_settings
+    set animation_grayscale = ${animationGrayscale}, updated_at = ${updatedAt}
     where id = 'site'
     returning ${siteSettingsColumns}
   `.execute(getKysely());

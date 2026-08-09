@@ -4,19 +4,26 @@ import { AnimationLayer } from '@/components/AnimationLayer';
 import { Header } from '@/components/Header';
 import { Portfolio } from '@/components/Portfolio';
 import { listHomeArtworks } from '@/lib/functions/artworks.functions';
+import { getAnimationGrayscale } from '@/lib/functions/site-settings.functions';
 
 export const Route = createFileRoute('/')({
-  loader: () => listHomeArtworks(),
+  loader: async () => {
+    const [artworks, { animationGrayscale }] = await Promise.all([
+      listHomeArtworks(),
+      getAnimationGrayscale(),
+    ]);
+    return { artworks, animationGrayscale };
+  },
   component: Home,
 });
 
 function Home() {
-  const artworks = Route.useLoaderData();
+  const { artworks, animationGrayscale } = Route.useLoaderData();
 
   return (
     <div className='relative'>
       <Header />
-      <AnimationLayer />
+      <AnimationLayer grayscale={animationGrayscale} />
       <Portfolio artworks={artworks} />
     </div>
   );

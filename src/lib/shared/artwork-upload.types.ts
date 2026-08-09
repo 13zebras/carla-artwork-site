@@ -17,6 +17,7 @@ export type AdminDashboardData = {
   };
   archivedCategories: ArtworkCategoryRecord[];
   demoMode: boolean;
+  animationGrayscale: boolean;
   about: AboutContent;
 };
 

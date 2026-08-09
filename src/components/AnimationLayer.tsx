@@ -70,7 +70,11 @@ function createCircle(id: number, quadrant: Quadrant): Circle {
   return circle;
 }
 
-function CircleDot({ circle }: { circle: Circle }) {
+function CircleDot({ circle, grayscale }: { circle: Circle; grayscale: boolean }) {
+  const filter = grayscale
+    ? `hue-rotate(${circle.hue}deg) grayscale(1)`
+    : `hue-rotate(${circle.hue}deg)`;
+
   const style = {
     '--top': `${circle.top}%`,
     '--left': `${circle.left}%`,
@@ -78,7 +82,7 @@ function CircleDot({ circle }: { circle: Circle }) {
     '--fade-out': `${circle.fadeOut}ms`,
     width: `${circle.size}px`,
     height: `${circle.size}px`,
-    filter: `hue-rotate(${circle.hue}deg)`,
+    filter,
   } as CSSProperties;
 
   return (
@@ -89,7 +93,7 @@ function CircleDot({ circle }: { circle: Circle }) {
   );
 }
 
-export function AnimationLayer() {
+export function AnimationLayer({ grayscale = false }: { grayscale?: boolean }) {
   const [circles, setCircles] = useState<Circle[]>([]);
 
   useEffect(() => {
@@ -151,7 +155,7 @@ export function AnimationLayer() {
       className='pointer-events-none fixed inset-x-0 bottom-0 top-44 z-0 overflow-hidden max-w-[120rem] mx-auto'
     >
       {circles.map((circle) => (
-        <CircleDot key={circle.id} circle={circle} />
+        <CircleDot key={circle.id} circle={circle} grayscale={grayscale} />
       ))}
     </div>
   );
