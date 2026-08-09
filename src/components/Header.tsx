@@ -34,7 +34,7 @@ export function Header() {
     <header
       className={cn(
         'z-20 fixed flex justify-center bg-background w-full h-44 xxs:h-42 xs:h-40 sm:h-42 xl:h-38 pb-4 xs:pb-6',
-        isStaging && 'border-3 border-rose-700',
+        isStaging && 'border-t-2 border-t-rose-900',
       )}
     >
       <div className='relative flex xl:flex-row flex-col justify-end xl:justify-between items-center sm:items-start xl:items-center gap-7 xl:gap-20 px-4 xs:px-10 xxs:px-6 sm:px-12 w-full max-w-7xl h-full'>
