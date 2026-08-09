@@ -231,3 +231,34 @@ body {
 .admin-delete-button {
   @apply border-red-700/75 bg-red-700/60 hover:bg-red-700/75 active:bg-red-700/60;
 }
+
+.animation-circle {
+  --top: 50%;
+  --left: 50%;
+  --fade-in: 4s;
+  --fade-out: 4s;
+  --peak-opacity: 0.7;
+
+  position: absolute;
+  top: var(--top);
+  left: var(--left);
+  transform: translate(calc(var(--left) * -1), calc(var(--top) * -1));
+  opacity: 0;
+  will-change: opacity;
+  animation:
+    circle-fade-in var(--fade-in) ease-in forwards,
+    circle-fade-out var(--fade-out) ease-out forwards;
+  animation-delay: 0s, var(--fade-in);
+}
+
+@keyframes circle-fade-in {
+  to {
+    opacity: var(--peak-opacity);
+  }
+}
+
+@keyframes circle-fade-out {
+  to {
+    opacity: 0;
+  }
+}
