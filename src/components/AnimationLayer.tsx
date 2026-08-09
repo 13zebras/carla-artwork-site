@@ -51,10 +51,8 @@ function getQuadrants(): Quadrant[] {
 const randomBetween = (min: number, max: number) => min + Math.random() * (max - min);
 
 function createCircle(id: number, quadrant: Quadrant): Circle {
-  const minCircleSize = Math.max(
-    MIN_CIRCLE_SIZE_PX,
-    (MIN_CIRCLE_SIZE_VW / 100) * window.innerWidth,
-  );
+  const minCircleVWtoPX = (MIN_CIRCLE_SIZE_VW / 100) * window.innerWidth;
+  const minCircleSize = minCircleVWtoPX > MIN_CIRCLE_SIZE_PX ? MIN_CIRCLE_SIZE_PX : minCircleVWtoPX;
   const maxCircleSize = Math.min(
     MAX_CIRCLE_SIZE_PX,
     (MAX_CIRCLE_SIZE_VW / 100) * window.innerWidth,

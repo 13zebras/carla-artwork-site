@@ -258,7 +258,10 @@ body {
 }
 
 @keyframes circle-fade-out {
-  to {
+  30% {
+    opacity: var(--peak-opacity);
+  }
+  100% {
     opacity: 0;
   }
 }
