@@ -289,3 +289,30 @@ body {
     transform: translate(var(--drift-x), var(--drift-y)) scale(1.05);
   }
 }
+
+.bubble-up-circle {
+  --left: 50%;
+  --duration: 8s;
+
+  position: absolute;
+  top: 100%;
+  left: var(--left);
+  transform: translateX(calc(var(--left) * -1));
+  opacity: 0;
+  will-change: top, opacity;
+  animation: bubble-up var(--duration) linear forwards;
+}
+
+@keyframes bubble-up {
+  0% {
+    top: 100%;
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  100% {
+    top: 0;
+    opacity: 0;
+  }
+}

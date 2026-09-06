@@ -1,16 +1,26 @@
 import { type CSSProperties, useEffect, useState } from 'react';
 
-interface Circle {
+import type { AnimationType } from '@/lib/shared/site-settings.types';
+
+type CircleAppearance = {
   id: number;
   size: number;
+  hue: number;
+};
+
+type RandomCircle = CircleAppearance & {
   top: number;
   left: number;
-  hue: number;
   fadeIn: number;
   fadeOut: number;
   driftX: number;
   driftY: number;
-}
+};
+
+type BubbleUpCircle = CircleAppearance & {
+  left: number;
+  duration: number;
+};
 
 interface Quadrant {
   top: [number, number];
@@ -21,6 +31,10 @@ const SLOT_COUNT = 9;
 const REMOVAL_BUFFER_MS = 500;
 const MIN_SPAWN_GAP_MS = 2000;
 const MAX_SPAWN_GAP_RANDOM_MS = 1500; // Random additional delay to avoid predictability
+const BUBBLE_UP_MIN_DURATION_MS = 6000;
+const BUBBLE_UP_MAX_DURATION_MS = 10000;
+const ANIMATION_VIEWPORT_CLASS_NAME =
+  'pointer-events-none fixed inset-x-0 bottom-0 top-44 z-0 overflow-hidden';
 
 // Circle diameter as a percentage of viewport width:
 // Mobile @ 400px: ~20-80px
@@ -30,7 +44,7 @@ const MIN_CIRCLE_SIZE_PX = 50;
 const MAX_CIRCLE_SIZE_VW = 30;
 const MAX_CIRCLE_SIZE_PX = 350;
 
-// Circles drift outward from the center while visible.
+// Random circles drift outward from the center while visible.
 const DRIFT_DISTANCE_X_PX = 100;
 const DRIFT_DISTANCE_Y_PX = 100;
 
@@ -61,16 +75,25 @@ function getQuadrants(): Quadrant[] {
 
 const randomBetween = (min: number, max: number) => min + Math.random() * (max - min);
 
-function createCircle(id: number, quadrant: Quadrant): Circle {
+function getRandomCircleSize() {
   const minCircleVWtoPX = (MIN_CIRCLE_SIZE_VW / 100) * window.innerWidth;
   const minCircleSize = minCircleVWtoPX > MIN_CIRCLE_SIZE_PX ? MIN_CIRCLE_SIZE_PX : minCircleVWtoPX;
   const maxCircleSize = Math.min(
     MAX_CIRCLE_SIZE_PX,
     (MAX_CIRCLE_SIZE_VW / 100) * window.innerWidth,
   );
+
+  return randomBetween(minCircleSize, maxCircleSize);
+}
+
+function getCircleFilter(circle: CircleAppearance, grayscale: boolean) {
+  return grayscale ? `hue-rotate(${circle.hue}deg) grayscale(1)` : `hue-rotate(${circle.hue}deg)`;
+}
+
+function createRandomCircle(id: number, quadrant: Quadrant): RandomCircle {
   const circle = {
     id,
-    size: randomBetween(minCircleSize, maxCircleSize),
+    size: getRandomCircleSize(),
     top: randomBetween(...quadrant.top),
     left: randomBetween(...quadrant.left),
     hue: randomBetween(0, 360),
@@ -87,11 +110,17 @@ function createCircle(id: number, quadrant: Quadrant): Circle {
   return circle;
 }
 
-function CircleDot({ circle, grayscale }: { circle: Circle; grayscale: boolean }) {
-  const filter = grayscale
-    ? `hue-rotate(${circle.hue}deg) grayscale(1)`
-    : `hue-rotate(${circle.hue}deg)`;
+function createBubbleUpCircle(id: number): BubbleUpCircle {
+  return {
+    id,
+    size: getRandomCircleSize(),
+    left: randomBetween(0, 100),
+    hue: randomBetween(0, 360),
+    duration: randomBetween(BUBBLE_UP_MIN_DURATION_MS, BUBBLE_UP_MAX_DURATION_MS),
+  };
+}
 
+function RandomCircleDot({ circle, grayscale }: { circle: RandomCircle; grayscale: boolean }) {
   const style = {
     '--top': `${circle.top}%`,
     '--left': `${circle.left}%`,
@@ -101,7 +130,7 @@ function CircleDot({ circle, grayscale }: { circle: Circle; grayscale: boolean }
     '--drift-y': `${circle.driftY}px`,
     width: `${circle.size}px`,
     height: `${circle.size}px`,
-    filter,
+    filter: getCircleFilter(circle, grayscale),
   } as CSSProperties;
 
   return (
@@ -112,8 +141,25 @@ function CircleDot({ circle, grayscale }: { circle: Circle; grayscale: boolean }
   );
 }
 
-export function AnimationLayer({ grayscale = false }: { grayscale?: boolean }) {
-  const [circles, setCircles] = useState<Circle[]>([]);
+function BubbleUpCircleDot({ circle, grayscale }: { circle: BubbleUpCircle; grayscale: boolean }) {
+  const style = {
+    '--left': `${circle.left}%`,
+    '--duration': `${circle.duration}ms`,
+    width: `${circle.size}px`,
+    height: `${circle.size}px`,
+    filter: getCircleFilter(circle, grayscale),
+  } as CSSProperties;
+
+  return (
+    <div
+      className='bubble-up-circle rounded-full bg-radial from-red-800 to-red-900 to-90%'
+      style={style}
+    />
+  );
+}
+
+function RandomAnimation({ grayscale }: { grayscale: boolean }) {
+  const [circles, setCircles] = useState<RandomCircle[]>([]);
 
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -135,12 +181,14 @@ export function AnimationLayer({ grayscale = false }: { grayscale?: boolean }) {
 
     const spawnCircle = () => {
       const quadrants = getQuadrants();
-      const circle = createCircle(nextId++, quadrants[quadrantIndex % quadrants.length]);
+      const circle = createRandomCircle(nextId++, quadrants[quadrantIndex % quadrants.length]);
       quadrantIndex++;
       setCircles((current) => [...current, circle]);
       schedule(
         () => {
-          setCircles((current) => current.filter((c) => c.id !== circle.id));
+          setCircles((current) =>
+            current.filter((currentCircle) => currentCircle.id !== circle.id),
+          );
           requestSpawn(randomBetween(0, MAX_SPAWN_GAP_RANDOM_MS));
         },
         circle.fadeIn + circle.fadeOut + REMOVAL_BUFFER_MS,
@@ -173,13 +221,87 @@ export function AnimationLayer({ grayscale = false }: { grayscale?: boolean }) {
   }, []);
 
   return (
-    <div
-      aria-hidden='true'
-      className='pointer-events-none fixed inset-x-0 bottom-0 top-44 z-0 overflow-hidden'
-    >
+    <div aria-hidden='true' className={ANIMATION_VIEWPORT_CLASS_NAME}>
       {circles.map((circle) => (
-        <CircleDot key={circle.id} circle={circle} grayscale={grayscale} />
+        <RandomCircleDot key={circle.id} circle={circle} grayscale={grayscale} />
       ))}
     </div>
   );
+}
+
+function BubbleUpAnimation({ grayscale }: { grayscale: boolean }) {
+  const [circles, setCircles] = useState<BubbleUpCircle[]>([]);
+
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return;
+    }
+
+    const timeouts = new Set<number>();
+    let nextId = 0;
+    let nextSpawnAt = 0;
+
+    const schedule = (callback: () => void, delay: number) => {
+      const handle = window.setTimeout(() => {
+        timeouts.delete(handle);
+        callback();
+      }, delay);
+      timeouts.add(handle);
+    };
+
+    const spawnCircle = () => {
+      const circle = createBubbleUpCircle(nextId++);
+      setCircles((current) => [...current, circle]);
+      schedule(() => {
+        setCircles((current) => current.filter((currentCircle) => currentCircle.id !== circle.id));
+        requestSpawn(randomBetween(0, MAX_SPAWN_GAP_RANDOM_MS));
+      }, circle.duration + REMOVAL_BUFFER_MS);
+    };
+
+    const requestSpawn = (minDelay: number) => {
+      const now = Date.now();
+      const spawnAt = Math.max(now + minDelay, nextSpawnAt);
+      nextSpawnAt = spawnAt + MIN_SPAWN_GAP_MS;
+      schedule(spawnCircle, spawnAt - now);
+    };
+
+    for (let i = 0; i < SLOT_COUNT; i++) {
+      if (i === 0) {
+        requestSpawn(0);
+      } else {
+        requestSpawn(randomBetween(1, MAX_SPAWN_GAP_RANDOM_MS));
+      }
+    }
+
+    return () => {
+      for (const handle of timeouts) {
+        window.clearTimeout(handle);
+      }
+      timeouts.clear();
+    };
+  }, []);
+
+  return (
+    <div aria-hidden='true' className={ANIMATION_VIEWPORT_CLASS_NAME}>
+      {circles.map((circle) => (
+        <BubbleUpCircleDot key={circle.id} circle={circle} grayscale={grayscale} />
+      ))}
+    </div>
+  );
+}
+
+type AnimationLayerProps = {
+  animationType?: AnimationType;
+  grayscale?: boolean;
+};
+
+export function AnimationLayer({
+  animationType = 'random',
+  grayscale = false,
+}: AnimationLayerProps) {
+  if (animationType === 'bubble-up') {
+    return <BubbleUpAnimation grayscale={grayscale} />;
+  }
+
+  return <RandomAnimation grayscale={grayscale} />;
 }

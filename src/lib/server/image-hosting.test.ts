@@ -37,6 +37,7 @@ import { ensureSchema, getKysely } from '@/lib/server/db.server';
 import {
   getSiteSettings,
   updateAboutSettings,
+  updateAnimationType,
   updateDemoMode,
 } from '@/lib/server/site-settings.server';
 import type { ArtworkRecord } from '@/lib/shared/artworks.types';
@@ -49,6 +50,7 @@ async function resetDatabase() {
   await sql`truncate table artworks, artwork_categories`.execute(getKysely());
   await sql`alter sequence artwork_category_id_seq restart with 1`.execute(getKysely());
   await updateDemoMode(false);
+  await updateAnimationType('random');
   await updateAboutSettings({
     aboutText: '',
     aboutMobileImagePath: null,
@@ -285,6 +287,15 @@ describe('site settings', () => {
 
     expect(settings.demoMode).toBe(true);
     await expect(getSiteSettings()).resolves.toMatchObject({ demoMode: true });
+  });
+
+  it('persists animation type changes', async () => {
+    await expect(getSiteSettings()).resolves.toMatchObject({ animationType: 'random' });
+
+    const settings = await updateAnimationType('bubble-up');
+
+    expect(settings.animationType).toBe('bubble-up');
+    await expect(getSiteSettings()).resolves.toMatchObject({ animationType: 'bubble-up' });
   });
 
   it('persists about content and responsive image details', async () => {

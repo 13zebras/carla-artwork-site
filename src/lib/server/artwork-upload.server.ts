@@ -299,6 +299,7 @@ export async function listAdminDashboard() {
     archivedCategories,
     demoMode: siteSettings.demoMode,
     animationGrayscale: siteSettings.animationGrayscale,
+    animationType: siteSettings.animationType,
     about: toAboutContent(siteSettings),
   } satisfies AdminDashboardData;
 }

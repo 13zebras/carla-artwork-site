@@ -6,11 +6,11 @@ import { ensureSchema } from '@/lib/server/db.server';
 export const Route = createFileRoute('/api/auth/$')({
   server: {
     handlers: {
-      GET: async ({ request }) => {
+      GET: async ({ request }: { request: Request }) => {
         await ensureSchema();
         return auth.handler(request);
       },
-      POST: async ({ request }) => {
+      POST: async ({ request }: { request: Request }) => {
         await ensureSchema();
         return auth.handler(request);
       },

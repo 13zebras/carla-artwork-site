@@ -9,6 +9,7 @@ import { ExternalLink } from 'lucide-react';
 import { useState } from 'react';
 
 import { AboutPageTab } from '@/components/admin/AboutPageTab';
+import { AnimationTypeSelector } from '@/components/admin/AnimationTypeSelector';
 import { BulkImageUploadModal } from '@/components/admin/BulkImageUploadModal';
 import { BunnyStorageTab } from '@/components/admin/BunnyStorageTab';
 import { CategoriesTab } from '@/components/admin/CategoriesTab';
@@ -63,7 +64,7 @@ function AdminLayout() {
 
   const navigate = useNavigate();
 
-  const { dashboard, archivedCategories, demoMode, animationGrayscale, about } =
+  const { dashboard, archivedCategories, demoMode, animationGrayscale, animationType, about } =
     Route.useLoaderData();
   const { activeCategories } = dashboard;
 
@@ -93,12 +94,13 @@ function AdminLayout() {
       >
         <div className='flex flex-col md:flex-row justify-between items-center gap-4 lg:gap-16 mx-auto max-w-300'>
           <div className='flex flex-col md:flex-row items-center gap-2 md:gap-6 lg:gap-8 xl:gap-16'>
-            <h1 className='font-semibold text-xl lg:text-3xl'>Artwork Admin Dashboard</h1>
+            <h1 className='font-semibold text-xl lg:text-3xl'>Admin Dashboard</h1>
             {isStaging && (
               <span className='text-red-600 font-semibold text-xl lg:text-3xl'>Staging</span>
             )}
           </div>
           <nav className='flex flex-col md:flex-row flex-wrap items-center gap-1 lg:gap-3 xl:gap-4'>
+            <AnimationTypeSelector animationType={animationType} />
             <DemoModeSwitch demoMode={demoMode} />
             <GrayscaleSwitch animationGrayscale={animationGrayscale} />
             <div className='flex items-center'>

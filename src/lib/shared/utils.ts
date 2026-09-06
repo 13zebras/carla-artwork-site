@@ -1,9 +1,11 @@
-import { type ClassValue, clsx } from 'clsx';
-import { twMerge } from 'tailwind-merge';
+// import { type ClassValue, clsx } from 'clsx';
+// import { twMerge } from 'tailwind-merge';
 
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
+// export function cn(...inputs: ClassValue[]) {
+//   return twMerge(clsx(inputs));
+// }
+
+export { cn } from 'cn';
 
 export function getParagraphs(text: string) {
   let position = 0;
