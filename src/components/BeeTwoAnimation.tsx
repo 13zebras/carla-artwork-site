@@ -10,34 +10,47 @@ import {
 } from '@/lib/shared/bee-two-animation';
 import type { BeeTwoPoint } from '@/lib/shared/bee-two-animation';
 
-// Independent switches: stacking does not change the flight container's geometry.
+// Above-content mode removes the central exclusion and always uses the full viewport.
+// FULL_VIEWPORT controls header exclusion only when flying behind the content.
 const ABOVE_CONTENT = true;
 const FULL_VIEWPORT = true;
 
 // Outer margin relative to container width/height: 0.02 = 2% inward; 0 = no extra gap.
 // Negative values (try -0.03) let loops extend past the edges and disappear/reappear.
 // Icon clearance offsets this margin; smaller random loops may not reach its limit.
-const OUTER_PADDING_RATIO = -0.1;
+const OUTER_PADDING_RATIO = -0.08;
 
 // 0 = minimal connectors; 1 = full inward/outward wandering and longer travel.
 // Higher intensity reserves more of the border for travel by fitting loops smaller.
 const TRAVEL_INTENSITY = 0.8;
 
+// Distance between single-loop stops: 1 = original spacing; lower = more frequent loops.
+// This shortens travel without changing speed, loop size, or inward/outward range.
+const LOOP_SPACING_RATIO = 0.75;
+
+// Active seconds spent in a quadrant before moving to a less-recently visited one.
+// Finish the current curve, then travel without local loops until arrival.
+const MAX_QUADRANT_SECONDS = 12;
+
+// Degrees for each of the two gradual, randomly left/right quadrant-travel turns.
+const MIN_TURN = 20;
+const MAX_TURN = 45;
+
 // Base loop diameter / smaller CONTAINER dimension. Large values are fitted to the border.
-const LOOP_SIZE_RATIO = 1.3;
-const LOOP_SIZE_VARIATION = 0.8;
+const LOOP_SIZE_RATIO = 0.15;
+const LOOP_SIZE_VARIATION = 2.0;
 const MIN_SPEED_PX_PER_SECOND = 50;
 const MAX_SPEED_PX_PER_SECOND = 200;
 const MIN_SPEED_CHANGE_SECONDS = 30;
-const MAX_SPEED_CHANGE_SECONDS = 60;
-const FADE_IN_SECONDS = 4;
+const MAX_SPEED_CHANGE_SECONDS = 70;
+const FADE_IN_SECONDS = 6;
 const TRAIL_LIFETIME_SECONDS = 20;
 const TRAIL_SAMPLES_PER_SECOND = 30;
-const TRAIL_OPACITY = 0.45;
+const TRAIL_OPACITY = 0.35;
 const TRAIL_WIDTH = 2;
 const MAX_TRAIL_SAMPLES = Math.ceil(TRAIL_LIFETIME_SECONDS * TRAIL_SAMPLES_PER_SECOND) + 2;
 
-// Optional overrides also let tests exercise all four combinations independently.
+// Optional overrides also let tests exercise all four switch combinations.
 type BeeTwoAnimationProps = { aboveContent?: boolean; fullViewport?: boolean };
 type TrailPoint = BeeTwoPoint & { created: number; opacity: number };
 
@@ -48,7 +61,8 @@ export function BeeTwoAnimation({
   const viewportRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const beeRef = useRef<HTMLDivElement>(null);
-  const topClasses = fullViewport ? 'top-0' : 'top-44 xxs:top-42 xs:top-40 sm:top-42 xl:top-38';
+  const usesFullViewport = aboveContent || fullViewport;
+  const topClasses = usesFullViewport ? 'top-0' : 'top-44 xxs:top-42 xs:top-40 sm:top-42 xl:top-38';
   const layerClass = aboveContent ? 'z-30' : '-z-10';
 
   useEffect(() => {
@@ -68,7 +82,7 @@ export function BeeTwoAnimation({
       MAX_SPEED_CHANGE_SECONDS,
     );
     let flight: ReturnType<typeof createBeeTwoFlight> = null;
-    let area = getBeeTwoArea(0, 0, 0, fullViewport);
+    let area = getBeeTwoArea(0, 0, 0, usesFullViewport);
     let pixelRatio = 0;
     let frame: number | null = null;
     let previousTime: number | null = null;
@@ -115,7 +129,7 @@ export function BeeTwoAnimation({
       // Trapezoidal integration keeps travelled distance stable across frame rates.
       const startSpeed = speed.advance(0);
       const endSpeed = speed.advance(seconds);
-      const pose = flight.advance(((startSpeed + endSpeed) / 2) * seconds);
+      const pose = flight.advance(((startSpeed + endSpeed) / 2) * seconds, seconds);
       const opacity = beeTwoEase(activeSeconds / FADE_IN_SECONDS);
       bee.style.opacity = String(opacity);
       bee.style.transform = `translate(${pose.x}px, ${pose.y}px) translate(-50%, -50%) rotate(${pose.angle + Math.PI / 2}rad)`;
@@ -153,7 +167,12 @@ export function BeeTwoAnimation({
 
     const measure = () => {
       const headerHeight = header?.getBoundingClientRect().height ?? 0;
-      const next = getBeeTwoArea(window.innerWidth, window.innerHeight, headerHeight, fullViewport);
+      const next = getBeeTwoArea(
+        window.innerWidth,
+        window.innerHeight,
+        headerHeight,
+        usesFullViewport,
+      );
       const nextPixelRatio = window.devicePixelRatio || 1;
       if (
         next.width === area.width &&
@@ -181,6 +200,11 @@ export function BeeTwoAnimation({
         loopVariation: LOOP_SIZE_VARIATION,
         outerPaddingRatio: OUTER_PADDING_RATIO,
         travelIntensity: TRAVEL_INTENSITY,
+        loopSpacingRatio: LOOP_SPACING_RATIO,
+        maxQuadrantSeconds: MAX_QUADRANT_SECONDS,
+        minTurnDegrees: MIN_TURN,
+        maxTurnDegrees: MAX_TURN,
+        excludeCenter: !aboveContent,
         clearance,
       });
       trail = [];
@@ -191,7 +215,7 @@ export function BeeTwoAnimation({
     };
 
     const headerObserver = new ResizeObserver(measure);
-    if (header && !fullViewport) headerObserver.observe(header);
+    if (header && !usesFullViewport) headerObserver.observe(header);
     const themeObserver = new MutationObserver(() => {
       color = getComputedStyle(viewport).color;
     });
@@ -214,16 +238,16 @@ export function BeeTwoAnimation({
       viewport.style.visibility = 'hidden';
       viewport.style.opacity = '0';
     };
-  }, [fullViewport, aboveContent]);
+  }, [usesFullViewport, aboveContent]);
 
   return (
     <div
       ref={viewportRef}
       aria-hidden='true'
-      className={`bee-animation pointer-events-none invisible opacity-0 fixed inset-x-0 bottom-0 ${topClasses} ${layerClass} overflow-hidden text-stone-700 dark:text-stone-400`}
+      className={`bee-animation pointer-events-none invisible opacity-0 fixed inset-x-0 bottom-0 ${topClasses} ${layerClass} overflow-hidden text-stone-700 dark:text-stone-300`}
     >
       <canvas ref={canvasRef} aria-hidden='true' className='absolute inset-0 size-full' />
-      <div ref={beeRef} className='absolute top-0 left-0 size-3 will-change-transform'>
+      <div ref={beeRef} className='absolute top-0 left-0 size-4 will-change-transform'>
         <Bug className='size-full' />
       </div>
     </div>

@@ -1,6 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
 
-// import { BeeAnimation } from '@/components/BeeAnimation';
 import { BeeTwoAnimation } from '@/components/BeeTwoAnimation';
 import { Header } from '@/components/Header';
 import { Portfolio } from '@/components/Portfolio';
@@ -20,7 +19,7 @@ function Home() {
   return (
     <div className='relative isolate'>
       <Header />
-      {/* <BeeAnimation /> */}
+
       <BeeTwoAnimation />
       <Portfolio artworks={artworks} />
     </div>

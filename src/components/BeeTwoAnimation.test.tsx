@@ -4,6 +4,7 @@ import { StrictMode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { BeeTwoAnimation } from '@/components/BeeTwoAnimation';
+import * as beeTwoGeometry from '@/lib/shared/bee-two-animation';
 
 let frames: Map<number, FrameRequestCallback>;
 let nextFrame: number;
@@ -113,20 +114,58 @@ describe('BeeTwoAnimation', () => {
     [false, true],
     [true, false],
     [true, true],
-  ])('keeps stacking (%s) independent from full viewport (%s)', (aboveContent, fullViewport) => {
-    const { container } = render(
-      <BeeTwoAnimation aboveContent={aboveContent} fullViewport={fullViewport} />,
-    );
-    const wrapper = container.firstElementChild as HTMLDivElement;
-    const canvas = wrapper.querySelector('canvas') as HTMLCanvasElement;
-    expect(wrapper.classList.contains(aboveContent ? 'z-30' : '-z-10')).toBe(true);
-    expect(wrapper.classList.contains('pointer-events-none')).toBe(true);
-    expect(wrapper.getAttribute('aria-hidden')).toBe('true');
-    expect(wrapper.style.top).toBe(fullViewport ? '0px' : '160px');
-    expect(canvas.width).toBe(2000);
-    expect(canvas.height).toBe(fullViewport ? 1600 : 1280);
-    expect(context.setTransform).toHaveBeenCalledWith(2, 0, 0, 2, 0, 0);
-    expect(resizeObservers[0].observe.mock.calls.length).toBe(fullViewport ? 0 : 1);
+  ])(
+    'uses unrestricted full-viewport flight above content (%s, full=%s)',
+    (aboveContent, fullViewport) => {
+      const createFlight = vi.spyOn(beeTwoGeometry, 'createBeeTwoFlight');
+      const usesFullViewport = aboveContent || fullViewport;
+      const { container } = render(
+        <BeeTwoAnimation aboveContent={aboveContent} fullViewport={fullViewport} />,
+      );
+      const wrapper = container.firstElementChild as HTMLDivElement;
+      const canvas = wrapper.querySelector('canvas') as HTMLCanvasElement;
+      expect(wrapper.classList.contains(aboveContent ? 'z-30' : '-z-10')).toBe(true);
+      expect(wrapper.classList.contains('pointer-events-none')).toBe(true);
+      expect(wrapper.getAttribute('aria-hidden')).toBe('true');
+      expect(wrapper.style.top).toBe(usesFullViewport ? '0px' : '160px');
+      expect(canvas.width).toBe(2000);
+      expect(canvas.height).toBe(usesFullViewport ? 1600 : 1280);
+      expect(context.setTransform).toHaveBeenCalledWith(2, 0, 0, 2, 0, 0);
+      expect(resizeObservers[0].observe.mock.calls.length).toBe(usesFullViewport ? 0 : 1);
+      expect(createFlight).toHaveBeenCalledWith(
+        { width: 1000, height: usesFullViewport ? 800 : 640, top: usesFullViewport ? 0 : 160 },
+        expect.objectContaining({
+          excludeCenter: !aboveContent,
+          maxQuadrantSeconds: 15,
+          minTurnDegrees: 5,
+          maxTurnDegrees: 12,
+        }),
+      );
+    },
+  );
+
+  it('advances the quadrant clock with active frame time, not hidden-tab time', () => {
+    const advance = vi.fn<
+      NonNullable<ReturnType<typeof beeTwoGeometry.createBeeTwoFlight>>['advance']
+    >(() => ({ x: 100, y: 100, angle: 0, phase: 'travel' }));
+    vi.spyOn(beeTwoGeometry, 'createBeeTwoFlight').mockReturnValue({ advance });
+    render(<BeeTwoAnimation />);
+    tick(0);
+    tick(100);
+    expect(advance).toHaveBeenLastCalledWith(expect.any(Number), 0.1);
+    act(() => {
+      hidden = true;
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+    advance.mockClear();
+    tick(60000);
+    expect(advance).not.toHaveBeenCalled();
+    act(() => {
+      hidden = false;
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+    tick(60000);
+    expect(advance).toHaveBeenLastCalledWith(0, 0);
   });
 
   it('fades in gradually and draws a trail without per-frame renders', () => {
@@ -140,13 +179,13 @@ describe('BeeTwoAnimation', () => {
     expect(Number(bee.style.opacity)).toBeLessThan(1);
     expect(bee.style.transform).not.toBe(initialTransform);
     expect(context.stroke).toHaveBeenCalled();
-    for (let time = 1300; time <= 2600; time += 100) tick(time);
+    for (let time = 1300; time <= 4100; time += 100) tick(time);
     expect(bee.style.opacity).toBe('1');
     expect(frames.size).toBe(1);
   });
 
   it('recalculates the container after header and viewport changes', () => {
-    const { container } = render(<BeeTwoAnimation />);
+    const { container } = render(<BeeTwoAnimation aboveContent={false} fullViewport={false} />);
     const wrapper = container.firstElementChild as HTMLDivElement;
     const canvas = wrapper.querySelector('canvas') as HTMLCanvasElement;
     headerHeight = 200;
@@ -156,6 +195,27 @@ describe('BeeTwoAnimation', () => {
     vi.stubGlobal('innerHeight', 900);
     act(() => window.dispatchEvent(new Event('resize')));
     expect(canvas.height).toBe(1400);
+    expect(frames.size).toBe(1);
+  });
+
+  it('rebuilds the flight when switching between above-content and behind-content modes', () => {
+    const createFlight = vi.spyOn(beeTwoGeometry, 'createBeeTwoFlight');
+    const { container, rerender } = render(
+      <BeeTwoAnimation aboveContent={false} fullViewport={false} />,
+    );
+    const wrapper = container.firstElementChild as HTMLDivElement;
+    rerender(<BeeTwoAnimation aboveContent fullViewport={false} />);
+    expect(wrapper.style.top).toBe('0px');
+    expect(createFlight).toHaveBeenLastCalledWith(
+      { width: 1000, height: 800, top: 0 },
+      expect.objectContaining({ excludeCenter: false }),
+    );
+    rerender(<BeeTwoAnimation aboveContent={false} fullViewport={false} />);
+    expect(wrapper.style.top).toBe('160px');
+    expect(createFlight).toHaveBeenLastCalledWith(
+      { width: 1000, height: 640, top: 160 },
+      expect.objectContaining({ excludeCenter: true }),
+    );
     expect(frames.size).toBe(1);
   });
 
@@ -188,10 +248,11 @@ describe('BeeTwoAnimation', () => {
       document.dispatchEvent(new Event('visibilitychange'));
     });
     context.stroke.mockClear();
-    tick(25000);
+    // Resume after the configured 50-second trail lifetime has expired.
+    tick(60000);
     expect(bee.style.transform).toBe(previousTransform);
     expect(context.stroke).not.toHaveBeenCalled();
-    tick(25100);
+    tick(60100);
     expect(bee.style.transform).not.toBe(previousTransform);
     expect(context.stroke).toHaveBeenCalledTimes(1);
   });

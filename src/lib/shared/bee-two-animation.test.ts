@@ -92,26 +92,30 @@ describe('bee-two container geometry', () => {
     'honors an adjustable outer margin of %s',
     (outerPaddingRatio) => {
       const area = getBeeTwoArea(1200, 800, 160, false);
-      const flight = requireFlight(
-        createBeeTwoFlight(
-          area,
-          {
-            ...settings,
-            outerPaddingRatio,
-            loopVariation: 0,
-            travelIntensity: 0,
-          },
-          seededRandom(15),
-        ),
-      );
       let minimumX = Infinity;
       let minimumY = Infinity;
-      for (let index = 0; index < 20000; index++) {
-        const point = flight.advance(4);
-        if (!isSafe(point, area, outerPaddingRatio))
-          throw new Error('Bee escaped the padded border');
-        minimumX = Math.min(minimumX, point.x);
-        minimumY = Math.min(minimumY, point.y);
+      // Start at a horizontal and a vertical edge. Frequent reversals no longer
+      // guarantee a full perimeter lap when travel intensity is zero.
+      for (const randomValue of [0.125, 0.875]) {
+        const flight = requireFlight(
+          createBeeTwoFlight(
+            area,
+            {
+              ...settings,
+              outerPaddingRatio,
+              loopVariation: 0,
+              travelIntensity: 0,
+            },
+            () => randomValue,
+          ),
+        );
+        for (let index = 0; index < 20000; index++) {
+          const point = flight.advance(4);
+          if (!isSafe(point, area, outerPaddingRatio))
+            throw new Error('Bee escaped the padded border');
+          minimumX = Math.min(minimumX, point.x);
+          minimumY = Math.min(minimumY, point.y);
+        }
       }
       // This checks actual proximity, not just containment: reducing padding really
       // moves loops outward instead of merely changing an unused boundary.
@@ -143,9 +147,10 @@ describe('bee-two container geometry', () => {
       const exited = { left: false, right: false, top: false, bottom: false };
       let wasOutside = false;
       let reentered = false;
-      // Allow enough flight distance to visit every edge while also wandering inward.
-      for (let index = 0; index < 30000; index++) {
-        const point = flight.advance(4);
+      // Exercise exploration with an active clock at 100px/s, as the component
+      // does. Distance-only geometry sampling deliberately leaves its clock paused.
+      for (let index = 0; index < 60000; index++) {
+        const point = flight.advance(4, 0.04);
         if (!isSafe(point, area, outerPaddingRatio))
           throw new Error('Bee crossed the center or extended flight boundary');
         if (point.x + settings.clearance < 0) exited.left = true;
@@ -190,6 +195,60 @@ describe('bee-two container geometry', () => {
     expect(enteredFormerExclusion).toBe(true);
   });
 
+  it.each([
+    [1000, 800, 1.3, -0.1],
+    [390, 844, 1.3, -0.1],
+    [844, 390, 0.14, 0.02],
+    [280, 440, 5, 0],
+  ])(
+    'visits the whole area with no central exclusion (%s×%s, loops=%s, padding=%s)',
+    (width, height, loopSizeRatio, outerPaddingRatio) => {
+      const area = getBeeTwoArea(width, height, 160, true);
+      const flight = requireFlight(
+        createBeeTwoFlight(
+          area,
+          {
+            ...settings,
+            loopSizeRatio,
+            outerPaddingRatio,
+            excludeCenter: false,
+          },
+          seededRandom(43),
+        ),
+      );
+      const marginX = width * outerPaddingRatio + settings.clearance;
+      const marginY = height * outerPaddingRatio + settings.clearance;
+      const visited = new Set<string>();
+      let travelledThroughCenter = false;
+      // Sample more circuits now that loop entries vary between inward- and
+      // outward-facing offsets, rather than always favoring the same side.
+      for (let index = 0; index < 60000; index++) {
+        const point = flight.advance(4);
+        if (
+          point.x < marginX - 0.000001 ||
+          point.x > width - marginX + 0.000001 ||
+          point.y < marginY - 0.000001 ||
+          point.y > height - marginY + 0.000001
+        ) {
+          throw new Error('Unrestricted bee escaped the configured outer bounds');
+        }
+        if (point.x >= 0 && point.x < width && point.y >= 0 && point.y < height) {
+          visited.add(`${Math.floor((point.x / width) * 3)},${Math.floor((point.y / height) * 3)}`);
+        }
+        if (
+          point.phase === 'travel' &&
+          point.x > width * 0.45 &&
+          point.x < width * 0.55 &&
+          point.y > height * 0.45 &&
+          point.y < height * 0.55
+        )
+          travelledThroughCenter = true;
+      }
+      expect(visited.size).toBe(9);
+      expect(travelledThroughCenter).toBe(true);
+    },
+  );
+
   it('declines padding that leaves no room for loops', () => {
     const area = getBeeTwoArea(1200, 800, 160, false);
     expect(createBeeTwoFlight(area, { ...settings, outerPaddingRatio: 0.4 })).toBeNull();
@@ -226,12 +285,256 @@ describe('bee-two looping motion', () => {
       );
       maximumDistanceError = Math.max(maximumDistanceError, Math.abs(travelled - 0.5));
       maximumTurn = Math.max(maximumTurn, Math.abs(turn));
-      cumulativeTurn += turn;
+      cumulativeTurn += Math.abs(turn);
       previous = point;
     }
     expect(maximumDistanceError).toBeLessThan(0.005);
     expect(maximumTurn).toBeLessThan(0.2);
-    expect(Math.abs(cumulativeTurn)).toBeGreaterThan(20 * Math.PI * 2);
+    expect(cumulativeTurn).toBeGreaterThan(20 * Math.PI * 2);
+  });
+
+  it.each([true, false])(
+    'makes both left and right single loops in one continuous flight (exclude center=%s)',
+    (excludeCenter) => {
+      const flight = requireFlight(
+        createBeeTwoFlight(
+          area,
+          {
+            ...settings,
+            loopSizeRatio: 0.15,
+            loopVariation: 1.6,
+            outerPaddingRatio: -0.1,
+            loopSpacingRatio: 0.75,
+            excludeCenter,
+          },
+          seededRandom(21),
+        ),
+      );
+      let previous = flight.advance(0);
+      let loopTurn = 0;
+      let leftLoops = 0;
+      let rightLoops = 0;
+      const completedLoops: number[] = [];
+      let maximumTurn = 0;
+      let maximumDistanceError = 0;
+      for (let index = 0; index < 60000; index++) {
+        const point = flight.advance(0.5);
+        const turn = Math.atan2(
+          Math.sin(point.angle - previous.angle),
+          Math.cos(point.angle - previous.angle),
+        );
+        maximumTurn = Math.max(maximumTurn, Math.abs(turn));
+        maximumDistanceError = Math.max(
+          maximumDistanceError,
+          Math.abs(Math.hypot(point.x - previous.x, point.y - previous.y) - 0.5),
+        );
+        if (previous.phase === 'loop') {
+          loopTurn += turn;
+          if (point.phase === 'travel') {
+            const revolutions = Math.round(loopTurn / (2 * Math.PI));
+            completedLoops.push(revolutions);
+            if (revolutions < 0) leftLoops++;
+            if (revolutions > 0) rightLoops++;
+            loopTurn = 0;
+          }
+        }
+        if (excludeCenter && !isSafe(point, area, -0.1))
+          throw new Error('Direction change entered excluded space');
+        previous = point;
+      }
+      expect(leftLoops).toBeGreaterThan(5);
+      expect(rightLoops).toBeGreaterThan(5);
+      expect(completedLoops.every((turns) => Math.abs(turns) === 1)).toBe(true);
+      expect(maximumTurn).toBeLessThan(0.2);
+      expect(maximumDistanceError).toBeLessThan(0.005);
+    },
+  );
+
+  it.each([
+    [true, 21],
+    [true, 43],
+    [true, 91],
+    [false, 21],
+    [false, 43],
+    [false, 91],
+  ] as const)(
+    'reverses travel after at most two loops, even when a turn needs more room (exclude center=%s, seed=%s)',
+    (excludeCenter, seed) => {
+      const viewport = getBeeTwoArea(1440, 900, 0, true);
+      const flight = requireFlight(
+        createBeeTwoFlight(
+          viewport,
+          {
+            ...settings,
+            loopSizeRatio: 0.15,
+            loopVariation: 1.6,
+            outerPaddingRatio: -0.1,
+            loopSpacingRatio: 0.75,
+            excludeCenter,
+          },
+          seededRandom(seed),
+        ),
+      );
+      let previous = flight.advance(0);
+      let loops = 0;
+      let lastDirection = 0;
+      let run = 0;
+      let longestRun = 0;
+      let directionChanges = 0;
+      for (let index = 0; index < 60000 && loops < 12; index++) {
+        const point = flight.advance(0.5);
+        if (previous.phase === 'travel' && point.phase === 'loop') {
+          // At entry, the heading still matches the guide, before orbital spin
+          // takes over. Measure actual circulation, not the random candidate.
+          const direction = Math.sign(
+            (point.x - viewport.width / 2) * Math.sin(point.angle) -
+              (point.y - viewport.height / 2) * Math.cos(point.angle),
+          );
+          if (lastDirection !== 0 && direction !== lastDirection) directionChanges++;
+          run = direction === lastDirection ? run + 1 : 1;
+          longestRun = Math.max(longestRun, run);
+          lastDirection = direction;
+          loops++;
+        }
+        previous = point;
+      }
+      expect(loops).toBe(12);
+      expect(directionChanges).toBeGreaterThanOrEqual(5);
+      // Finding room for a turn must not add a third loop in the same direction.
+      expect(longestRun).toBeLessThanOrEqual(2);
+    },
+  );
+
+  it.each([0.35, 1])(
+    'keeps unrestricted travel and loop joins smooth (spacing=%s)',
+    (loopSpacingRatio) => {
+      const flight = requireFlight(
+        createBeeTwoFlight(
+          area,
+          {
+            ...settings,
+            loopSizeRatio: 1.3,
+            outerPaddingRatio: -0.1,
+            excludeCenter: false,
+            loopSpacingRatio,
+          },
+          seededRandom(91),
+        ),
+      );
+      let previous = flight.advance(0);
+      let maximumDistanceError = 0;
+      let maximumTurn = 0;
+      const phases = new Set<string>();
+      for (let index = 0; index < 40000; index++) {
+        const point = flight.advance(0.5);
+        maximumDistanceError = Math.max(
+          maximumDistanceError,
+          Math.abs(Math.hypot(point.x - previous.x, point.y - previous.y) - 0.5),
+        );
+        maximumTurn = Math.max(
+          maximumTurn,
+          Math.abs(
+            Math.atan2(
+              Math.sin(point.angle - previous.angle),
+              Math.cos(point.angle - previous.angle),
+            ),
+          ),
+        );
+        phases.add(point.phase);
+        previous = point;
+      }
+      expect(phases.size).toBe(2);
+      expect(maximumDistanceError).toBeLessThan(0.005);
+      expect(maximumTurn).toBeLessThan(0.2);
+    },
+  );
+
+  it.each([true, false])(
+    'keeps one revolution per stop with shorter spacing (exclude center=%s)',
+    (excludeCenter) => {
+      function measureFirstLoop(loopSpacingRatio: number) {
+        const flight = requireFlight(
+          createBeeTwoFlight(
+            area,
+            {
+              ...settings,
+              loopSpacingRatio,
+              excludeCenter,
+            },
+            seededRandom(21),
+          ),
+        );
+        let previous = flight.advance(0);
+        let turning = 0;
+        let enteredLoop = false;
+        for (let index = 0; index < 20000; index++) {
+          const point = flight.advance(0.5);
+          if (excludeCenter && !isSafe(point, area)) throw new Error('Loop entered the exclusion');
+          if (previous.phase === 'loop') {
+            turning += Math.atan2(
+              Math.sin(point.angle - previous.angle),
+              Math.cos(point.angle - previous.angle),
+            );
+            if (point.phase === 'travel') return Math.round(Math.abs(turning) / (2 * Math.PI));
+          }
+          if (point.phase === 'loop') enteredLoop = true;
+          previous = point;
+        }
+        throw new Error(`Loop did not complete (entered=${enteredLoop})`);
+      }
+      expect(measureFirstLoop(1)).toBe(1);
+      expect(measureFirstLoop(0.35)).toBe(1);
+    },
+  );
+
+  it.each([
+    [1440, 900],
+    [1000, 800],
+    [390, 844],
+  ])('shortens the interval between distinct loops at unchanged speed (%s×%s)', (width, height) => {
+    function countLoopStops(loopSpacingRatio: number) {
+      let stops = 0;
+      let crossedCenter = false;
+      for (const seed of [21, 43, 91]) {
+        const flight = requireFlight(
+          createBeeTwoFlight(
+            getBeeTwoArea(width, height, 0, true),
+            {
+              ...settings,
+              loopSizeRatio: 0.1,
+              loopVariation: 1.5,
+              outerPaddingRatio: -0.1,
+              excludeCenter: false,
+              loopSpacingRatio,
+            },
+            seededRandom(seed),
+          ),
+        );
+        let previous = flight.advance(0);
+        // Equal travelled distance means equal time at the same speed. Sample
+        // more trips now that reversals happen after at most two loops.
+        for (let index = 0; index < 50000; index++) {
+          const point = flight.advance(4);
+          if (previous.phase === 'travel' && point.phase === 'loop') stops++;
+          if (
+            point.x > width * 0.4 &&
+            point.x < width * 0.6 &&
+            point.y > height * 0.4 &&
+            point.y < height * 0.6
+          )
+            crossedCenter = true;
+          previous = point;
+        }
+      }
+      return { stops, crossedCenter };
+    }
+    const original = countLoopStops(1);
+    const closer = countLoopStops(0.35);
+    const intervalRatio = original.stops / closer.stops;
+    // Approximately 7 seconds -> 5 seconds, rather than more turns at one stop.
+    expect(intervalRatio).toBeGreaterThan(0.6);
+    expect(intervalRatio).toBeLessThan(0.8);
+    expect(closer.crossedCenter).toBe(true);
   });
 
   it('travels inward and outward between distinct loops', () => {
@@ -284,7 +587,8 @@ describe('bee-two looping motion', () => {
         createBeeTwoFlight(
           area,
           { ...settings, travelIntensity, loopVariation: 0 },
-          seededRandom(72),
+          // Hold random choices fixed to compare travel intensity alone.
+          () => 0.4,
         ),
       );
       let distance = 0;
@@ -311,6 +615,138 @@ describe('bee-two looping motion', () => {
     expect(smaller.advance(1300)).not.toEqual(sample);
     expect(varied.advance(1300)).not.toEqual(sample);
   });
+});
+
+describe('bee-two quadrant exploration', () => {
+  function quadrantAt(point: BeeTwoPoint, area: BeeTwoArea) {
+    return Number(point.x >= area.width / 2) + 2 * Number(point.y >= area.height / 2);
+  }
+
+  it('uses the configured time limit and skips local loops until another quadrant is reached', () => {
+    const area = getBeeTwoArea(1000, 900, 160, false);
+    function firstLoopAfterWaiting(maxQuadrantSeconds: number) {
+      const flight = requireFlight(
+        createBeeTwoFlight(
+          area,
+          {
+            ...settings,
+            travelIntensity: 0,
+            maxQuadrantSeconds,
+          },
+          seededRandom(21),
+        ),
+      );
+      const initialQuadrant = quadrantAt(flight.advance(0), area);
+      flight.advance(0, 16);
+      for (let index = 0; index < 20000; index++) {
+        const point = flight.advance(1);
+        if (point.phase === 'loop')
+          return { initialQuadrant, loopQuadrant: quadrantAt(point, area) };
+      }
+      throw new Error('No loop reached after the quadrant wait');
+    }
+    const withinLimit = firstLoopAfterWaiting(30);
+    const overdue = firstLoopAfterWaiting(15);
+    expect(withinLimit.loopQuadrant).toBe(withinLimit.initialQuadrant);
+    expect(overdue.loopQuadrant).not.toBe(overdue.initialQuadrant);
+  });
+
+  it.each([
+    [1440, 900, false, 21],
+    [1440, 900, false, 43],
+    [1440, 900, false, 91],
+    [1440, 900, true, 21],
+    [1440, 900, true, 43],
+    [1440, 900, true, 91],
+    [390, 844, false, 21],
+    [390, 844, false, 43],
+    [390, 844, false, 91],
+    [390, 844, true, 21],
+    [390, 844, true, 43],
+    [390, 844, true, 91],
+    [844, 390, false, 21],
+    [844, 390, false, 43],
+    [844, 390, false, 91],
+    [844, 390, true, 21],
+    [844, 390, true, 43],
+    [844, 390, true, 91],
+  ] as const)(
+    'draws loops in all four quadrants within five minutes (%s×%s, exclude center=%s, seed=%s)',
+    (width, height, excludeCenter, seed) => {
+      const area = getBeeTwoArea(width, height, 0, true);
+      const flight = requireFlight(
+        createBeeTwoFlight(
+          area,
+          {
+            ...settings,
+            loopSizeRatio: 0.2,
+            loopVariation: 1.9,
+            outerPaddingRatio: -0.1,
+            loopSpacingRatio: 0.75,
+            maxQuadrantSeconds: 15,
+            excludeCenter,
+          },
+          seededRandom(seed),
+        ),
+      );
+      let previous = flight.advance(0);
+      let previousQuadrant = quadrantAt(previous, area);
+      let residence = 0;
+      let longestResidence = 0;
+      let heldHeadingDistance = 0;
+      let longestHeldHeading = 0;
+      let maximumTurn = 0;
+      let maximumDistanceError = 0;
+      const loops = [0, 0, 0, 0];
+      // Five minutes at 50px/s, the current minimum speed. Count actual loop
+      // entries, not just brief crossings or a much longer distance-only run.
+      for (let index = 0; index < 30000; index++) {
+        const point = flight.advance(0.5, 0.01);
+        const quadrant = quadrantAt(point, area);
+        if (previous.phase === 'travel' && point.phase === 'loop') loops[quadrant]++;
+        residence = quadrant === previousQuadrant ? residence + 0.01 : 0;
+        longestResidence = Math.max(longestResidence, residence);
+        const turn = Math.atan2(
+          Math.sin(point.angle - previous.angle),
+          Math.cos(point.angle - previous.angle),
+        );
+        maximumTurn = Math.max(maximumTurn, Math.abs(turn));
+        // Verify accepted motion, not merely proposed turns: a new, non-axis
+        // heading must actually be held for a stretch of travel.
+        const held =
+          previous.phase === 'travel' &&
+          point.phase === 'travel' &&
+          Math.abs(turn) < 1e-6 &&
+          Math.abs(Math.sin(point.angle * 2)) > 0.12;
+        heldHeadingDistance = held ? heldHeadingDistance + 0.5 : 0;
+        longestHeldHeading = Math.max(longestHeldHeading, heldHeadingDistance);
+        maximumDistanceError = Math.max(
+          maximumDistanceError,
+          Math.abs(Math.hypot(point.x - previous.x, point.y - previous.y) - 0.5),
+        );
+        if (excludeCenter && !isSafe(point, area, -0.1))
+          throw new Error('Relocation crossed the center exclusion');
+        const marginX = -width * 0.1 + settings.clearance;
+        const marginY = -height * 0.1 + settings.clearance;
+        if (
+          point.x < marginX - 0.000001 ||
+          point.x > width - marginX + 0.000001 ||
+          point.y < marginY - 0.000001 ||
+          point.y > height - marginY + 0.000001
+        )
+          throw new Error('Relocation escaped the outer padding');
+        previousQuadrant = quadrant;
+        previous = point;
+      }
+      expect(loops.every((count) => count > 0)).toBe(true);
+      // The timer requests departure after 15s; finishing a curve and safely
+      // reaching the next quadrant adds travel time, but must not take minutes.
+      expect(longestResidence).toBeLessThan(60);
+      expect(longestHeldHeading).toBeGreaterThan(5);
+      expect(maximumTurn).toBeLessThan(0.2);
+      expect(maximumDistanceError).toBeLessThan(0.005);
+    },
+  );
 });
 
 describe('bee-two speed and fading', () => {

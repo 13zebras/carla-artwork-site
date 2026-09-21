@@ -1,6 +1,6 @@
 import { createFileRoute, notFound } from '@tanstack/react-router';
 
-import { BeeAnimation } from '@/components/BeeAnimation';
+import { BeeTwoAnimation } from '@/components/BeeTwoAnimation';
 import { Header } from '@/components/Header';
 import { Portfolio } from '@/components/Portfolio';
 import { getCategoryPage } from '@/lib/functions/artworks.functions';
@@ -26,7 +26,7 @@ function CategoryComponent() {
   return (
     <div className='relative'>
       <Header />
-      <BeeAnimation />
+      <BeeTwoAnimation />
       <Portfolio artworks={artworks} title={title} description={description} />
     </div>
   );
