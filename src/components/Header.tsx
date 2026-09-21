@@ -32,6 +32,7 @@ export function Header() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   return (
     <header
+      data-site-header
       className={cn(
         'z-20 fixed flex justify-center bg-background w-full h-44 xxs:h-42 xs:h-40 sm:h-42 xl:h-38 pb-4 xs:pb-6',
         isStaging && 'border-t-2 border-t-rose-900',

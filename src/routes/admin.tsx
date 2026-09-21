@@ -9,14 +9,12 @@ import { ExternalLink } from 'lucide-react';
 import { useState } from 'react';
 
 import { AboutPageTab } from '@/components/admin/AboutPageTab';
-import { AnimationTypeSelector } from '@/components/admin/AnimationTypeSelector';
 import { BulkImageUploadModal } from '@/components/admin/BulkImageUploadModal';
 import { BunnyStorageTab } from '@/components/admin/BunnyStorageTab';
 import { CategoriesTab } from '@/components/admin/CategoriesTab';
 import { DashboardSummary } from '@/components/admin/DashboardSummary';
 import { DatabaseRecordsTab } from '@/components/admin/DatabaseRecordsTab';
 import { DemoModeSwitch } from '@/components/admin/DemoModeSwitch';
-import { GrayscaleSwitch } from '@/components/admin/GrayscaleSwitch';
 import { ImageUploadModal } from '@/components/admin/ImageUploadModal';
 import { UploadActionButtons } from '@/components/admin/UploadActionButtons';
 import { Button } from '@/components/ui/button';
@@ -64,8 +62,7 @@ function AdminLayout() {
 
   const navigate = useNavigate();
 
-  const { dashboard, archivedCategories, demoMode, animationGrayscale, animationType, about } =
-    Route.useLoaderData();
+  const { dashboard, archivedCategories, demoMode, about } = Route.useLoaderData();
   const { activeCategories } = dashboard;
 
   const allCategories = mergeCategories(activeCategories, archivedCategories);
@@ -100,9 +97,7 @@ function AdminLayout() {
             )}
           </div>
           <nav className='flex flex-col md:flex-row flex-wrap items-center gap-1 lg:gap-3 xl:gap-4'>
-            <AnimationTypeSelector animationType={animationType} />
             <DemoModeSwitch demoMode={demoMode} />
-            <GrayscaleSwitch animationGrayscale={animationGrayscale} />
             <div className='flex items-center'>
               <Tooltip>
                 <TooltipTrigger asChild>

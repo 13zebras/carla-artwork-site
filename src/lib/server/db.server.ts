@@ -5,7 +5,7 @@ import { getServerEnv } from './env.server';
 
 type AppDatabase = Record<string, never>;
 
-const LATEST_MIGRATION = '004_animation_type.sql';
+const LATEST_MIGRATION = '005_remove_animation_settings.sql';
 
 let pool: pg.Pool | undefined;
 let db: Kysely<AppDatabase> | undefined;

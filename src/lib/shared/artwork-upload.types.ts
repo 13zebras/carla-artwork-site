@@ -1,5 +1,3 @@
-import type { AnimationType } from '@/lib/shared/site-settings.types';
-
 import type { AboutContent } from './about.types';
 import type { ArtworkRecord } from './artworks.types';
 import type { BunnyStorageFile } from './bunny.types';
@@ -19,8 +17,6 @@ export type AdminDashboardData = {
   };
   archivedCategories: ArtworkCategoryRecord[];
   demoMode: boolean;
-  animationGrayscale: boolean;
-  animationType: AnimationType;
   about: AboutContent;
 };
 

@@ -1,13 +1,9 @@
 import { sql } from 'kysely';
 
-import { type AnimationType, isAnimationType } from '@/lib/shared/site-settings.types';
-
 import { getKysely, toIsoTimestamp } from './db.server';
 
 export type SiteSettings = {
   demoMode: boolean;
-  animationGrayscale: boolean;
-  animationType: AnimationType;
   aboutText: string;
   aboutMobileImagePath: string | null;
   aboutDesktopImagePath: string | null;
@@ -17,8 +13,6 @@ export type SiteSettings = {
 
 type SiteSettingsRow = {
   demo_mode: boolean;
-  animation_grayscale: boolean;
-  animation_type: string;
   about_text: string;
   about_mobile_image_path: string | null;
   about_desktop_image_path: string | null;
@@ -27,14 +21,8 @@ type SiteSettingsRow = {
 };
 
 function toSiteSettings(row: SiteSettingsRow): SiteSettings {
-  if (!isAnimationType(row.animation_type)) {
-    throw new Error(`Unsupported animation type: ${row.animation_type}`);
-  }
-
   return {
     demoMode: row.demo_mode,
-    animationGrayscale: row.animation_grayscale,
-    animationType: row.animation_type,
     aboutText: row.about_text,
     aboutMobileImagePath: row.about_mobile_image_path,
     aboutDesktopImagePath: row.about_desktop_image_path,
@@ -45,8 +33,6 @@ function toSiteSettings(row: SiteSettingsRow): SiteSettings {
 
 const siteSettingsColumns = sql`
   demo_mode,
-  animation_grayscale,
-  animation_type,
   about_text,
   about_mobile_image_path,
   about_desktop_image_path,
@@ -75,40 +61,6 @@ export async function updateDemoMode(demoMode: boolean) {
   const { rows } = await sql`
     update site_settings
     set demo_mode = ${demoMode}, updated_at = ${updatedAt}
-    where id = 'site'
-    returning ${siteSettingsColumns}
-  `.execute(getKysely());
-
-  const row = rows[0] as SiteSettingsRow | undefined;
-  if (!row) {
-    throw new Error('Site settings are not initialized');
-  }
-
-  return toSiteSettings(row);
-}
-
-export async function updateAnimationGrayscale(animationGrayscale: boolean) {
-  const updatedAt = new Date().toISOString();
-  const { rows } = await sql`
-    update site_settings
-    set animation_grayscale = ${animationGrayscale}, updated_at = ${updatedAt}
-    where id = 'site'
-    returning ${siteSettingsColumns}
-  `.execute(getKysely());
-
-  const row = rows[0] as SiteSettingsRow | undefined;
-  if (!row) {
-    throw new Error('Site settings are not initialized');
-  }
-
-  return toSiteSettings(row);
-}
-
-export async function updateAnimationType(animationType: AnimationType) {
-  const updatedAt = new Date().toISOString();
-  const { rows } = await sql`
-    update site_settings
-    set animation_type = ${animationType}, updated_at = ${updatedAt}
     where id = 'site'
     returning ${siteSettingsColumns}
   `.execute(getKysely());

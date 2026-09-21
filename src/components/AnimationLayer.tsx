@@ -1,7 +1,5 @@
 import { type CSSProperties, useEffect, useState } from 'react';
 
-import type { AnimationType } from '@/lib/shared/site-settings.types';
-
 type CircleAppearance = {
   id: number;
   size: number;
@@ -86,8 +84,8 @@ function getRandomCircleSize() {
   return randomBetween(minCircleSize, maxCircleSize);
 }
 
-function getCircleFilter(circle: CircleAppearance, grayscale: boolean) {
-  return grayscale ? `hue-rotate(${circle.hue}deg) grayscale(1)` : `hue-rotate(${circle.hue}deg)`;
+function getCircleFilter(circle: CircleAppearance) {
+  return `hue-rotate(${circle.hue}deg)`;
 }
 
 function createRandomCircle(id: number, quadrant: Quadrant): RandomCircle {
@@ -120,7 +118,7 @@ function createBubbleUpCircle(id: number): BubbleUpCircle {
   };
 }
 
-function RandomCircleDot({ circle, grayscale }: { circle: RandomCircle; grayscale: boolean }) {
+function RandomCircleDot({ circle }: { circle: RandomCircle }) {
   const style = {
     '--top': `${circle.top}%`,
     '--left': `${circle.left}%`,
@@ -130,7 +128,7 @@ function RandomCircleDot({ circle, grayscale }: { circle: RandomCircle; grayscal
     '--drift-y': `${circle.driftY}px`,
     width: `${circle.size}px`,
     height: `${circle.size}px`,
-    filter: getCircleFilter(circle, grayscale),
+    filter: getCircleFilter(circle),
   } as CSSProperties;
 
   return (
@@ -141,13 +139,13 @@ function RandomCircleDot({ circle, grayscale }: { circle: RandomCircle; grayscal
   );
 }
 
-function BubbleUpCircleDot({ circle, grayscale }: { circle: BubbleUpCircle; grayscale: boolean }) {
+function BubbleUpCircleDot({ circle }: { circle: BubbleUpCircle }) {
   const style = {
     '--left': `${circle.left}%`,
     '--duration': `${circle.duration}ms`,
     width: `${circle.size}px`,
     height: `${circle.size}px`,
-    filter: getCircleFilter(circle, grayscale),
+    filter: getCircleFilter(circle),
   } as CSSProperties;
 
   return (
@@ -158,7 +156,7 @@ function BubbleUpCircleDot({ circle, grayscale }: { circle: BubbleUpCircle; gray
   );
 }
 
-function RandomAnimation({ grayscale }: { grayscale: boolean }) {
+export function RandomAnimation() {
   const [circles, setCircles] = useState<RandomCircle[]>([]);
 
   useEffect(() => {
@@ -223,13 +221,13 @@ function RandomAnimation({ grayscale }: { grayscale: boolean }) {
   return (
     <div aria-hidden='true' className={ANIMATION_VIEWPORT_CLASS_NAME}>
       {circles.map((circle) => (
-        <RandomCircleDot key={circle.id} circle={circle} grayscale={grayscale} />
+        <RandomCircleDot key={circle.id} circle={circle} />
       ))}
     </div>
   );
 }
 
-function BubbleUpAnimation({ grayscale }: { grayscale: boolean }) {
+function BubbleUpAnimation() {
   const [circles, setCircles] = useState<BubbleUpCircle[]>([]);
 
   useEffect(() => {
@@ -284,24 +282,13 @@ function BubbleUpAnimation({ grayscale }: { grayscale: boolean }) {
   return (
     <div aria-hidden='true' className={ANIMATION_VIEWPORT_CLASS_NAME}>
       {circles.map((circle) => (
-        <BubbleUpCircleDot key={circle.id} circle={circle} grayscale={grayscale} />
+        <BubbleUpCircleDot key={circle.id} circle={circle} />
       ))}
     </div>
   );
 }
 
-type AnimationLayerProps = {
-  animationType?: AnimationType;
-  grayscale?: boolean;
-};
-
-export function AnimationLayer({
-  animationType = 'random',
-  grayscale = false,
-}: AnimationLayerProps) {
-  if (animationType === 'bubble-up') {
-    return <BubbleUpAnimation grayscale={grayscale} />;
-  }
-
-  return <RandomAnimation grayscale={grayscale} />;
+export function AnimationLayer() {
+  // return <RandomAnimation />;
+  return <BubbleUpAnimation />;
 }

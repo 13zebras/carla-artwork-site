@@ -1,29 +1,25 @@
 import { createFileRoute } from '@tanstack/react-router';
 
-import { AnimationLayer } from '@/components/AnimationLayer';
+import { BeeAnimation } from '@/components/BeeAnimation';
 import { Header } from '@/components/Header';
 import { Portfolio } from '@/components/Portfolio';
 import { listHomeArtworks } from '@/lib/functions/artworks.functions';
-import { getAnimationSettings } from '@/lib/functions/site-settings.functions';
 
 export const Route = createFileRoute('/')({
   loader: async () => {
-    const [artworks, { animationGrayscale, animationType }] = await Promise.all([
-      listHomeArtworks(),
-      getAnimationSettings(),
-    ]);
-    return { artworks, animationGrayscale, animationType };
+    const artworks = await listHomeArtworks();
+    return { artworks };
   },
   component: Home,
 });
 
 function Home() {
-  const { artworks, animationGrayscale, animationType } = Route.useLoaderData();
+  const { artworks } = Route.useLoaderData();
 
   return (
-    <div className='relative'>
+    <div className='relative isolate'>
       <Header />
-      <AnimationLayer animationType={animationType} grayscale={animationGrayscale} />
+      <BeeAnimation />
       <Portfolio artworks={artworks} />
     </div>
   );
