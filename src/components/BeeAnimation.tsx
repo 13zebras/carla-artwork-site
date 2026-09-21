@@ -22,7 +22,7 @@ const VELOCITY_MAX = 170;
 // Time spent gradually easing from one random velocity to the next.
 const SPEED_TRANSITION_MIN_MS = 3_000;
 const SPEED_TRANSITION_MAX_MS = 7_000;
-const FADE_IN_MS = 1_000;
+const FADE_IN_MS = 8_000;
 const TRAIL_LIFETIME_MS = 30_000;
 const TRAIL_WIDTH_PX = 2;
 const TRAIL_OPACITY = 0.35;

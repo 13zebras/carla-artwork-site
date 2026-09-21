@@ -23,8 +23,8 @@ export type BeeFlightPath = {
 // 1 = compact coils; 2 = roomier coils. Keep at least 1 to avoid pinched curls.
 // Width is limited by coil spacing, not the entire viewport.
 const LOOP_SIZE = 2;
-const LOOP_SIZE_VARIATION = 0.8;
-const LOOPS_PER_CROSSING = 3; // Any positive integer.
+const LOOP_SIZE_VARIATION = 0.6;
+const LOOPS_PER_CROSSING = 5; // Any positive integer.
 const VIEWPORT_PADDING_PX = 24;
 const EDGE_MARGIN = 0.03;
 const EDGE_TURN_RADIUS = 0.12;
