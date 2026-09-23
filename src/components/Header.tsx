@@ -1,6 +1,6 @@
 import { Link, useLoaderData, useRouterState } from '@tanstack/react-router';
 import { Mail } from 'lucide-react';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 
 import { cn } from '@/lib/shared/utils';
 
@@ -32,23 +32,31 @@ export function Header() {
   const isStaging = railwayEnvironmentName === 'staging';
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const headerRef = useRef<HTMLElement>(null);
-  const [isPortfolioBehind, setIsPortfolioBehind] = useState(false);
 
   useEffect(() => {
     const header = headerRef.current;
     const portfolioContent = document.querySelector<HTMLElement>('[data-portfolio-content]');
 
-    if (!header || !portfolioContent) {
-      setIsPortfolioBehind(false);
+    if (!header) return;
+
+    if (!portfolioContent) {
+      header.removeAttribute('data-portfolio-behind');
       return;
     }
+
+    let previousOverlap: boolean | undefined;
 
     const updateOverlap = () => {
       const headerBounds = header.getBoundingClientRect();
       const contentBounds = portfolioContent.getBoundingClientRect();
-      setIsPortfolioBehind(
-        contentBounds.top < headerBounds.bottom && contentBounds.bottom > headerBounds.top,
-      );
+
+      const overlaps =
+        contentBounds.top < headerBounds.bottom && contentBounds.bottom > headerBounds.top;
+
+      if (overlaps === previousOverlap) return;
+
+      previousOverlap = overlaps;
+      header.toggleAttribute('data-portfolio-behind', overlaps);
     };
 
     updateOverlap();
@@ -58,6 +66,7 @@ export function Header() {
     return () => {
       window.removeEventListener('scroll', updateOverlap);
       window.removeEventListener('resize', updateOverlap);
+      header.removeAttribute('data-portfolio-behind');
     };
   }, [pathname]);
 
@@ -66,10 +75,8 @@ export function Header() {
       ref={headerRef}
       data-site-header
       className={cn(
-        'z-20 fixed flex justify-center w-full h-41 xs:h-36 sm:h-37 md:h-38 xl:h-33 pb-2 xl:pb-0 transition-[background-color,backdrop-filter] duration-200',
-        isPortfolioBehind
-          ? 'bg-background/80 backdrop-blur-[3px]'
-          : 'bg-background/10 backdrop-blur-[0px]',
+        'z-20 fixed flex justify-center w-full h-41 xs:h-36 sm:h-37 md:h-38 xl:h-33 pb-2 xl:pb-0',
+        'bg-background/10 backdrop-blur-[0px] data-portfolio-behind:bg-background/80 data-portfolio-behind:backdrop-blur-[3px]',
         isStaging && 'border-t-2 border-t-rose-900',
       )}
     >

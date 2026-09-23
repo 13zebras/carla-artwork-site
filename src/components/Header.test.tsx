@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 import { act, cleanup, render } from '@testing-library/react';
+import { Profiler, type ProfilerOnRenderCallback } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Header } from '@/components/Header';
@@ -60,39 +61,82 @@ describe('Header portfolio overlap', () => {
 
     expect(header?.className).toContain('bg-background/10');
     expect(header?.className).toContain('backdrop-blur-[0px]');
-    expect(header?.className).toContain('duration-100');
+    expect(header?.className).toContain('duration-200');
+    expect(header?.className).toContain('data-[portfolio-behind]:bg-background/80');
+    expect(header?.className).toContain('data-[portfolio-behind]:backdrop-blur-[3px]');
+    expect(header?.hasAttribute('data-portfolio-behind')).toBe(false);
 
     contentTop = 99;
     act(() => window.dispatchEvent(new Event('scroll')));
-    expect(header?.className).toContain('bg-background/80');
-    expect(header?.className).toContain('backdrop-blur-[3px]');
+    expect(header?.hasAttribute('data-portfolio-behind')).toBe(true);
 
     contentTop = -200;
     contentBottom = 0;
     act(() => window.dispatchEvent(new Event('scroll')));
-    expect(header?.className).toContain('bg-background/10');
-    expect(header?.className).toContain('backdrop-blur-[0px]');
+    expect(header?.hasAttribute('data-portfolio-behind')).toBe(false);
 
     contentTop = 100;
     contentBottom = 1000;
     act(() => window.dispatchEvent(new Event('scroll')));
-    expect(header?.className).toContain('bg-background/10');
+    expect(header?.hasAttribute('data-portfolio-behind')).toBe(false);
 
     headerBottom = 150;
     act(() => window.dispatchEvent(new Event('resize')));
-    expect(header?.className).toContain('bg-background/80');
+    expect(header?.hasAttribute('data-portfolio-behind')).toBe(true);
   });
 
   it('resets when navigating away from a portfolio', () => {
     contentTop = 50;
     const { container, rerender } = render(<Header />);
     const header = container.querySelector('[data-site-header]');
-    expect(header?.className).toContain('bg-background/80');
+    expect(header?.hasAttribute('data-portfolio-behind')).toBe(true);
 
     content.remove();
     pathname = '/about';
     rerender(<Header />);
-    expect(header?.className).toContain('bg-background/10');
-    expect(header?.className).toContain('backdrop-blur-[0px]');
+    expect(header?.hasAttribute('data-portfolio-behind')).toBe(false);
+
+    act(() => window.dispatchEvent(new Event('scroll')));
+    expect(header?.hasAttribute('data-portfolio-behind')).toBe(false);
+  });
+
+  it('updates synchronously without React commits or redundant attribute writes', () => {
+    const onRender = vi.fn<ProfilerOnRenderCallback>();
+    const { getByRole } = render(
+      <Profiler id='header' onRender={onRender}>
+        <Header />
+      </Profiler>,
+    );
+    const header = getByRole('banner');
+    const toggleAttribute = vi.spyOn(header, 'toggleAttribute');
+    onRender.mockClear();
+
+    contentTop = 99;
+    act(() => {
+      window.dispatchEvent(new Event('scroll'));
+      expect(header.hasAttribute('data-portfolio-behind')).toBe(true);
+    });
+
+    contentTop = 50;
+    act(() => window.dispatchEvent(new Event('scroll')));
+    act(() => window.dispatchEvent(new Event('resize')));
+
+    expect(toggleAttribute).toHaveBeenCalledTimes(1);
+    expect(onRender).not.toHaveBeenCalled();
+  });
+
+  it('removes the attribute and listeners on unmount', () => {
+    contentTop = 50;
+    const { getByRole, unmount } = render(<Header />);
+    const header = getByRole('banner');
+    expect(header.hasAttribute('data-portfolio-behind')).toBe(true);
+
+    unmount();
+    expect(header.hasAttribute('data-portfolio-behind')).toBe(false);
+
+    const toggleAttribute = vi.spyOn(header, 'toggleAttribute');
+    act(() => window.dispatchEvent(new Event('scroll')));
+    act(() => window.dispatchEvent(new Event('resize')));
+    expect(toggleAttribute).not.toHaveBeenCalled();
   });
 });
