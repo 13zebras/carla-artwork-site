@@ -150,18 +150,18 @@ describe('BeeAnimation', () => {
     expect(frames.size).toBe(1);
   });
 
-  it('fades the bee and trail in over the first second without restarting on resize', () => {
+  it('fades the bee and trail in over eight seconds without restarting on resize', () => {
     const { container } = render(<BeeAnimation />);
     const viewport = container.firstElementChild as HTMLDivElement;
     expect(viewport.classList.contains('opacity-0')).toBe(true);
     advanceFrame(100);
     expect(viewport.style.opacity).toBe('0');
     advanceFrame(600);
-    expect(viewport.style.opacity).toBe('0.5');
+    expect(viewport.style.opacity).toBe('0.0625');
     act(() => resize());
     advanceFrame(1100);
-    expect(viewport.style.opacity).toBe('1');
-    advanceFrame(2100);
+    expect(viewport.style.opacity).toBe('0.125');
+    advanceFrame(8100);
     expect(viewport.style.opacity).toBe('1');
   });
 
@@ -299,7 +299,7 @@ describe('BeeAnimation', () => {
     context.moveTo.mockClear();
     advanceFrame(60_000);
     expect(bee.style.transform).toBe(beforePause);
-    expect(viewport.style.opacity).toBe('0.1');
+    expect(viewport.style.opacity).toBe('0.0125');
     // Only the new head remains; no connecting line to the expired trail.
     expect(context.moveTo).toHaveBeenCalledTimes(1);
   });

@@ -136,11 +136,55 @@ describe('BeeTwoAnimation', () => {
         { width: 1000, height: usesFullViewport ? 800 : 640, top: usesFullViewport ? 0 : 160 },
         expect.objectContaining({
           excludeCenter: !aboveContent,
-          maxQuadrantSeconds: 15,
-          minTurnDegrees: 5,
-          maxTurnDegrees: 12,
+          maxQuadrantSeconds: 7,
+          minTurnDegrees: 30,
+          maxTurnDegrees: 60,
         }),
       );
+    },
+  );
+
+  it.each([
+    [559, 'compact', 0.12],
+    [560, 'wide', 0.06],
+    [561, 'wide', 0.06],
+  ] as const)(
+    'launches at the %s px logo position (%s)',
+    (width, logoType, horizontalRatio) => {
+      const wideLogo = document.createElement('img');
+      wideLogo.dataset.beeLogo = 'wide';
+      const compactLogo = document.createElement('img');
+      compactLogo.dataset.beeLogo = 'compact';
+      header.append(wideLogo, compactLogo);
+      let logoLeft = 80;
+      const logoTop = 20;
+      const logoWidth = 300;
+      const logoHeight = 70;
+      const chosenLogo = logoType === 'wide' ? wideLogo : compactLogo;
+      vi.spyOn(chosenLogo, 'getBoundingClientRect').mockImplementation(
+        () =>
+          ({ left: logoLeft, top: logoTop, width: logoWidth, height: logoHeight }) as DOMRect,
+      );
+      vi.stubGlobal('innerWidth', width);
+      const createFlight = vi.spyOn(beeTwoGeometry, 'createBeeTwoFlight');
+      const { container } = render(<BeeTwoAnimation />);
+      const start = { x: logoLeft + logoWidth * horizontalRatio, y: logoTop + logoHeight / 2 };
+      expect(createFlight).toHaveBeenLastCalledWith(
+        expect.anything(),
+        expect.objectContaining({ initialPoint: start }),
+      );
+      const bee = container.querySelector('canvas + div') as HTMLDivElement;
+      tick(0);
+      expect(bee.style.transform).toContain(`translate(${start.x}px, ${start.y}px)`);
+
+      logoLeft += 25;
+      act(() => resizeObservers[0].callback([], resizeObservers[0] as unknown as ResizeObserver));
+      expect(createFlight).toHaveBeenLastCalledWith(
+        expect.anything(),
+        expect.objectContaining({ initialPoint: { ...start, x: start.x + 25 } }),
+      );
+      tick(100);
+      expect(bee.style.transform).toContain(`translate(${start.x + 25}px, ${start.y}px)`);
     },
   );
 
@@ -168,20 +212,36 @@ describe('BeeTwoAnimation', () => {
     expect(advance).toHaveBeenLastCalledWith(0, 0);
   });
 
-  it('fades in gradually and draws a trail without per-frame renders', () => {
+  it('positions the bee before its first frame and draws a trail without per-frame renders', () => {
     const { container } = render(<BeeTwoAnimation />);
     const bee = container.querySelector('canvas + div') as HTMLDivElement;
-    tick(0);
-    expect(bee.style.opacity).toBe('0');
     const initialTransform = bee.style.transform;
-    for (let time = 100; time <= 1200; time += 100) tick(time);
-    expect(Number(bee.style.opacity)).toBeGreaterThan(0);
-    expect(Number(bee.style.opacity)).toBeLessThan(1);
+    expect(initialTransform).toContain('translate(');
+    for (let time = 0; time <= 1200; time += 100) tick(time);
     expect(bee.style.transform).not.toBe(initialTransform);
     expect(context.stroke).toHaveBeenCalled();
-    for (let time = 1300; time <= 4100; time += 100) tick(time);
-    expect(bee.style.opacity).toBe('1');
     expect(frames.size).toBe(1);
+  });
+
+  it('draws uniform dashes across trail sample boundaries', () => {
+    let distance = 0;
+    vi.spyOn(beeTwoGeometry, 'createBeeTwoSpeed').mockReturnValue({ advance: () => 70 });
+    vi.spyOn(beeTwoGeometry, 'createBeeTwoFlight').mockReturnValue({
+      advance: (step) => {
+        distance += step;
+        return { x: distance, y: 100, angle: 0, phase: 'travel' };
+      },
+    });
+    render(<BeeTwoAnimation />);
+    for (let time = 0; time <= 400; time += 100) tick(time);
+    context.moveTo.mockClear();
+    context.lineTo.mockClear();
+    context.stroke.mockClear();
+    tick(500);
+
+    expect(context.moveTo.mock.calls).toEqual([[0, 100], [32, 100]]);
+    expect(context.lineTo.mock.calls.at(-1)).toEqual([35, 100]);
+    expect(context.stroke).toHaveBeenCalledTimes(2);
   });
 
   it('recalculates the container after header and viewport changes', () => {
@@ -248,13 +308,14 @@ describe('BeeTwoAnimation', () => {
       document.dispatchEvent(new Event('visibilitychange'));
     });
     context.stroke.mockClear();
-    // Resume after the configured 50-second trail lifetime has expired.
-    tick(60000);
+    // Resume after the configured 90-second trail lifetime has expired.
+    tick(100000);
     expect(bee.style.transform).toBe(previousTransform);
     expect(context.stroke).not.toHaveBeenCalled();
-    tick(60100);
+    tick(100100);
     expect(bee.style.transform).not.toBe(previousTransform);
-    expect(context.stroke).toHaveBeenCalledTimes(1);
+    // The new short trail can contain multiple independent dashes.
+    expect(context.stroke).toHaveBeenCalled();
   });
 
   it('cleans up frames and listeners, including Strict Mode setup/cleanup', () => {

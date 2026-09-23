@@ -17,14 +17,15 @@ type FlightSettings = {
   maxTurnDegrees?: number;
   excludeCenter?: boolean;
   clearance: number;
+  initialPoint?: BeeTwoPoint;
 };
 type Radii = { x: number; y: number };
 
 const TAU = Math.PI * 2;
 // Keep distance-based speed accurate even on large, viewport-spanning curves.
 const CURVE_SAMPLES = 720;
-// Centered exclusion: 40–60vw across the full-width container, and 40–60% of its height.
-const CENTER_MIN_RATIO = 0.4;
+// Centered exclusion: 30–70vw across the full-width container, and 30–70% of its height.
+const CENTER_MIN_RATIO = 0.3;
 const CENTER_MAX_RATIO = 1 - CENTER_MIN_RATIO;
 
 export function getBeeTwoArea(
@@ -43,7 +44,12 @@ export function beeTwoEase(value: number): number {
 }
 
 export function beeTwoTrailOpacity(ageSeconds: number, lifetimeSeconds: number): number {
-  return 1 - Math.max(0, Math.min(1, ageSeconds / lifetimeSeconds));
+  // Full opacity holds for the first half of the lifetime, then fades linearly
+  // to zero across the second half instead of fading uniformly throughout.
+  const fadeStart = lifetimeSeconds / 2;
+  if (ageSeconds <= fadeStart) return 1;
+  const fade = (ageSeconds - fadeStart) / (lifetimeSeconds - fadeStart);
+  return 1 - Math.max(0, Math.min(1, fade));
 }
 
 /** A rounded rectangular guide, travelled at constant distance per revolution. */
@@ -118,7 +124,13 @@ function createGuide(
     }
   }
 
-  return { point, perimeter };
+  function leftEdgeProgress(y: number): number {
+    const leftEdgeStart = lengths.slice(0, 6).reduce((sum, length) => sum + length, 0);
+    const targetY = Math.max(top + radius, Math.min(bottom - radius, y));
+    return (leftEdgeStart + bottom - radius - targetY) / perimeter;
+  }
+
+  return { point, perimeter, leftEdgeProgress };
 }
 
 /**
@@ -139,7 +151,7 @@ export function createBeeTwoFlight(
   const paddingRatio = settings.outerPaddingRatio;
   // At a rounded corner, at least one axis is this close to its straight strip.
   const cornerInset = smallerSide * 0.055 * (1 - Math.SQRT1_2);
-  // The central exclusion leaves a 40% flight band along each container edge.
+  // The central exclusion leaves a 30% flight band along each container edge.
   const availableBand = smallerSide * (CENTER_MIN_RATIO - paddingRatio);
   const maximumRadius = excludeCenter
     ? (availableBand - cornerInset) / 2 - settings.clearance
@@ -487,16 +499,50 @@ export function createBeeTwoFlight(
     });
   }
 
-  const progress = random();
+  const progress = settings.initialPoint ? 0 : random();
   const depth = random() * intensity;
-  let segment = travelSegment({
-    progress,
+  const firstProgress = settings.initialPoint
+    ? guideAt(depth).leftEdgeProgress(settings.initialPoint.y + Math.min(100, area.height * 0.15))
+    : progress;
+  const firstGuideDirection = settings.initialPoint ? -1 : initialGuideDirection;
+  const firstAnchor: Anchor = {
+    progress: firstProgress,
     depth,
     radii: randomRadii(),
-    angle: loopAngle(progress, depth, initialDirection, initialGuideDirection),
+    angle: loopAngle(firstProgress, depth, initialDirection, firstGuideDirection),
     direction: initialDirection,
-    guideDirection: initialGuideDirection,
-  });
+    guideDirection: firstGuideDirection,
+  };
+  let segment: Segment;
+  if (settings.initialPoint) {
+    const start = settings.initialPoint;
+    const end = anchorPoint(firstAnchor);
+    const dx = end.x - start.x;
+    const dy = end.y - start.y;
+    const handle = Math.max(1, Math.min(Math.hypot(dx, dy) / 3, area.height * 0.1));
+    const tangent = guideTangent(firstAnchor);
+    // The icon's 0° points up; its first heading is 140–220° (downward).
+    const heading = ((50 + random() * 80) * Math.PI) / 180;
+    const p1 = {
+      x: start.x + Math.cos(heading) * handle,
+      y: start.y + Math.sin(heading) * handle,
+    };
+    const p2 = { x: end.x - tangent.x * handle, y: end.y - tangent.y * handle };
+    segment = measureSegment(
+      'travel',
+      firstAnchor,
+      (t) => {
+        const u = 1 - t;
+        return {
+          x: u ** 3 * start.x + 3 * u * u * t * p1.x + 3 * u * t * t * p2.x + t ** 3 * end.x,
+          y: u ** 3 * start.y + 3 * u * u * t * p1.y + 3 * u * t * t * p2.y + t ** 3 * end.y,
+        };
+      },
+      'travel',
+    );
+  } else {
+    segment = travelSegment(firstAnchor);
+  }
   let distanceInSegment = 0;
 
   // Motion uses distance; exploration uses active seconds. Omitting seconds

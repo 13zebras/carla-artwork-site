@@ -26,7 +26,7 @@ export function ArtworkNavMenu({ categories }: ArtworkNavMenuProps) {
         <NavigationMenuItem>
           <NavigationMenuTrigger
             className={cn(
-              'data-[state=open]:bg-transparent data-[state=open]:hover:bg-transparent data-[state=open]:focus:bg-transparent focus:bg-transparent h-auto data-[state=open]:text-foreground focus:text-foreground',
+              'data-[state=open]:bg-transparent data-[state=open]:hover:bg-brand-200/80 data-[state=open]:dark:hover:bg-brand-700/80 data-[state=open]:focus:bg-transparent focus:bg-transparent h-auto data-[state=open]:text-foreground focus:text-foreground',
               linkClassName,
             )}
           >
@@ -43,7 +43,7 @@ export function ArtworkNavMenu({ categories }: ArtworkNavMenuProps) {
                       {isActive ? (
                         <span
                           aria-current='page'
-                          className={cn(linkClassName, activeLinkClassName)}
+                          className={cn(linkClassName, activeLinkClassName, 'items-start')}
                         >
                           {label}
                         </span>
@@ -51,7 +51,7 @@ export function ArtworkNavMenu({ categories }: ArtworkNavMenuProps) {
                         <Link
                           to='/category/$category'
                           params={{ category: categorySlug }}
-                          className={cn(linkClassName, 'transition-colors')}
+                          className={cn(linkClassName, 'items-start')}
                         >
                           {label}
                         </Link>

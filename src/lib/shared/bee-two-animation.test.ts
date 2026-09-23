@@ -40,14 +40,38 @@ function isSafe(point: BeeTwoPoint, area: BeeTwoArea, paddingRatio = settings.ou
     point.y >= marginY - 0.000001 &&
     point.y <= area.height - marginY + 0.000001;
   const outsideCenter =
-    point.x + clearance <= area.width * 0.4 ||
-    point.x - clearance >= area.width * 0.6 ||
-    point.y + clearance <= area.height * 0.4 ||
-    point.y - clearance >= area.height * 0.6;
+    point.x + clearance <= area.width * 0.3 ||
+    point.x - clearance >= area.width * 0.7 ||
+    point.y + clearance <= area.height * 0.3 ||
+    point.y - clearance >= area.height * 0.7;
   return insideContainer && outsideCenter;
 }
 
 describe('bee-two container geometry', () => {
+  it('starts exactly at a supplied point and joins its ordinary flight continuously', () => {
+    const area = getBeeTwoArea(1000, 800, 160, true);
+    const initialPoint = { x: 120, y: 60 };
+    const flight = requireFlight(
+      createBeeTwoFlight(area, { ...settings, initialPoint }, seededRandom(97)),
+    );
+    let previous = flight.advance(0);
+    expect(previous).toMatchObject(initialPoint);
+    const heading = ((previous.angle + Math.PI / 2) * 180) / Math.PI;
+    expect(heading).toBeGreaterThanOrEqual(140);
+    expect(heading).toBeLessThanOrEqual(220);
+    let reachedLoop = false;
+    let movedDownward = true;
+    for (let index = 0; index < 1000; index++) {
+      const pose = flight.advance(2);
+      expect(Math.hypot(pose.x - previous.x, pose.y - previous.y)).toBeLessThanOrEqual(2.01);
+      if (index < 10 && pose.y <= previous.y) movedDownward = false;
+      if (pose.phase === 'loop') reachedLoop = true;
+      previous = pose;
+    }
+    expect(movedDownward).toBe(true);
+    expect(reachedLoop).toBe(true);
+  });
+
   it('uses the full viewport only when requested', () => {
     expect(getBeeTwoArea(1200, 900, 180, true)).toEqual({ width: 1200, height: 900, top: 0 });
   });
@@ -74,9 +98,9 @@ describe('bee-two container geometry', () => {
       const area = getBeeTwoArea(w, h, header, full);
       const flight = requireFlight(createBeeTwoFlight(area, settings, seededRandom(97)));
       const visited = { top: false, right: false, bottom: false, left: false };
-      // Enough distance for multiple circuits, including all rounded corners and joins.
+      // Active time triggers quadrant exploration as it does in the component.
       for (let index = 0; index < 20000; index++) {
-        const point = flight.advance(4);
+        const point = flight.advance(4, 0.04);
         if (!isSafe(point, area))
           throw new Error(`Unsafe bee-two position: ${JSON.stringify(point)}`);
         if (point.y < area.height * 0.4) visited.top = true;
@@ -84,11 +108,11 @@ describe('bee-two container geometry', () => {
         if (point.y > area.height * 0.6) visited.bottom = true;
         if (point.x < area.width * 0.4) visited.left = true;
       }
-      expect(Object.values(visited).every(Boolean)).toBe(true);
+      expect(visited).toEqual({ top: true, right: true, bottom: true, left: true });
     },
   );
 
-  it.each([-0.15, -0.05, 0, 0.02, 0.08, 0.15, 0.25])(
+  it.each([-0.15, -0.05, 0, 0.02, 0.08, 0.15, 0.2])(
     'honors an adjustable outer margin of %s',
     (outerPaddingRatio) => {
       const area = getBeeTwoArea(1200, 800, 160, false);
@@ -166,33 +190,20 @@ describe('bee-two container geometry', () => {
     },
   );
 
-  it.each([true, false])('uses the newly opened inner band (full viewport=%s)', (fullViewport) => {
+  it.each([true, false])('respects the expanded central exclusion (full viewport=%s)', (fullViewport) => {
     const area = getBeeTwoArea(1000, 900, 160, fullViewport);
     const flight = requireFlight(
-      createBeeTwoFlight(
-        area,
-        {
-          ...settings,
-          travelIntensity: 1,
-        },
-        seededRandom(43),
-      ),
+      createBeeTwoFlight(area, { ...settings, travelIntensity: 1 }, seededRandom(43)),
     );
-    let enteredFormerExclusion = false;
+    let unsafePoint: BeeTwoPoint | undefined;
     for (let index = 0; index < 20000; index++) {
       const point = flight.advance(4);
-      if (!isSafe(point, area)) throw new Error('Bee entered the new 40–60% exclusion');
-      // Prove it can enter space that was forbidden by the previous 33–66% rectangle.
-      if (
-        point.x > area.width * 0.33 &&
-        point.x < area.width * 0.66 &&
-        point.y > area.height * 0.33 &&
-        point.y < area.height * 0.66
-      ) {
-        enteredFormerExclusion = true;
+      if (!isSafe(point, area)) {
+        unsafePoint = point;
+        break;
       }
     }
-    expect(enteredFormerExclusion).toBe(true);
+    expect(unsafePoint).toBeUndefined();
   });
 
   it.each([
@@ -251,6 +262,7 @@ describe('bee-two container geometry', () => {
 
   it('declines padding that leaves no room for loops', () => {
     const area = getBeeTwoArea(1200, 800, 160, false);
+    expect(createBeeTwoFlight(area, { ...settings, outerPaddingRatio: 0.25 })).toBeNull();
     expect(createBeeTwoFlight(area, { ...settings, outerPaddingRatio: 0.4 })).toBeNull();
   });
 
@@ -775,10 +787,11 @@ describe('bee-two speed and fading', () => {
     expect(createBeeTwoSpeed(40, 40, 1, 2).advance(100)).toBe(40);
   });
 
-  it('fades each trail segment according to its own age over exactly 20 seconds', () => {
+  it('holds full trail opacity for half the lifetime, then fades to zero by the end', () => {
     expect(beeTwoTrailOpacity(0, 20)).toBe(1);
-    expect(beeTwoTrailOpacity(5, 20)).toBe(0.75);
-    expect(beeTwoTrailOpacity(10, 20)).toBe(0.5);
+    expect(beeTwoTrailOpacity(10, 20)).toBe(1);
+    expect(beeTwoTrailOpacity(10.01, 20)).toBeLessThan(1);
+    expect(beeTwoTrailOpacity(15, 20)).toBeCloseTo(0.5);
     expect(beeTwoTrailOpacity(19.99, 20)).toBeGreaterThan(0);
     expect(beeTwoTrailOpacity(20, 20)).toBe(0);
     expect(beeTwoTrailOpacity(50, 20)).toBe(0);

@@ -2,17 +2,17 @@ import { Bug } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 
 import {
-  beeTwoEase,
   beeTwoTrailOpacity,
   createBeeTwoFlight,
   createBeeTwoSpeed,
   getBeeTwoArea,
 } from '@/lib/shared/bee-two-animation';
-import type { BeeTwoPoint } from '@/lib/shared/bee-two-animation';
+import type { BeeTwoPoint, BeeTwoPose } from '@/lib/shared/bee-two-animation';
+import { cn } from '@/lib/shared/utils';
 
 // Above-content mode removes the central exclusion and always uses the full viewport.
 // FULL_VIEWPORT controls header exclusion only when flying behind the content.
-const ABOVE_CONTENT = true;
+const ABOVE_CONTENT = false;
 const FULL_VIEWPORT = true;
 
 // Outer margin relative to container width/height: 0.02 = 2% inward; 0 = no extra gap.
@@ -22,37 +22,45 @@ const OUTER_PADDING_RATIO = -0.08;
 
 // 0 = minimal connectors; 1 = full inward/outward wandering and longer travel.
 // Higher intensity reserves more of the border for travel by fitting loops smaller.
-const TRAVEL_INTENSITY = 0.8;
+const TRAVEL_INTENSITY = 0.9;
 
 // Distance between single-loop stops: 1 = original spacing; lower = more frequent loops.
 // This shortens travel without changing speed, loop size, or inward/outward range.
-const LOOP_SPACING_RATIO = 0.75;
+const LOOP_SPACING_RATIO = 0.6;
 
 // Active seconds spent in a quadrant before moving to a less-recently visited one.
 // Finish the current curve, then travel without local loops until arrival.
-const MAX_QUADRANT_SECONDS = 12;
+const MAX_QUADRANT_SECONDS = 7;
 
 // Degrees for each of the two gradual, randomly left/right quadrant-travel turns.
-const MIN_TURN = 20;
-const MAX_TURN = 45;
+const MIN_TURN = 40;
+const MAX_TURN = 60;
 
 // Base loop diameter / smaller CONTAINER dimension. Large values are fitted to the border.
 const LOOP_SIZE_RATIO = 0.15;
-const LOOP_SIZE_VARIATION = 2.0;
-const MIN_SPEED_PX_PER_SECOND = 50;
-const MAX_SPEED_PX_PER_SECOND = 200;
-const MIN_SPEED_CHANGE_SECONDS = 30;
-const MAX_SPEED_CHANGE_SECONDS = 70;
-const FADE_IN_SECONDS = 6;
-const TRAIL_LIFETIME_SECONDS = 20;
+const LOOP_SIZE_VARIATION = 2.2;
+const MIN_SPEED_PX_PER_SECOND = 30;
+const MAX_SPEED_PX_PER_SECOND = 80;
+const MIN_SPEED_CHANGE_SECONDS = 3;
+const MAX_SPEED_CHANGE_SECONDS = 6;
+const TRAIL_LIFETIME_SECONDS = 90;
 const TRAIL_SAMPLES_PER_SECOND = 30;
-const TRAIL_OPACITY = 0.35;
+const TRAIL_OPACITY = 0.9;
 const TRAIL_WIDTH = 2;
 const MAX_TRAIL_SAMPLES = Math.ceil(TRAIL_LIFETIME_SECONDS * TRAIL_SAMPLES_PER_SECOND) + 2;
+const beeColor = 'text-neutral-950 dark:text-neutral-50';
+const trailColor = 'text-neutral-950 dark:text-neutral-50';
+
+const TRAIL_DASH_LENGTH = 8;
+const TRAIL_GAP_LENGTH = 10;
+const XS_BREAKPOINT_PX = 560;
 
 // Optional overrides also let tests exercise all four switch combinations.
 type BeeTwoAnimationProps = { aboveContent?: boolean; fullViewport?: boolean };
-type TrailPoint = BeeTwoPoint & { created: number; opacity: number };
+type TrailPoint = BeeTwoPoint & {
+  created: number;
+  distance: number;
+};
 
 export function BeeTwoAnimation({
   aboveContent = ABOVE_CONTENT,
@@ -74,6 +82,8 @@ export function BeeTwoAnimation({
     if (!context) return;
 
     const header = document.querySelector<HTMLElement>('[data-site-header]');
+    const wideLogo = document.querySelector<HTMLElement>('[data-bee-logo="wide"]');
+    const compactLogo = document.querySelector<HTMLElement>('[data-bee-logo="compact"]');
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
     const speed = createBeeTwoSpeed(
       MIN_SPEED_PX_PER_SECOND,
@@ -83,15 +93,18 @@ export function BeeTwoAnimation({
     );
     let flight: ReturnType<typeof createBeeTwoFlight> = null;
     let area = getBeeTwoArea(0, 0, 0, usesFullViewport);
+    let initialPoint: BeeTwoPoint | undefined;
     let pixelRatio = 0;
     let frame: number | null = null;
     let previousTime: number | null = null;
-    let activeSeconds = 0;
     let lastSampleTime = -Infinity;
     let trail: TrailPoint[] = [];
     let color = getComputedStyle(viewport).color;
 
     const adjustedTrailOpacity = aboveContent ? TRAIL_OPACITY : TRAIL_OPACITY * 0.5;
+    const positionBee = (pose: BeeTwoPose) => {
+      bee.style.transform = `translate(${pose.x}px, ${pose.y}px) translate(-50%, -50%) rotate(${pose.angle + Math.PI / 2}rad)`;
+    };
 
     const paintTrail = (now: number) => {
       context.clearRect(0, 0, area.width, area.height);
@@ -101,17 +114,44 @@ export function BeeTwoAnimation({
       context.lineWidth = TRAIL_WIDTH;
       context.lineCap = 'butt';
       context.lineJoin = 'round';
-      // context.lineCap = 'round';
-      for (let index = 1; index < trail.length; index++) {
-        const start = trail[index - 1];
-        const end = trail[index];
-        context.globalAlpha =
-          adjustedTrailOpacity *
-          end.opacity *
-          beeTwoTrailOpacity(now - end.created, TRAIL_LIFETIME_SECONDS);
+      const period = TRAIL_DASH_LENGTH + TRAIL_GAP_LENGTH;
+      const first = trail[0];
+      const last = trail[trail.length - 1];
+      if (!first || !last) return;
+
+      // Build each dash as one path across sample boundaries. Restarting Canvas's
+      // dashed stroke for every short sample produces uneven, broken dashes.
+      let index = 0;
+      const pointAt = (distance: number) => {
+        const start = trail[index];
+        const end = trail[index + 1];
+        const fraction = (distance - start.distance) / (end.distance - start.distance);
+        return {
+          x: start.x + (end.x - start.x) * fraction,
+          y: start.y + (end.y - start.y) * fraction,
+          created: start.created + (end.created - start.created) * fraction,
+        };
+      };
+      for (
+        let dashStart = Math.floor(first.distance / period) * period;
+        dashStart < last.distance;
+        dashStart += period
+      ) {
+        const visibleStart = Math.max(first.distance, dashStart);
+        const visibleEnd = Math.min(last.distance, dashStart + TRAIL_DASH_LENGTH);
+        if (visibleEnd <= visibleStart) continue;
+        while (index < trail.length - 2 && trail[index + 1].distance <= visibleStart) index++;
+        const start = pointAt(visibleStart);
         context.beginPath();
         context.moveTo(start.x, start.y);
+        while (index < trail.length - 2 && trail[index + 1].distance < visibleEnd) {
+          index++;
+          context.lineTo(trail[index].x, trail[index].y);
+        }
+        const end = pointAt(visibleEnd);
         context.lineTo(end.x, end.y);
+        context.globalAlpha =
+          adjustedTrailOpacity * beeTwoTrailOpacity(now - end.created, TRAIL_LIFETIME_SECONDS);
         context.stroke();
       }
       context.globalAlpha = 1;
@@ -124,22 +164,23 @@ export function BeeTwoAnimation({
       let seconds = 0;
       if (previousTime !== null) seconds = Math.min(0.1, Math.max(0, now - previousTime));
       previousTime = now;
-      activeSeconds += seconds;
 
       // Trapezoidal integration keeps travelled distance stable across frame rates.
       const startSpeed = speed.advance(0);
       const endSpeed = speed.advance(seconds);
       const pose = flight.advance(((startSpeed + endSpeed) / 2) * seconds, seconds);
-      const opacity = beeTwoEase(activeSeconds / FADE_IN_SECONDS);
-      bee.style.opacity = String(opacity);
-      bee.style.transform = `translate(${pose.x}px, ${pose.y}px) translate(-50%, -50%) rotate(${pose.angle + Math.PI / 2}rad)`;
+      positionBee(pose);
 
       if (now - lastSampleTime >= 1 / TRAIL_SAMPLES_PER_SECOND) {
         // Do not connect a fresh sample to a completely expired trail after a pause.
         if (trail.length && now - trail[trail.length - 1].created >= TRAIL_LIFETIME_SECONDS) {
           trail = [];
         }
-        trail.push({ x: pose.x, y: pose.y, created: now, opacity });
+        const previous = trail[trail.length - 1];
+        const distance = previous
+          ? previous.distance + Math.hypot(pose.x - previous.x, pose.y - previous.y)
+          : 0;
+        trail.push({ x: pose.x, y: pose.y, created: now, distance });
         if (trail.length > MAX_TRAIL_SAMPLES) trail.shift();
         lastSampleTime = now;
       }
@@ -154,13 +195,10 @@ export function BeeTwoAnimation({
       if (reducedMotion.matches || !flight) {
         viewport.style.visibility = 'hidden';
         trail = [];
-        activeSeconds = 0;
-        bee.style.opacity = '0';
         context.clearRect(0, 0, area.width, area.height);
         return;
       }
       viewport.style.visibility = 'visible';
-      viewport.style.opacity = '1';
       if (document.hidden) return;
       frame = requestAnimationFrame(animate);
     };
@@ -174,16 +212,29 @@ export function BeeTwoAnimation({
         usesFullViewport,
       );
       const nextPixelRatio = window.devicePixelRatio || 1;
+      const isWide = window.innerWidth >= XS_BREAKPOINT_PX;
+      const logo = isWide ? wideLogo : compactLogo;
+      const logoBounds = logo?.getBoundingClientRect();
+      const nextInitialPoint =
+        usesFullViewport && logoBounds
+          ? {
+              x: logoBounds.left + logoBounds.width * (isWide ? 0.06 : 0.12),
+              y: logoBounds.top + logoBounds.height * 0.5 - next.top,
+            }
+          : undefined;
       if (
         next.width === area.width &&
         next.height === area.height &&
         next.top === area.top &&
-        nextPixelRatio === pixelRatio
+        nextPixelRatio === pixelRatio &&
+        nextInitialPoint?.x === initialPoint?.x &&
+        nextInitialPoint?.y === initialPoint?.y
       ) {
         return;
       }
       area = next;
       pixelRatio = nextPixelRatio;
+      initialPoint = nextInitialPoint;
       viewport.style.top = `${area.top}px`;
       canvas.width = Math.round(area.width * pixelRatio);
       canvas.height = Math.round(area.height * pixelRatio);
@@ -206,16 +257,18 @@ export function BeeTwoAnimation({
         maxTurnDegrees: MAX_TURN,
         excludeCenter: !aboveContent,
         clearance,
+        initialPoint,
       });
       trail = [];
       lastSampleTime = -Infinity;
-      activeSeconds = 0;
-      bee.style.opacity = '0';
+      if (flight) positionBee(flight.advance(0));
       syncActivity();
     };
 
     const headerObserver = new ResizeObserver(measure);
     if (header && !usesFullViewport) headerObserver.observe(header);
+    if (usesFullViewport && wideLogo) headerObserver.observe(wideLogo);
+    if (usesFullViewport && compactLogo) headerObserver.observe(compactLogo);
     const themeObserver = new MutationObserver(() => {
       color = getComputedStyle(viewport).color;
     });
@@ -236,7 +289,6 @@ export function BeeTwoAnimation({
       document.removeEventListener('visibilitychange', syncActivity);
       window.removeEventListener('resize', measure);
       viewport.style.visibility = 'hidden';
-      viewport.style.opacity = '0';
     };
   }, [usesFullViewport, aboveContent]);
 
@@ -244,11 +296,16 @@ export function BeeTwoAnimation({
     <div
       ref={viewportRef}
       aria-hidden='true'
-      className={`bee-animation pointer-events-none invisible opacity-0 fixed inset-x-0 bottom-0 ${topClasses} ${layerClass} overflow-hidden text-stone-700 dark:text-stone-300`}
+      className={cn(
+        'bee-animation pointer-events-none invisible fixed inset-x-0 bottom-0 overflow-hidden',
+        trailColor,
+        topClasses,
+        layerClass,
+      )}
     >
       <canvas ref={canvasRef} aria-hidden='true' className='absolute inset-0 size-full' />
-      <div ref={beeRef} className='absolute top-0 left-0 size-4 will-change-transform'>
-        <Bug className='size-full' />
+      <div ref={beeRef} className='absolute top-0 left-0 size-5 will-change-transform'>
+        <Bug className={cn('size-full', beeColor)} />
       </div>
     </div>
   );

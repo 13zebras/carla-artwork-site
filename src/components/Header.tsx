@@ -1,5 +1,6 @@
 import { Link, useLoaderData, useRouterState } from '@tanstack/react-router';
-import type { ReactNode } from 'react';
+import { Mail } from 'lucide-react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 
 import { cn } from '@/lib/shared/utils';
 
@@ -7,7 +8,7 @@ import { ArtworkNavMenu } from './ArtworkNavMenu';
 import { ThemeToggle } from './ThemeToggle';
 
 export const linkClassName =
-  'font-hand-rendered text-muted-foreground text-sm xs:text-base px-1 xxs:px-2 pt-1 pb-1 rounded-md hover:text-foreground hover:bg-brand-200/80 active:text-foreground active:bg-brand-300/60 dark:hover:bg-brand-700/80 dark:active:bg-brand-700/70' as const;
+  'flex font-hand-rendered text-muted-foreground text-[0.93rem] xxs:text-base px-1 xxs:px-2 items-center rounded-md hover:text-foreground hover:bg-brand-200/80 active:text-foreground active:bg-brand-300/60 dark:hover:bg-brand-700/80 dark:active:bg-brand-700/70' as const;
 
 export const activeLinkClassName =
   'text-muted-foreground/60 pointer-events-none cursor-default transition-colors hover:bg-transparent hover:text-muted-foreground/60 focus:bg-transparent focus:text-muted-foreground/60 dark:hover:bg-transparent' as const;
@@ -30,17 +31,52 @@ export function Header() {
   const { categories, railwayEnvironmentName } = useLoaderData({ from: '__root__' });
   const isStaging = railwayEnvironmentName === 'staging';
   const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const headerRef = useRef<HTMLElement>(null);
+  const [isPortfolioBehind, setIsPortfolioBehind] = useState(false);
+
+  useEffect(() => {
+    const header = headerRef.current;
+    const portfolioContent = document.querySelector<HTMLElement>('[data-portfolio-content]');
+
+    if (!header || !portfolioContent) {
+      setIsPortfolioBehind(false);
+      return;
+    }
+
+    const updateOverlap = () => {
+      const headerBounds = header.getBoundingClientRect();
+      const contentBounds = portfolioContent.getBoundingClientRect();
+      setIsPortfolioBehind(
+        contentBounds.top < headerBounds.bottom && contentBounds.bottom > headerBounds.top,
+      );
+    };
+
+    updateOverlap();
+    window.addEventListener('scroll', updateOverlap, { passive: true });
+    window.addEventListener('resize', updateOverlap);
+
+    return () => {
+      window.removeEventListener('scroll', updateOverlap);
+      window.removeEventListener('resize', updateOverlap);
+    };
+  }, [pathname]);
+
   return (
     <header
+      ref={headerRef}
       data-site-header
       className={cn(
-        'z-20 fixed flex justify-center bg-background w-full h-44 xxs:h-42 xs:h-40 sm:h-42 xl:h-38 pb-4 xs:pb-6',
+        'z-20 fixed flex justify-center w-full h-41 xs:h-36 sm:h-37 md:h-38 xl:h-33 pb-2 xl:pb-0 transition-[background-color,backdrop-filter] duration-200',
+        isPortfolioBehind
+          ? 'bg-background/80 backdrop-blur-[3px]'
+          : 'bg-background/10 backdrop-blur-[0px]',
         isStaging && 'border-t-2 border-t-rose-900',
       )}
     >
-      <div className='relative flex xl:flex-row flex-col justify-end xl:justify-between items-center sm:items-start xl:items-center gap-7 xl:gap-20 px-4 xs:px-10 xxs:px-6 sm:px-12 w-full max-w-7xl h-full'>
+      <div className='relative flex xl:flex-row flex-col justify-end xl:justify-between items-center gap-6 xl:gap-20 px-10 xxs:px-12 xs:px-14 sm:px-18 md:px-20 w-full max-w-7xl h-full'>
         <HomeLogoLink className='hidden xs:block w-full max-w-162.5 h-auto'>
           <img
+            data-bee-logo='wide'
             src='/header-logos/logo-h-650x55.webp'
             srcSet='/header-logos/logo-h-650x55.webp 1x, /header-logos/logo-h-1300x110.webp 2x'
             alt='Carla Stine'
@@ -51,6 +87,7 @@ export function Header() {
         </HomeLogoLink>
         <HomeLogoLink className='xs:hidden block w-full max-w-83.75 h-auto'>
           <img
+            data-bee-logo='compact'
             src='/header-logos/logo-stacked-335x70.webp'
             srcSet='/header-logos/logo-stacked-335x70.webp 1x, /header-logos/logo-stacked-670x140.webp 2x'
             alt='Carla Stine'
@@ -60,7 +97,7 @@ export function Header() {
           />
         </HomeLogoLink>
 
-        <nav className='flex justify-between xs:justify-center xl:justify-end xs:gap-8 xl:gap-4 xl:mt-4 w-full xs:w-auto max-w-100 xs:max-w-full grow-0'>
+        <nav className='flex justify-between xxs:justify-center xl:justify-end xxs:gap-6 xl:gap-4 xl:mt-4 w-full xs:w-auto max-w-100 xs:max-w-full grow-0'>
           <ArtworkNavMenu categories={categories} />
           <a href='/coming-soon' className={linkClassName} target='_blank'>
             Shop
@@ -73,9 +110,23 @@ export function Header() {
           </Link>
           <Link
             to='/contact'
-            className={cn(linkClassName, pathname === '/contact' && activeLinkClassName)}
+            className={cn(
+              linkClassName,
+              'hidden xs:flex',
+              pathname === '/contact' && activeLinkClassName,
+            )}
           >
             Contact
+          </Link>
+          <Link
+            to='/contact'
+            className={cn(
+              linkClassName,
+              'xs:hidden',
+              pathname === '/contact' && activeLinkClassName,
+            )}
+          >
+            <Mail className='size-6' />
           </Link>
         </nav>
         <ThemeToggle className='top-2 xs:top-3 right-2 xs:right-3 sm:right-4 z-50 absolute' />
