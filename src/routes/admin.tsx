@@ -9,6 +9,7 @@ import { ExternalLink } from 'lucide-react';
 import { useState } from 'react';
 
 import { AboutPageTab } from '@/components/admin/AboutPageTab';
+import { BeeSettingsTab } from '@/components/admin/BeeSettingsTab';
 import { BulkImageUploadModal } from '@/components/admin/BulkImageUploadModal';
 import { BunnyStorageTab } from '@/components/admin/BunnyStorageTab';
 import { CategoriesTab } from '@/components/admin/CategoriesTab';
@@ -62,7 +63,7 @@ function AdminLayout() {
 
   const navigate = useNavigate();
 
-  const { dashboard, archivedCategories, demoMode, about } = Route.useLoaderData();
+  const { dashboard, archivedCategories, demoMode, about, bee } = Route.useLoaderData();
   const { activeCategories } = dashboard;
 
   const allCategories = mergeCategories(activeCategories, archivedCategories);
@@ -144,7 +145,7 @@ function AdminLayout() {
 
           <Tabs defaultValue='records' className='w-full min-w-0'>
             <div className='flex flex-wrap justify-between items-center gap-4 mx-auto pr-2 w-full max-w-300'>
-              <TabsList variant='line'>
+              <TabsList variant='line' className='gap-3 xl:gap-4'>
                 <TabsTrigger className='text-base' value='records'>
                   Database Records
                 </TabsTrigger>
@@ -156,6 +157,9 @@ function AdminLayout() {
                 </TabsTrigger>
                 <TabsTrigger className='text-base' value='about'>
                   About
+                </TabsTrigger>
+                <TabsTrigger className='text-base' value='bee'>
+                  Bee
                 </TabsTrigger>
               </TabsList>
               <UploadActionButtons
@@ -175,6 +179,7 @@ function AdminLayout() {
             <CategoriesTab allCategories={allCategories} />
 
             <AboutPageTab key={about.updatedAt} about={about} />
+            <BeeSettingsTab key={bee.revision} bee={bee} />
           </Tabs>
         </div>
       </div>

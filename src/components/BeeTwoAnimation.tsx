@@ -1,6 +1,8 @@
 import { Bug } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 
+import { DEFAULT_BEE_SETTINGS } from '@/lib/shared/bee-settings';
+import type { BeeSettings } from '@/lib/shared/bee-settings';
 import {
   beeTwoTrailOpacity,
   createBeeTwoFlight,
@@ -20,34 +22,13 @@ const FULL_VIEWPORT = true;
 // Icon clearance offsets this margin; smaller random loops may not reach its limit.
 const OUTER_PADDING_RATIO = -0.08;
 
-// 0 = minimal connectors; 1 = full inward/outward wandering and longer travel.
-// Higher intensity reserves more of the border for travel by fitting loops smaller.
-const TRAVEL_INTENSITY = 0.9;
-
-// Distance between single-loop stops: 1 = original spacing; lower = more frequent loops.
-// This shortens travel without changing speed, loop size, or inward/outward range.
-const LOOP_SPACING_RATIO = 0.6;
-
-// Active seconds spent in a quadrant before moving to a less-recently visited one.
-// Finish the current curve, then travel without local loops until arrival.
-const MAX_QUADRANT_SECONDS = 7;
-
 // Degrees for each of the two gradual, randomly left/right quadrant-travel turns.
 const MIN_TURN = 40;
 const MAX_TURN = 60;
 
-// Base loop diameter / smaller CONTAINER dimension. Large values are fitted to the border.
-const LOOP_SIZE_RATIO = 0.15;
-const LOOP_SIZE_VARIATION = 2.2;
-const MIN_SPEED_PX_PER_SECOND = 30;
-const MAX_SPEED_PX_PER_SECOND = 80;
 const MIN_SPEED_CHANGE_SECONDS = 3;
 const MAX_SPEED_CHANGE_SECONDS = 6;
-const TRAIL_LIFETIME_SECONDS = 90;
 const TRAIL_SAMPLES_PER_SECOND = 30;
-const TRAIL_OPACITY = 0.9;
-const TRAIL_WIDTH = 2;
-const MAX_TRAIL_SAMPLES = Math.ceil(TRAIL_LIFETIME_SECONDS * TRAIL_SAMPLES_PER_SECOND) + 2;
 const beeColor = 'text-neutral-950 dark:text-neutral-50';
 const trailColor = 'text-neutral-950 dark:text-neutral-50';
 
@@ -56,7 +37,11 @@ const TRAIL_GAP_LENGTH = 10;
 const XS_BREAKPOINT_PX = 560;
 
 // Optional overrides also let tests exercise all four switch combinations.
-type BeeTwoAnimationProps = { aboveContent?: boolean; fullViewport?: boolean };
+type BeeTwoAnimationProps = {
+  aboveContent?: boolean;
+  fullViewport?: boolean;
+  settings?: BeeSettings;
+};
 type TrailPoint = BeeTwoPoint & {
   created: number;
   distance: number;
@@ -65,6 +50,7 @@ type TrailPoint = BeeTwoPoint & {
 export function BeeTwoAnimation({
   aboveContent = ABOVE_CONTENT,
   fullViewport = FULL_VIEWPORT,
+  settings = DEFAULT_BEE_SETTINGS,
 }: BeeTwoAnimationProps = {}) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -74,6 +60,20 @@ export function BeeTwoAnimation({
   const layerClass = aboveContent ? 'z-30' : '-z-10';
 
   useEffect(() => {
+    // Only the existing inputs are configurable; flight constraints stay in the engine.
+    const {
+      minSpeed: MIN_SPEED_PX_PER_SECOND,
+      maxSpeed: MAX_SPEED_PX_PER_SECOND,
+      trailLifetime: TRAIL_LIFETIME_SECONDS,
+      loopSize: LOOP_SIZE_RATIO,
+      travelIntensity: TRAVEL_INTENSITY,
+      loopSpacing: LOOP_SPACING_RATIO,
+      trailOpacity: TRAIL_OPACITY,
+      maxQuadrantSeconds: MAX_QUADRANT_SECONDS,
+      loopVariation: LOOP_SIZE_VARIATION,
+      trailWidth: TRAIL_WIDTH,
+    } = settings;
+    const MAX_TRAIL_SAMPLES = Math.ceil(TRAIL_LIFETIME_SECONDS * TRAIL_SAMPLES_PER_SECOND) + 2;
     const viewport = viewportRef.current;
     const canvas = canvasRef.current;
     const bee = beeRef.current;
@@ -290,7 +290,7 @@ export function BeeTwoAnimation({
       window.removeEventListener('resize', measure);
       viewport.style.visibility = 'hidden';
     };
-  }, [usesFullViewport, aboveContent]);
+  }, [usesFullViewport, aboveContent, settings]);
 
   return (
     <div
@@ -304,7 +304,11 @@ export function BeeTwoAnimation({
       )}
     >
       <canvas ref={canvasRef} aria-hidden='true' className='absolute inset-0 size-full' />
-      <div ref={beeRef} className='absolute top-0 left-0 size-5 will-change-transform'>
+      <div
+        ref={beeRef}
+        className='absolute top-0 left-0 will-change-transform'
+        style={{ width: settings.size, height: settings.size }}
+      >
         <Bug className={cn('size-full', beeColor)} />
       </div>
     </div>

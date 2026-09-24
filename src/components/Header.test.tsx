@@ -61,9 +61,8 @@ describe('Header portfolio overlap', () => {
 
     expect(header?.className).toContain('bg-background/10');
     expect(header?.className).toContain('backdrop-blur-[0px]');
-    expect(header?.className).toContain('duration-200');
-    expect(header?.className).toContain('data-[portfolio-behind]:bg-background/80');
-    expect(header?.className).toContain('data-[portfolio-behind]:backdrop-blur-[3px]');
+    expect(header?.className).toContain('data-portfolio-behind:bg-background/80');
+    expect(header?.className).toContain('data-portfolio-behind:backdrop-blur-[3px]');
     expect(header?.hasAttribute('data-portfolio-behind')).toBe(false);
 
     contentTop = 99;

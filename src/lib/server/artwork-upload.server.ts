@@ -299,6 +299,7 @@ export async function listAdminDashboard() {
     archivedCategories,
     demoMode: siteSettings.demoMode,
     about: toAboutContent(siteSettings),
+    bee: siteSettings.bee,
   } satisfies AdminDashboardData;
 }
 

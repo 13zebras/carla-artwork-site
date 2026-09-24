@@ -1,3 +1,5 @@
+import type { BeeSettingsSnapshot } from '@/lib/shared/bee-settings';
+
 import type { AboutContent } from './about.types';
 import type { ArtworkRecord } from './artworks.types';
 import type { BunnyStorageFile } from './bunny.types';
@@ -18,6 +20,7 @@ export type AdminDashboardData = {
   archivedCategories: ArtworkCategoryRecord[];
   demoMode: boolean;
   about: AboutContent;
+  bee: BeeSettingsSnapshot;
 };
 
 export type BulkArtworkUploadSuccess = {

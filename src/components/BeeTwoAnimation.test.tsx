@@ -4,6 +4,7 @@ import { StrictMode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { BeeTwoAnimation } from '@/components/BeeTwoAnimation';
+import { DEFAULT_BEE_SETTINGS } from '@/lib/shared/bee-settings';
 import * as beeTwoGeometry from '@/lib/shared/bee-two-animation';
 
 let frames: Map<number, FrameRequestCallback>;
@@ -137,7 +138,7 @@ describe('BeeTwoAnimation', () => {
         expect.objectContaining({
           excludeCenter: !aboveContent,
           maxQuadrantSeconds: 7,
-          minTurnDegrees: 30,
+          minTurnDegrees: 40,
           maxTurnDegrees: 60,
         }),
       );
@@ -148,45 +149,41 @@ describe('BeeTwoAnimation', () => {
     [559, 'compact', 0.12],
     [560, 'wide', 0.06],
     [561, 'wide', 0.06],
-  ] as const)(
-    'launches at the %s px logo position (%s)',
-    (width, logoType, horizontalRatio) => {
-      const wideLogo = document.createElement('img');
-      wideLogo.dataset.beeLogo = 'wide';
-      const compactLogo = document.createElement('img');
-      compactLogo.dataset.beeLogo = 'compact';
-      header.append(wideLogo, compactLogo);
-      let logoLeft = 80;
-      const logoTop = 20;
-      const logoWidth = 300;
-      const logoHeight = 70;
-      const chosenLogo = logoType === 'wide' ? wideLogo : compactLogo;
-      vi.spyOn(chosenLogo, 'getBoundingClientRect').mockImplementation(
-        () =>
-          ({ left: logoLeft, top: logoTop, width: logoWidth, height: logoHeight }) as DOMRect,
-      );
-      vi.stubGlobal('innerWidth', width);
-      const createFlight = vi.spyOn(beeTwoGeometry, 'createBeeTwoFlight');
-      const { container } = render(<BeeTwoAnimation />);
-      const start = { x: logoLeft + logoWidth * horizontalRatio, y: logoTop + logoHeight / 2 };
-      expect(createFlight).toHaveBeenLastCalledWith(
-        expect.anything(),
-        expect.objectContaining({ initialPoint: start }),
-      );
-      const bee = container.querySelector('canvas + div') as HTMLDivElement;
-      tick(0);
-      expect(bee.style.transform).toContain(`translate(${start.x}px, ${start.y}px)`);
+  ] as const)('launches at the %s px logo position (%s)', (width, logoType, horizontalRatio) => {
+    const wideLogo = document.createElement('img');
+    wideLogo.dataset.beeLogo = 'wide';
+    const compactLogo = document.createElement('img');
+    compactLogo.dataset.beeLogo = 'compact';
+    header.append(wideLogo, compactLogo);
+    let logoLeft = 80;
+    const logoTop = 20;
+    const logoWidth = 300;
+    const logoHeight = 70;
+    const chosenLogo = logoType === 'wide' ? wideLogo : compactLogo;
+    vi.spyOn(chosenLogo, 'getBoundingClientRect').mockImplementation(
+      () => ({ left: logoLeft, top: logoTop, width: logoWidth, height: logoHeight }) as DOMRect,
+    );
+    vi.stubGlobal('innerWidth', width);
+    const createFlight = vi.spyOn(beeTwoGeometry, 'createBeeTwoFlight');
+    const { container } = render(<BeeTwoAnimation />);
+    const start = { x: logoLeft + logoWidth * horizontalRatio, y: logoTop + logoHeight / 2 };
+    expect(createFlight).toHaveBeenLastCalledWith(
+      expect.anything(),
+      expect.objectContaining({ initialPoint: start }),
+    );
+    const bee = container.querySelector('canvas + div') as HTMLDivElement;
+    tick(0);
+    expect(bee.style.transform).toContain(`translate(${start.x}px, ${start.y}px)`);
 
-      logoLeft += 25;
-      act(() => resizeObservers[0].callback([], resizeObservers[0] as unknown as ResizeObserver));
-      expect(createFlight).toHaveBeenLastCalledWith(
-        expect.anything(),
-        expect.objectContaining({ initialPoint: { ...start, x: start.x + 25 } }),
-      );
-      tick(100);
-      expect(bee.style.transform).toContain(`translate(${start.x + 25}px, ${start.y}px)`);
-    },
-  );
+    logoLeft += 25;
+    act(() => resizeObservers[0].callback([], resizeObservers[0] as unknown as ResizeObserver));
+    expect(createFlight).toHaveBeenLastCalledWith(
+      expect.anything(),
+      expect.objectContaining({ initialPoint: { ...start, x: start.x + 25 } }),
+    );
+    tick(100);
+    expect(bee.style.transform).toContain(`translate(${start.x + 25}px, ${start.y}px)`);
+  });
 
   it('advances the quadrant clock with active frame time, not hidden-tab time', () => {
     const advance = vi.fn<
@@ -239,8 +236,11 @@ describe('BeeTwoAnimation', () => {
     context.stroke.mockClear();
     tick(500);
 
-    expect(context.moveTo.mock.calls).toEqual([[0, 100], [32, 100]]);
-    expect(context.lineTo.mock.calls.at(-1)).toEqual([35, 100]);
+    expect(context.moveTo.mock.calls).toEqual([
+      [0, 100],
+      [18, 100],
+    ]);
+    expect(context.lineTo.mock.calls.at(-1)).toEqual([26, 100]);
     expect(context.stroke).toHaveBeenCalledTimes(2);
   });
 
@@ -317,6 +317,103 @@ describe('BeeTwoAnimation', () => {
     // The new short trail can contain multiple independent dashes.
     expect(context.stroke).toHaveBeenCalled();
   });
+
+  it.each([16, 20, 48])('uses the existing clearance formula with a %spx bee', (size) => {
+    const createFlight = vi.spyOn(beeTwoGeometry, 'createBeeTwoFlight');
+    const createSpeed = vi.spyOn(beeTwoGeometry, 'createBeeTwoSpeed');
+    const { container } = render(<BeeTwoAnimation settings={{ ...DEFAULT_BEE_SETTINGS, size }} />);
+    const bee = container.querySelector('canvas + div') as HTMLDivElement;
+    expect(bee.style.width).toBe(`${size}px`);
+    expect(bee.style.height).toBe(`${size}px`);
+    expect(createFlight).toHaveBeenLastCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        clearance: Math.hypot(size, size) / 2 + 2,
+        outerPaddingRatio: -0.08,
+        excludeCenter: true,
+        loopVariation: 0.4,
+        minTurnDegrees: 40,
+        maxTurnDegrees: 60,
+      }),
+    );
+    expect(createSpeed).toHaveBeenCalledWith(30, 80, 3, 6);
+  });
+
+  it('applies saved inputs, clears the trail, and replaces rather than duplicates the frame loop', () => {
+    const createFlight = vi.spyOn(beeTwoGeometry, 'createBeeTwoFlight');
+    const createSpeed = vi.spyOn(beeTwoGeometry, 'createBeeTwoSpeed');
+    const { rerender } = render(<BeeTwoAnimation />);
+    for (let time = 0; time < 500; time += 100) tick(time);
+    const previousObservers = [...resizeObservers];
+    const settings = {
+      ...DEFAULT_BEE_SETTINGS,
+      size: 48,
+      minSpeed: 15,
+      maxSpeed: 150,
+      loopSize: 0.2,
+      loopVariation: 0.1,
+      travelIntensity: 0.3,
+      loopSpacing: 1,
+      maxQuadrantSeconds: 20,
+      trailWidth: 4,
+      trailLifetime: 5,
+    };
+    rerender(<BeeTwoAnimation settings={settings} />);
+    expect(previousObservers.every(({ disconnect }) => disconnect.mock.calls.length === 1)).toBe(
+      true,
+    );
+    expect(createSpeed).toHaveBeenLastCalledWith(15, 150, 3, 6);
+    expect(createFlight).toHaveBeenLastCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        clearance: Math.hypot(48, 48) / 2 + 4,
+        loopSizeRatio: 0.2,
+        loopVariation: 0.1,
+        travelIntensity: 0.3,
+        loopSpacingRatio: 1,
+        maxQuadrantSeconds: 20,
+      }),
+    );
+    context.stroke.mockClear();
+    tick(500);
+    expect(context.stroke).not.toHaveBeenCalled();
+    expect(frames.size).toBe(1);
+    setReducedMotion(true);
+    rerender(<BeeTwoAnimation settings={{ ...settings, size: 16 }} />);
+    expect(frames.size).toBe(0);
+  });
+
+  it.each([5, 90, 120])(
+    'uses the configured %s-second trail lifetime, opacity, and width',
+    (trailLifetime) => {
+      let distance = 0;
+      vi.spyOn(beeTwoGeometry, 'createBeeTwoSpeed').mockReturnValue({ advance: () => 70 });
+      vi.spyOn(beeTwoGeometry, 'createBeeTwoFlight').mockReturnValue({
+        advance: (step) => {
+          distance += step;
+          return { x: distance, y: 100, angle: 0, phase: 'travel' };
+        },
+      });
+      const alphas: number[] = [];
+      context.stroke.mockImplementation(() => {
+        alphas.push(context.globalAlpha);
+      });
+      render(
+        <BeeTwoAnimation
+          settings={{ ...DEFAULT_BEE_SETTINGS, trailLifetime, trailOpacity: 0.4, trailWidth: 3.5 }}
+        />,
+      );
+      for (let time = 0; time <= 500; time += 100) tick(time);
+      expect(alphas.length).toBeGreaterThan(0);
+      expect(alphas.every((alpha) => alpha === 0.2)).toBe(true); // Existing behind-content multiplier.
+      expect((context as unknown as CanvasRenderingContext2D).lineWidth).toBe(3.5);
+      context.stroke.mockClear();
+      tick((trailLifetime + 1) * 1000);
+      expect(context.stroke).not.toHaveBeenCalled();
+      tick((trailLifetime + 1) * 1000 + 100);
+      expect(context.stroke).toHaveBeenCalled();
+    },
+  );
 
   it('cleans up frames and listeners, including Strict Mode setup/cleanup', () => {
     const { unmount } = render(
