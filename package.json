@@ -29,7 +29,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "csv-parse": "^7.0.0",
-    "image-size": "^2.0.2",
+    "image-size": "^2.0.3",
     "kysely": "^0.29.2",
     "lucide-react": "^0.577.0",
     "nitro": "3.0.260610-beta",
