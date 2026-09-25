@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  beeTwoEase,
-  beeTwoTrailOpacity,
-  createBeeTwoFlight,
-  createBeeTwoSpeed,
-  getBeeTwoArea,
-} from '@/lib/shared/bee-two-animation';
-import type { BeeTwoArea, BeeTwoPoint } from '@/lib/shared/bee-two-animation';
+  beeEase,
+  beeTrailOpacity,
+  createBeeFlight,
+  createBeeSpeed,
+  getBeeArea,
+} from '@/lib/shared/bee-animation';
+import type { BeeArea, BeePoint } from '@/lib/shared/bee-animation';
 
 function seededRandom(seed: number) {
   let state = seed;
@@ -25,12 +25,12 @@ const settings = {
   clearance: 10,
 };
 
-function requireFlight(flight: ReturnType<typeof createBeeTwoFlight>) {
-  if (!flight) throw new Error('Expected a usable bee-two flight area');
+function requireFlight(flight: ReturnType<typeof createBeeFlight>) {
+  if (!flight) throw new Error('Expected a usable bee flight area');
   return flight;
 }
 
-function isSafe(point: BeeTwoPoint, area: BeeTwoArea, paddingRatio = settings.outerPaddingRatio) {
+function isSafe(point: BeePoint, area: BeeArea, paddingRatio = settings.outerPaddingRatio) {
   const { clearance } = settings;
   const marginX = area.width * paddingRatio + clearance;
   const marginY = area.height * paddingRatio + clearance;
@@ -47,12 +47,12 @@ function isSafe(point: BeeTwoPoint, area: BeeTwoArea, paddingRatio = settings.ou
   return insideContainer && outsideCenter;
 }
 
-describe('bee-two container geometry', () => {
+describe('bee container geometry', () => {
   it('starts exactly at a supplied point and joins its ordinary flight continuously', () => {
-    const area = getBeeTwoArea(1000, 800, 160, true);
+    const area = getBeeArea(1000, 800, 160, true);
     const initialPoint = { x: 120, y: 60 };
     const flight = requireFlight(
-      createBeeTwoFlight(area, { ...settings, initialPoint }, seededRandom(97)),
+      createBeeFlight(area, { ...settings, initialPoint }, seededRandom(97)),
     );
     let previous = flight.advance(0);
     expect(previous).toMatchObject(initialPoint);
@@ -73,11 +73,11 @@ describe('bee-two container geometry', () => {
   });
 
   it('uses the full viewport only when requested', () => {
-    expect(getBeeTwoArea(1200, 900, 180, true)).toEqual({ width: 1200, height: 900, top: 0 });
+    expect(getBeeArea(1200, 900, 180, true)).toEqual({ width: 1200, height: 900, top: 0 });
   });
 
   it('both shifts and shrinks the central rectangle when excluding the header', () => {
-    const area = getBeeTwoArea(1200, 900, 180, false);
+    const area = getBeeArea(1200, 900, 180, false);
     expect(area).toEqual({ width: 1200, height: 720, top: 180 });
     expect(area.width * 0.4).toBe(480);
     expect(area.width * 0.6).toBe(720);
@@ -95,14 +95,14 @@ describe('bee-two container geometry', () => {
   ] as const)(
     'keeps loops and their joins inside %s×%s (header=%s, full=%s)',
     (w, h, header, full) => {
-      const area = getBeeTwoArea(w, h, header, full);
-      const flight = requireFlight(createBeeTwoFlight(area, settings, seededRandom(97)));
+      const area = getBeeArea(w, h, header, full);
+      const flight = requireFlight(createBeeFlight(area, settings, seededRandom(97)));
       const visited = { top: false, right: false, bottom: false, left: false };
       // Active time triggers quadrant exploration as it does in the component.
       for (let index = 0; index < 20000; index++) {
         const point = flight.advance(4, 0.04);
         if (!isSafe(point, area))
-          throw new Error(`Unsafe bee-two position: ${JSON.stringify(point)}`);
+          throw new Error(`Unsafe bee position: ${JSON.stringify(point)}`);
         if (point.y < area.height * 0.4) visited.top = true;
         if (point.x > area.width * 0.6) visited.right = true;
         if (point.y > area.height * 0.6) visited.bottom = true;
@@ -115,14 +115,14 @@ describe('bee-two container geometry', () => {
   it.each([-0.15, -0.05, 0, 0.02, 0.08, 0.15, 0.2])(
     'honors an adjustable outer margin of %s',
     (outerPaddingRatio) => {
-      const area = getBeeTwoArea(1200, 800, 160, false);
+      const area = getBeeArea(1200, 800, 160, false);
       let minimumX = Infinity;
       let minimumY = Infinity;
       // Start at a horizontal and a vertical edge. Frequent reversals no longer
       // guarantee a full perimeter lap when travel intensity is zero.
       for (const randomValue of [0.125, 0.875]) {
         const flight = requireFlight(
-          createBeeTwoFlight(
+          createBeeFlight(
             area,
             {
               ...settings,
@@ -155,10 +155,10 @@ describe('bee-two container geometry', () => {
   ] as const)(
     'allows exits and re-entry without crossing the center (%s×%s, header=%s, full=%s, loops=%s)',
     (width, height, header, full, loopSizeRatio) => {
-      const area = getBeeTwoArea(width, height, header, full);
+      const area = getBeeArea(width, height, header, full);
       const outerPaddingRatio = -0.08;
       const flight = requireFlight(
-        createBeeTwoFlight(
+        createBeeFlight(
           area,
           {
             ...settings,
@@ -191,11 +191,11 @@ describe('bee-two container geometry', () => {
   );
 
   it.each([true, false])('respects the expanded central exclusion (full viewport=%s)', (fullViewport) => {
-    const area = getBeeTwoArea(1000, 900, 160, fullViewport);
+    const area = getBeeArea(1000, 900, 160, fullViewport);
     const flight = requireFlight(
-      createBeeTwoFlight(area, { ...settings, travelIntensity: 1 }, seededRandom(43)),
+      createBeeFlight(area, { ...settings, travelIntensity: 1 }, seededRandom(43)),
     );
-    let unsafePoint: BeeTwoPoint | undefined;
+    let unsafePoint: BeePoint | undefined;
     for (let index = 0; index < 20000; index++) {
       const point = flight.advance(4);
       if (!isSafe(point, area)) {
@@ -214,9 +214,9 @@ describe('bee-two container geometry', () => {
   ])(
     'visits the whole area with no central exclusion (%s×%s, loops=%s, padding=%s)',
     (width, height, loopSizeRatio, outerPaddingRatio) => {
-      const area = getBeeTwoArea(width, height, 160, true);
+      const area = getBeeArea(width, height, 160, true);
       const flight = requireFlight(
-        createBeeTwoFlight(
+        createBeeFlight(
           area,
           {
             ...settings,
@@ -261,29 +261,29 @@ describe('bee-two container geometry', () => {
   );
 
   it('declines padding that leaves no room for loops', () => {
-    const area = getBeeTwoArea(1200, 800, 160, false);
-    expect(createBeeTwoFlight(area, { ...settings, outerPaddingRatio: 0.25 })).toBeNull();
-    expect(createBeeTwoFlight(area, { ...settings, outerPaddingRatio: 0.4 })).toBeNull();
+    const area = getBeeArea(1200, 800, 160, false);
+    expect(createBeeFlight(area, { ...settings, outerPaddingRatio: 0.25 })).toBeNull();
+    expect(createBeeFlight(area, { ...settings, outerPaddingRatio: 0.4 })).toBeNull();
   });
 
   it('fits oversized loops and declines unusably small containers', () => {
-    const area = getBeeTwoArea(390, 844, 176, false);
+    const area = getBeeArea(390, 844, 176, false);
     const flight = requireFlight(
-      createBeeTwoFlight(area, { ...settings, loopSizeRatio: 5 }, seededRandom(12)),
+      createBeeFlight(area, { ...settings, loopSizeRatio: 5 }, seededRandom(12)),
     );
     for (let index = 0; index < 10000; index++) {
       if (!isSafe(flight.advance(4), area)) throw new Error('Oversized loop escaped the border');
     }
-    expect(createBeeTwoFlight(getBeeTwoArea(30, 30, 0, true), settings)).toBeNull();
-    expect(createBeeTwoFlight(getBeeTwoArea(390, 100, 176, false), settings)).toBeNull();
+    expect(createBeeFlight(getBeeArea(30, 30, 0, true), settings)).toBeNull();
+    expect(createBeeFlight(getBeeArea(390, 100, 176, false), settings)).toBeNull();
   });
 });
 
-describe('bee-two looping motion', () => {
-  const area = getBeeTwoArea(1000, 900, 160, false);
+describe('bee looping motion', () => {
+  const area = getBeeArea(1000, 900, 160, false);
 
   it('travels by distance, loops repeatedly, and preserves smooth tangents through joins', () => {
-    const flight = requireFlight(createBeeTwoFlight(area, settings, seededRandom(21)));
+    const flight = requireFlight(createBeeFlight(area, settings, seededRandom(21)));
     let previous = flight.advance(0);
     let maximumDistanceError = 0;
     let maximumTurn = 0;
@@ -309,7 +309,7 @@ describe('bee-two looping motion', () => {
     'makes both left and right single loops in one continuous flight (exclude center=%s)',
     (excludeCenter) => {
       const flight = requireFlight(
-        createBeeTwoFlight(
+        createBeeFlight(
           area,
           {
             ...settings,
@@ -372,9 +372,9 @@ describe('bee-two looping motion', () => {
   ] as const)(
     'reverses travel after at most two loops, even when a turn needs more room (exclude center=%s, seed=%s)',
     (excludeCenter, seed) => {
-      const viewport = getBeeTwoArea(1440, 900, 0, true);
+      const viewport = getBeeArea(1440, 900, 0, true);
       const flight = requireFlight(
-        createBeeTwoFlight(
+        createBeeFlight(
           viewport,
           {
             ...settings,
@@ -421,7 +421,7 @@ describe('bee-two looping motion', () => {
     'keeps unrestricted travel and loop joins smooth (spacing=%s)',
     (loopSpacingRatio) => {
       const flight = requireFlight(
-        createBeeTwoFlight(
+        createBeeFlight(
           area,
           {
             ...settings,
@@ -466,7 +466,7 @@ describe('bee-two looping motion', () => {
     (excludeCenter) => {
       function measureFirstLoop(loopSpacingRatio: number) {
         const flight = requireFlight(
-          createBeeTwoFlight(
+          createBeeFlight(
             area,
             {
               ...settings,
@@ -509,8 +509,8 @@ describe('bee-two looping motion', () => {
       let crossedCenter = false;
       for (const seed of [21, 43, 91]) {
         const flight = requireFlight(
-          createBeeTwoFlight(
-            getBeeTwoArea(width, height, 0, true),
+          createBeeFlight(
+            getBeeArea(width, height, 0, true),
             {
               ...settings,
               loopSizeRatio: 0.1,
@@ -551,7 +551,7 @@ describe('bee-two looping motion', () => {
 
   it('travels inward and outward between distinct loops', () => {
     const flight = requireFlight(
-      createBeeTwoFlight(
+      createBeeFlight(
         area,
         {
           ...settings,
@@ -596,7 +596,7 @@ describe('bee-two looping motion', () => {
   it('increases the distance travelled between loops with travel intensity', () => {
     function firstTravelDistance(travelIntensity: number) {
       const flight = requireFlight(
-        createBeeTwoFlight(
+        createBeeFlight(
           area,
           { ...settings, travelIntensity, loopVariation: 0 },
           // Hold random choices fixed to compare travel intensity alone.
@@ -614,13 +614,13 @@ describe('bee-two looping motion', () => {
   });
 
   it('responds to loop size and randomness, while remaining reproducible for tests', () => {
-    const regular = requireFlight(createBeeTwoFlight(area, settings, seededRandom(8)));
-    const repeated = requireFlight(createBeeTwoFlight(area, settings, seededRandom(8)));
+    const regular = requireFlight(createBeeFlight(area, settings, seededRandom(8)));
+    const repeated = requireFlight(createBeeFlight(area, settings, seededRandom(8)));
     const smaller = requireFlight(
-      createBeeTwoFlight(area, { ...settings, loopSizeRatio: 0.06 }, seededRandom(8)),
+      createBeeFlight(area, { ...settings, loopSizeRatio: 0.06 }, seededRandom(8)),
     );
     const varied = requireFlight(
-      createBeeTwoFlight(area, { ...settings, loopVariation: 0 }, seededRandom(8)),
+      createBeeFlight(area, { ...settings, loopVariation: 0 }, seededRandom(8)),
     );
     const sample = regular.advance(1300);
     expect(repeated.advance(1300)).toEqual(sample);
@@ -629,16 +629,16 @@ describe('bee-two looping motion', () => {
   });
 });
 
-describe('bee-two quadrant exploration', () => {
-  function quadrantAt(point: BeeTwoPoint, area: BeeTwoArea) {
+describe('bee quadrant exploration', () => {
+  function quadrantAt(point: BeePoint, area: BeeArea) {
     return Number(point.x >= area.width / 2) + 2 * Number(point.y >= area.height / 2);
   }
 
   it('uses the configured time limit and skips local loops until another quadrant is reached', () => {
-    const area = getBeeTwoArea(1000, 900, 160, false);
+    const area = getBeeArea(1000, 900, 160, false);
     function firstLoopAfterWaiting(maxQuadrantSeconds: number) {
       const flight = requireFlight(
-        createBeeTwoFlight(
+        createBeeFlight(
           area,
           {
             ...settings,
@@ -685,9 +685,9 @@ describe('bee-two quadrant exploration', () => {
   ] as const)(
     'draws loops in all four quadrants within five minutes (%s×%s, exclude center=%s, seed=%s)',
     (width, height, excludeCenter, seed) => {
-      const area = getBeeTwoArea(width, height, 0, true);
+      const area = getBeeArea(width, height, 0, true);
       const flight = requireFlight(
-        createBeeTwoFlight(
+        createBeeFlight(
           area,
           {
             ...settings,
@@ -761,9 +761,9 @@ describe('bee-two quadrant exploration', () => {
   );
 });
 
-describe('bee-two speed and fading', () => {
+describe('bee speed and fading', () => {
   it('accelerates and decelerates smoothly without leaving speed limits', () => {
-    const speed = createBeeTwoSpeed(24, 80, 1.5, 4.5, seededRandom(35));
+    const speed = createBeeSpeed(24, 80, 1.5, 4.5, seededRandom(35));
     let previous = speed.advance(0);
     let increased = false;
     let decreased = false;
@@ -780,21 +780,21 @@ describe('bee-two speed and fading', () => {
   });
 
   it('is time based rather than frame based, and supports a fixed speed', () => {
-    const smallSteps = createBeeTwoSpeed(24, 80, 1.5, 4.5, seededRandom(8));
-    const largeStep = createBeeTwoSpeed(24, 80, 1.5, 4.5, seededRandom(8));
+    const smallSteps = createBeeSpeed(24, 80, 1.5, 4.5, seededRandom(8));
+    const largeStep = createBeeSpeed(24, 80, 1.5, 4.5, seededRandom(8));
     for (let index = 0; index < 1200; index++) smallSteps.advance(1 / 120);
     expect(smallSteps.advance(0)).toBeCloseTo(largeStep.advance(10), 8);
-    expect(createBeeTwoSpeed(40, 40, 1, 2).advance(100)).toBe(40);
+    expect(createBeeSpeed(40, 40, 1, 2).advance(100)).toBe(40);
   });
 
   it('holds full trail opacity for half the lifetime, then fades to zero by the end', () => {
-    expect(beeTwoTrailOpacity(0, 20)).toBe(1);
-    expect(beeTwoTrailOpacity(10, 20)).toBe(1);
-    expect(beeTwoTrailOpacity(10.01, 20)).toBeLessThan(1);
-    expect(beeTwoTrailOpacity(15, 20)).toBeCloseTo(0.5);
-    expect(beeTwoTrailOpacity(19.99, 20)).toBeGreaterThan(0);
-    expect(beeTwoTrailOpacity(20, 20)).toBe(0);
-    expect(beeTwoTrailOpacity(50, 20)).toBe(0);
-    expect([0, 0.5, 1, 2].map(beeTwoEase)).toEqual([0, 0.5, 1, 1]);
+    expect(beeTrailOpacity(0, 20)).toBe(1);
+    expect(beeTrailOpacity(10, 20)).toBe(1);
+    expect(beeTrailOpacity(10.01, 20)).toBeLessThan(1);
+    expect(beeTrailOpacity(15, 20)).toBeCloseTo(0.5);
+    expect(beeTrailOpacity(19.99, 20)).toBeGreaterThan(0);
+    expect(beeTrailOpacity(20, 20)).toBe(0);
+    expect(beeTrailOpacity(50, 20)).toBe(0);
+    expect([0, 0.5, 1, 2].map(beeEase)).toEqual([0, 0.5, 1, 1]);
   });
 });

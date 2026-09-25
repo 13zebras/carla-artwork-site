@@ -10,7 +10,7 @@ import {
   parseBeeSettings,
   sliderToBeeSetting,
 } from '@/lib/shared/bee-settings';
-import { createBeeTwoFlight, getBeeTwoArea } from '@/lib/shared/bee-two-animation';
+import { createBeeFlight, getBeeArea } from '@/lib/shared/bee-animation';
 
 describe('bee settings', () => {
   it.each(BEE_SETTING_KEYS)('round-trips the exact default for %s', (key) => {
@@ -111,9 +111,9 @@ describe('existing geometry with configurable inputs', () => {
   it.each(geometryCases)(
     'keeps $width × $height safe (size=$size, variation=$variation, wandering=$intensity, loops=$loopSize)',
     ({ width, height, size, variation, intensity, loopSize }) => {
-      const area = getBeeTwoArea(width, height, 160, true);
+      const area = getBeeArea(width, height, 160, true);
       const clearance = Math.hypot(size, size) / 2 + 4;
-      const flight = createBeeTwoFlight(
+      const flight = createBeeFlight(
         area,
         {
           loopSizeRatio: loopSize,
@@ -153,15 +153,15 @@ describe('existing geometry with configurable inputs', () => {
   );
 
   it('retains the original 0.4 variation clamp', () => {
-    const area = getBeeTwoArea(1440, 900, 160, true);
+    const area = getBeeArea(1440, 900, 160, true);
     const settings = {
       loopSizeRatio: 0.15,
       outerPaddingRatio: -0.08,
       travelIntensity: 0.9,
       clearance: 20,
     };
-    const original = createBeeTwoFlight(area, { ...settings, loopVariation: 2.2 }, seededRandom());
-    const explicit = createBeeTwoFlight(area, { ...settings, loopVariation: 0.4 }, seededRandom());
+    const original = createBeeFlight(area, { ...settings, loopVariation: 2.2 }, seededRandom());
+    const explicit = createBeeFlight(area, { ...settings, loopVariation: 0.4 }, seededRandom());
     expect(original).not.toBeNull();
     for (let step = 0; step < 300; step++) {
       expect(explicit?.advance(4, 0.05)).toEqual(original?.advance(4, 0.05));

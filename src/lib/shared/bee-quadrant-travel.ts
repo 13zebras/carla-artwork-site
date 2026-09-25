@@ -1,19 +1,19 @@
-import type { BeeTwoPoint } from '@/lib/shared/bee-two-animation';
+import type { BeePoint } from '@/lib/shared/bee-animation';
 
-type Heading = BeeTwoPoint & { angle: number };
+type Heading = BeePoint & { angle: number };
 type TravelSettings = {
   radius: number;
   minTurn: number;
   maxTurn: number;
-  isSafe: (points: BeeTwoPoint[]) => boolean;
-  isTarget: (point: BeeTwoPoint) => boolean;
+  isSafe: (points: BeePoint[]) => boolean;
+  isTarget: (point: BeePoint) => boolean;
   finish: (pose: Heading) => boolean;
 };
 const STEP = 0.25;
 const angleDifference = (angle: number) => Math.atan2(Math.sin(angle), Math.cos(angle));
 
 /** Exactly two gradual turns, each followed by straight flight on its new heading. */
-export function createBeeTwoCourseChanges(
+export function createBeeCourseChanges(
   start: Heading,
   distance: number,
   minTurn: number,
@@ -67,12 +67,12 @@ export function createBeeTwoCourseChanges(
 }
 
 /** Heading-based quadrant travel; the old rectangular guide does not control this path. */
-export function createBeeTwoQuadrantTravel(
+export function createBeeQuadrantTravel(
   start: Heading,
-  goal: BeeTwoPoint,
+  goal: BeePoint,
   settings: TravelSettings,
   random: () => number,
-): { points: BeeTwoPoint[]; turns: number[] } | null {
+): { points: BeePoint[]; turns: number[] } | null {
   const { radius, isSafe, isTarget, finish } = settings;
   const waypoints = [goal];
   if (!isSafe([start, goal])) {
@@ -85,7 +85,7 @@ export function createBeeTwoQuadrantTravel(
     if (!elbow) return null;
     waypoints.unshift(elbow);
   }
-  const points: BeeTwoPoint[] = [start];
+  const points: BeePoint[] = [start];
   const tripLength = Math.hypot(goal.x - start.x, goal.y - start.y);
   let pose = start;
   let waypoint = 0;
@@ -112,7 +112,7 @@ export function createBeeTwoQuadrantTravel(
       // Reject unsafe proposals before committing, never clip or undo a turn.
       for (let attempt = 0; attempt < 8; attempt++) {
         const distance = remaining * 0.95;
-        const course = createBeeTwoCourseChanges(
+        const course = createBeeCourseChanges(
           pose,
           distance,
           settings.minTurn,

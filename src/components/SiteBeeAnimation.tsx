@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { BeeTwoAnimation } from '@/components/BeeTwoAnimation';
+import { BeeAnimation } from '@/components/BeeAnimation';
 import { getPublishedBeeSettings } from '@/lib/functions/bee-settings.functions';
 import type { BeeSettingsSnapshot } from '@/lib/shared/bee-settings';
 
@@ -45,5 +45,5 @@ export function SiteBeeAnimation({ initial }: { initial: BeeSettingsSnapshot }) 
     };
   }, []);
 
-  return <BeeTwoAnimation settings={published.settings} />;
+  return <BeeAnimation settings={published.settings} />;
 }

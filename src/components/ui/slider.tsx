@@ -54,11 +54,11 @@ function Slider({
       <SliderPrimitive.Control className='relative flex w-full touch-none items-center select-none data-disabled:opacity-50 data-[orientation=vertical]:h-full data-[orientation=vertical]:min-h-40 data-[orientation=vertical]:w-auto data-[orientation=vertical]:flex-col'>
         <SliderPrimitive.Track
           data-slot='slider-track'
-          className='relative grow overflow-hidden rounded-full bg-border-2nd select-none data-[orientation=horizontal]:h-1 data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-1'
+          className='relative grow overflow-hidden rounded-full bg-border-2nd select-none data-[orientation=horizontal]:h-1.5 data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-1'
         >
           <SliderPrimitive.Indicator
             data-slot='slider-range'
-            className='bg-brand-500 select-none data-[orientation=horizontal]:h-full data-[orientation=vertical]:w-full'
+            className='bg-brand-600 select-none data-[orientation=horizontal]:h-full data-[orientation=vertical]:w-full'
           />
         </SliderPrimitive.Track>
         {thumbs.map(({ index, key }) => (
@@ -66,7 +66,7 @@ function Slider({
             key={key}
             index={index}
             data-slot='slider-thumb'
-            className='relative block size-3 shrink-0 rounded-full border border-ring bg-white ring-ring/50 transition-[color,box-shadow] select-none after:absolute after:-inset-2 hover:ring-3 focus-visible:ring-3 focus-visible:outline-hidden active:ring-3 disabled:pointer-events-none disabled:opacity-50'
+            className='relative block size-3.5 shrink-0 rounded-full border border-brand-500 bg-neutral-200 ring-brand-600/50 transition-[color,box-shadow] select-none after:absolute after:-inset-2 hover:ring-3 focus-visible:ring-3 focus-visible:outline-hidden active:ring-3 active:bg-brand-300 disabled:pointer-events-none disabled:opacity-50'
             {...thumbProps}
           />
         ))}

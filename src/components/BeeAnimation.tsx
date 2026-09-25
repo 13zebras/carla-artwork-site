@@ -4,12 +4,12 @@ import { useEffect, useRef } from 'react';
 import { DEFAULT_BEE_SETTINGS } from '@/lib/shared/bee-settings';
 import type { BeeSettings } from '@/lib/shared/bee-settings';
 import {
-  beeTwoTrailOpacity,
-  createBeeTwoFlight,
-  createBeeTwoSpeed,
-  getBeeTwoArea,
-} from '@/lib/shared/bee-two-animation';
-import type { BeeTwoPoint, BeeTwoPose } from '@/lib/shared/bee-two-animation';
+  beeTrailOpacity,
+  createBeeFlight,
+  createBeeSpeed,
+  getBeeArea,
+} from '@/lib/shared/bee-animation';
+import type { BeePoint, BeePose } from '@/lib/shared/bee-animation';
 import { cn } from '@/lib/shared/utils';
 
 // Above-content mode removes the central exclusion and always uses the full viewport.
@@ -37,21 +37,21 @@ const TRAIL_GAP_LENGTH = 10;
 const XS_BREAKPOINT_PX = 560;
 
 // Optional overrides also let tests exercise all four switch combinations.
-type BeeTwoAnimationProps = {
+type BeeAnimationProps = {
   aboveContent?: boolean;
   fullViewport?: boolean;
   settings?: BeeSettings;
 };
-type TrailPoint = BeeTwoPoint & {
+type TrailPoint = BeePoint & {
   created: number;
   distance: number;
 };
 
-export function BeeTwoAnimation({
+export function BeeAnimation({
   aboveContent = ABOVE_CONTENT,
   fullViewport = FULL_VIEWPORT,
   settings = DEFAULT_BEE_SETTINGS,
-}: BeeTwoAnimationProps = {}) {
+}: BeeAnimationProps = {}) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const beeRef = useRef<HTMLDivElement>(null);
@@ -85,15 +85,15 @@ export function BeeTwoAnimation({
     const wideLogo = document.querySelector<HTMLElement>('[data-bee-logo="wide"]');
     const compactLogo = document.querySelector<HTMLElement>('[data-bee-logo="compact"]');
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const speed = createBeeTwoSpeed(
+    const speed = createBeeSpeed(
       MIN_SPEED_PX_PER_SECOND,
       MAX_SPEED_PX_PER_SECOND,
       MIN_SPEED_CHANGE_SECONDS,
       MAX_SPEED_CHANGE_SECONDS,
     );
-    let flight: ReturnType<typeof createBeeTwoFlight> = null;
-    let area = getBeeTwoArea(0, 0, 0, usesFullViewport);
-    let initialPoint: BeeTwoPoint | undefined;
+    let flight: ReturnType<typeof createBeeFlight> = null;
+    let area = getBeeArea(0, 0, 0, usesFullViewport);
+    let initialPoint: BeePoint | undefined;
     let pixelRatio = 0;
     let frame: number | null = null;
     let previousTime: number | null = null;
@@ -102,7 +102,7 @@ export function BeeTwoAnimation({
     let color = getComputedStyle(viewport).color;
 
     const adjustedTrailOpacity = aboveContent ? TRAIL_OPACITY : TRAIL_OPACITY * 0.5;
-    const positionBee = (pose: BeeTwoPose) => {
+    const positionBee = (pose: BeePose) => {
       bee.style.transform = `translate(${pose.x}px, ${pose.y}px) translate(-50%, -50%) rotate(${pose.angle + Math.PI / 2}rad)`;
     };
 
@@ -151,7 +151,7 @@ export function BeeTwoAnimation({
         const end = pointAt(visibleEnd);
         context.lineTo(end.x, end.y);
         context.globalAlpha =
-          adjustedTrailOpacity * beeTwoTrailOpacity(now - end.created, TRAIL_LIFETIME_SECONDS);
+          adjustedTrailOpacity * beeTrailOpacity(now - end.created, TRAIL_LIFETIME_SECONDS);
         context.stroke();
       }
       context.globalAlpha = 1;
@@ -205,7 +205,7 @@ export function BeeTwoAnimation({
 
     const measure = () => {
       const headerHeight = header?.getBoundingClientRect().height ?? 0;
-      const next = getBeeTwoArea(
+      const next = getBeeArea(
         window.innerWidth,
         window.innerHeight,
         headerHeight,
@@ -246,7 +246,7 @@ export function BeeTwoAnimation({
       const beeWidth = Number.parseFloat(beeStyle.width) || 12;
       const beeHeight = Number.parseFloat(beeStyle.height) || 12;
       const clearance = Math.hypot(beeWidth, beeHeight) / 2 + TRAIL_WIDTH;
-      flight = createBeeTwoFlight(area, {
+      flight = createBeeFlight(area, {
         loopSizeRatio: LOOP_SIZE_RATIO,
         loopVariation: LOOP_SIZE_VARIATION,
         outerPaddingRatio: OUTER_PADDING_RATIO,

@@ -113,7 +113,7 @@
   --theme-dark-popover: var(--color-neutral-900);
   --theme-dark-popover-foreground: var(--color-neutral-100);
   --theme-dark-popover-border: var(--color-neutral-600);
-  --theme-dark-card: var(--color-neutral-900);
+  --theme-dark-card: var(--color-neutral-950);
   --theme-dark-card-foreground: var(--color-neutral-200);
   --theme-dark-ring: var(--color-blue-400);
   --theme-dark-card-shadow-color: var(--color-neutral-800);

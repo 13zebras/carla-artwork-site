@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import type { BeeTwoPoint } from '@/lib/shared/bee-two-animation';
+import type { BeePoint } from '@/lib/shared/bee-animation';
 import {
-  createBeeTwoCourseChanges,
-  createBeeTwoQuadrantTravel,
-} from '@/lib/shared/bee-two-quadrant-travel';
+  createBeeCourseChanges,
+  createBeeQuadrantTravel,
+} from '@/lib/shared/bee-quadrant-travel';
 
 function seededRandom(seed: number) {
   let state = seed;
@@ -14,7 +14,7 @@ function seededRandom(seed: number) {
   };
 }
 
-describe('bee-two held course changes', () => {
+describe('bee held course changes', () => {
   it.each([
     [-1, -1],
     [-1, 1],
@@ -23,7 +23,7 @@ describe('bee-two held course changes', () => {
   ])('gradually turns, then holds each new heading (%s, %s)', (firstSign, secondSign) => {
     const choices = [0, (firstSign + 1) / 2, 1, (secondSign + 1) / 2];
     let index = 0;
-    const course = createBeeTwoCourseChanges(
+    const course = createBeeCourseChanges(
       { x: 100, y: 200, angle: 0 },
       400,
       5,
@@ -64,7 +64,7 @@ describe('bee-two held course changes', () => {
   it.each([true, false])(
     'navigates to the quadrant with exactly two committed turns (exclude center=%s)',
     (excludeCenter) => {
-      function isSafe(points: BeeTwoPoint[]) {
+      function isSafe(points: BeePoint[]) {
         if (points.some((p) => p.x < 10 || p.x > 990 || p.y < 10 || p.y > 790)) return false;
         if (!excludeCenter) return true;
         return (
@@ -74,7 +74,7 @@ describe('bee-two held course changes', () => {
           points.every((p) => p.y >= 490)
         );
       }
-      const result = createBeeTwoQuadrantTravel(
+      const result = createBeeQuadrantTravel(
         { x: 100, y: 400, angle: 0 },
         { x: 800, y: 160 },
         {
@@ -101,9 +101,9 @@ describe('bee-two held course changes', () => {
   );
 
   it('uses configurable angles, including zero without invalid positions', () => {
-    const tuned = createBeeTwoCourseChanges({ x: 0, y: 0, angle: 0 }, 400, 2, 4, () => 0.75);
+    const tuned = createBeeCourseChanges({ x: 0, y: 0, angle: 0 }, 400, 2, 4, () => 0.75);
     expect(tuned.turns).toEqual([3.5, 3.5]);
-    const straight = createBeeTwoCourseChanges({ x: 0, y: 0, angle: 0 }, 400, 0, 0, () => 0.5);
+    const straight = createBeeCourseChanges({ x: 0, y: 0, angle: 0 }, 400, 0, 0, () => 0.5);
     expect(straight.end).toEqual({ x: 400, y: 0, angle: 0 });
   });
 });

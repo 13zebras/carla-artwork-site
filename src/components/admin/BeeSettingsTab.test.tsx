@@ -65,7 +65,7 @@ describe('Bee settings tab', () => {
       const descriptionId = slider.getAttribute('aria-describedby');
       expect(descriptionId).toBeTruthy();
       expect(document.getElementById(descriptionId ?? '')?.textContent).toMatch(
-        /^Makes|^Keeps|^Higher/,
+        /^Bee|^Loops|^Trail|^Higher/,
       );
     }
     const duration = screen.getByRole('slider', { name: 'Trail duration' }) as HTMLInputElement;
@@ -82,7 +82,7 @@ describe('Bee settings tab', () => {
     expect(opacity.value).toBe('90');
     expect(opacity.getAttribute('aria-valuetext')).toBe('90 percent');
     expect(screen.getByText('90%')).toBeTruthy();
-    expect(screen.getByText('Higher number makes the trail darker, lower lighter.')).toBeTruthy();
+    expect(screen.getByText('Higher number = trail darker.')).toBeTruthy();
     expect(screen.getAllByRole('radio')).toHaveLength(4);
     expect((screen.getByRole('radio', { name: '2px' }) as HTMLInputElement).checked).toBe(true);
     for (const output of screen.getAllByRole('status')) {

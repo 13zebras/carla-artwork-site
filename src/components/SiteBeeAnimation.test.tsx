@@ -12,8 +12,8 @@ const { load, renderedBee } = vi.hoisted(() => ({
   renderedBee: vi.fn<(settings: BeeSettings) => void>(),
 }));
 vi.mock('@/lib/functions/bee-settings.functions', () => ({ getPublishedBeeSettings: load }));
-vi.mock('@/components/BeeTwoAnimation', () => ({
-  BeeTwoAnimation: ({ settings }: { settings: BeeSettings }) => {
+vi.mock('@/components/BeeAnimation', () => ({
+  BeeAnimation: ({ settings }: { settings: BeeSettings }) => {
     renderedBee(settings);
     return <div data-testid='bee'>{settings.size}px</div>;
   },

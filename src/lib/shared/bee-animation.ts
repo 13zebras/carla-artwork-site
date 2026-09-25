@@ -1,9 +1,9 @@
-import { createBeeTwoQuadrantTravel } from '@/lib/shared/bee-two-quadrant-travel';
+import { createBeeQuadrantTravel } from '@/lib/shared/bee-quadrant-travel';
 
-// Independent BeeTwo geometry. All positions are local to its flight container.
-export type BeeTwoPoint = { x: number; y: number };
-export type BeeTwoArea = { width: number; height: number; top: number };
-export type BeeTwoPose = BeeTwoPoint & { angle: number; phase: 'travel' | 'loop' };
+// Independent Bee geometry. All positions are local to its flight container.
+export type BeePoint = { x: number; y: number };
+export type BeeArea = { width: number; height: number; top: number };
+export type BeePose = BeePoint & { angle: number; phase: 'travel' | 'loop' };
 
 type Random = () => number;
 type FlightSettings = {
@@ -17,7 +17,7 @@ type FlightSettings = {
   maxTurnDegrees?: number;
   excludeCenter?: boolean;
   clearance: number;
-  initialPoint?: BeeTwoPoint;
+  initialPoint?: BeePoint;
 };
 type Radii = { x: number; y: number };
 
@@ -28,22 +28,22 @@ const CURVE_SAMPLES = 720;
 const CENTER_MIN_RATIO = 0.3;
 const CENTER_MAX_RATIO = 1 - CENTER_MIN_RATIO;
 
-export function getBeeTwoArea(
+export function getBeeArea(
   width: number,
   viewportHeight: number,
   headerHeight: number,
   fullViewport: boolean,
-): BeeTwoArea {
+): BeeArea {
   const top = fullViewport ? 0 : Math.min(viewportHeight, Math.max(0, headerHeight));
   return { width, height: Math.max(0, viewportHeight - top), top };
 }
 
-export function beeTwoEase(value: number): number {
+export function beeEase(value: number): number {
   const t = Math.max(0, Math.min(1, value));
   return t * t * t * (t * (t * 6 - 15) + 10);
 }
 
-export function beeTwoTrailOpacity(ageSeconds: number, lifetimeSeconds: number): number {
+export function beeTrailOpacity(ageSeconds: number, lifetimeSeconds: number): number {
   // Full opacity holds for the first half of the lifetime, then fades linearly
   // to zero across the second half instead of fading uniformly throughout.
   const fadeStart = lifetimeSeconds / 2;
@@ -54,7 +54,7 @@ export function beeTwoTrailOpacity(ageSeconds: number, lifetimeSeconds: number):
 
 /** A rounded rectangular guide, travelled at constant distance per revolution. */
 function createGuide(
-  area: BeeTwoArea,
+  area: BeeArea,
   paddingRatio: number,
   orbitRadius: number,
   clearance: number,
@@ -84,7 +84,7 @@ function createGuide(
   const lengths = [horizontal, corner, vertical, corner, horizontal, corner, vertical, corner];
   const perimeter = lengths.reduce((sum, length) => sum + length, 0);
 
-  function point(distance: number): BeeTwoPoint {
+  function point(distance: number): BeePoint {
     let remaining = ((distance % perimeter) + perimeter) % perimeter;
     let section = 0;
     while (section < lengths.length - 1 && remaining > lengths[section]) {
@@ -139,11 +139,11 @@ function createGuide(
  * Travel handles match signed guide tangents, so direction changes happen through
  * smooth connectors, never by flipping the bee's velocity in place.
  */
-export function createBeeTwoFlight(
-  area: BeeTwoArea,
+export function createBeeFlight(
+  area: BeeArea,
   settings: FlightSettings,
   random: Random = Math.random,
-): { advance: (distance: number, seconds?: number) => BeeTwoPose } | null {
+): { advance: (distance: number, seconds?: number) => BeePose } | null {
   const smallerSide = Math.min(area.width, area.height);
   const excludeCenter = settings.excludeCenter ?? true;
   // Negative padding extends the flight beyond the container; its overflow clips
@@ -179,13 +179,13 @@ export function createBeeTwoFlight(
     angle: number;
     direction: -1 | 1;
     guideDirection: -1 | 1;
-    pose?: BeeTwoPoint & { angle: number };
+    pose?: BeePoint & { angle: number };
   };
   type Segment = {
-    phase: BeeTwoPose['phase'];
-    nextPhase: BeeTwoPose['phase'];
+    phase: BeePose['phase'];
+    nextPhase: BeePose['phase'];
     end: Anchor;
-    pointAt: (t: number) => BeeTwoPoint;
+    pointAt: (t: number) => BeePoint;
     lengths: number[];
   };
 
@@ -198,13 +198,13 @@ export function createBeeTwoFlight(
   let activeSeconds = 0;
   let targetQuadrant: number | null = null;
 
-  function quadrantAt(point: BeeTwoPoint): number {
+  function quadrantAt(point: BeePoint): number {
     const column = point.x < area.width / 2 ? 0 : 1;
     const row = point.y < area.height / 2 ? 0 : 1;
     return row * 2 + column;
   }
 
-  function insideQuadrant(point: BeeTwoPoint, quadrant: number): boolean {
+  function insideQuadrant(point: BeePoint, quadrant: number): boolean {
     // Require a visible arrival well inside the quadrant, not a tiny excursion
     // over a center line followed by more loops in the original patch.
     return (
@@ -218,7 +218,7 @@ export function createBeeTwoFlight(
     );
   }
 
-  function trackQuadrants(point: BeeTwoPoint, seconds: number) {
+  function trackQuadrants(point: BeePoint, seconds: number) {
     const elapsed = Math.max(0, seconds);
     activeSeconds += elapsed;
     const quadrant = quadrantAt(point);
@@ -256,15 +256,15 @@ export function createBeeTwoFlight(
     return Math.atan2(after.y - before.y, after.x - before.x) - (direction * Math.PI) / 2;
   }
 
-  function orbit(center: BeeTwoPoint, radii: Radii, angle: number): BeeTwoPoint {
+  function orbit(center: BeePoint, radii: Radii, angle: number): BeePoint {
     return { x: center.x + radii.x * Math.cos(angle), y: center.y + radii.y * Math.sin(angle) };
   }
 
   function measureSegment(
-    phase: BeeTwoPose['phase'],
+    phase: BeePose['phase'],
     end: Anchor,
     pointAt: Segment['pointAt'],
-    nextPhase: BeeTwoPose['phase'] = phase === 'travel' ? 'loop' : 'travel',
+    nextPhase: BeePose['phase'] = phase === 'travel' ? 'loop' : 'travel',
   ): Segment {
     const lengths = [0];
     let previous = pointAt(0);
@@ -276,7 +276,7 @@ export function createBeeTwoFlight(
     return { phase, nextPhase, end, pointAt, lengths };
   }
 
-  function guideTangent(anchor: Anchor): BeeTwoPoint {
+  function guideTangent(anchor: Anchor): BeePoint {
     if (anchor.pose) return { x: Math.cos(anchor.pose.angle), y: Math.sin(anchor.pose.angle) };
     const guide = guideAt(anchor.depth);
     const distance = anchor.progress * guide.perimeter;
@@ -289,13 +289,13 @@ export function createBeeTwoFlight(
     };
   }
 
-  function anchorPoint(anchor: Anchor): BeeTwoPoint {
+  function anchorPoint(anchor: Anchor): BeePoint {
     if (anchor.pose) return anchor.pose;
     const guide = guideAt(anchor.depth);
     return orbit(guide.point(anchor.progress * guide.perimeter), anchor.radii, anchor.angle);
   }
 
-  function safeControls(points: BeeTwoPoint[]): boolean {
+  function safeControls(points: BeePoint[]): boolean {
     const marginX = area.width * paddingRatio + settings.clearance;
     const marginY = area.height * paddingRatio + settings.clearance;
     if (
@@ -421,7 +421,7 @@ export function createBeeTwoFlight(
     const tangent = guideTangent(start);
     const finish: { segment: Segment | null } = { segment: null };
     const minTurn = Math.max(0, settings.minTurnDegrees ?? 5);
-    const result = createBeeTwoQuadrantTravel(
+    const result = createBeeQuadrantTravel(
       { ...anchorPoint(start), angle: Math.atan2(tangent.y, tangent.x) },
       goal,
       {
@@ -495,7 +495,7 @@ export function createBeeTwoFlight(
     const end = { ...start, progress: (start.progress + drift / guide.perimeter) % 1 };
     return measureSegment('loop', end, (t) => {
       const center = guide.point(start.progress * guide.perimeter + drift * t);
-      return orbit(center, start.radii, start.angle + start.direction * TAU * beeTwoEase(t));
+      return orbit(center, start.radii, start.angle + start.direction * TAU * beeEase(t));
     });
   }
 
@@ -547,7 +547,7 @@ export function createBeeTwoFlight(
 
   // Motion uses distance; exploration uses active seconds. Omitting seconds
   // leaves the quadrant clock paused for distance-only geometry sampling.
-  function advance(distance: number, seconds = 0): BeeTwoPose {
+  function advance(distance: number, seconds = 0): BeePose {
     distanceInSegment += Math.max(0, distance);
     while (distanceInSegment >= segment.lengths[segment.lengths.length - 1]) {
       distanceInSegment -= segment.lengths[segment.lengths.length - 1];
@@ -598,7 +598,7 @@ export function createBeeTwoFlight(
 }
 
 /** Quintic speed changes have zero acceleration at joins, with random targets/timing. */
-export function createBeeTwoSpeed(
+export function createBeeSpeed(
   min: number,
   max: number,
   minChangeSeconds: number,
@@ -621,7 +621,7 @@ export function createBeeTwoSpeed(
         to = pickSpeed();
         duration = pickDuration();
       }
-      return from + (to - from) * beeTwoEase(elapsed / duration);
+      return from + (to - from) * beeEase(elapsed / duration);
     },
   };
 }

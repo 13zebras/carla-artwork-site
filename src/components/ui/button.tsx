@@ -17,7 +17,7 @@ const buttonVariants = cva(
         positive:
           'bg-positive/50 border-positive text-foreground hover:bg-positive/35 active:bg-positive/50 focus-visible:ring-positive/50 dark:bg-positive/60 dark:hover:bg-positive/80',
         brand:
-          'bg-brand-500/50 border-brand-500 text-foreground hover:bg-brand-500/70 active:bg-brand-500/55 focus-visible:ring-brand-600/50',
+          'bg-brand-700/70 border-brand-600 text-foreground hover:bg-brand-700/90 active:bg-brand-700/80 focus-visible:ring-brand-700/70',
         vibrant:
           'bg-fuchsia-700 hover:bg-fuchsia-700/70 text-neutral-200 dark:bg-fuchsia-600/65 dark:hover:bg-fuchsia-600/75 hover:border-fuchsia-500/75 active:bg-fuchsia-700 dark:active:bg-fuchsia-600/60',
         outline:

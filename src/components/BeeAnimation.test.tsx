@@ -3,9 +3,9 @@ import { act, cleanup, render } from '@testing-library/react';
 import { StrictMode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { BeeTwoAnimation } from '@/components/BeeTwoAnimation';
+import { BeeAnimation } from '@/components/BeeAnimation';
 import { DEFAULT_BEE_SETTINGS } from '@/lib/shared/bee-settings';
-import * as beeTwoGeometry from '@/lib/shared/bee-two-animation';
+import * as beeGeometry from '@/lib/shared/bee-animation';
 
 let frames: Map<number, FrameRequestCallback>;
 let nextFrame: number;
@@ -109,7 +109,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe('BeeTwoAnimation', () => {
+describe('BeeAnimation', () => {
   it.each([
     [false, false],
     [false, true],
@@ -118,10 +118,10 @@ describe('BeeTwoAnimation', () => {
   ])(
     'uses unrestricted full-viewport flight above content (%s, full=%s)',
     (aboveContent, fullViewport) => {
-      const createFlight = vi.spyOn(beeTwoGeometry, 'createBeeTwoFlight');
+      const createFlight = vi.spyOn(beeGeometry, 'createBeeFlight');
       const usesFullViewport = aboveContent || fullViewport;
       const { container } = render(
-        <BeeTwoAnimation aboveContent={aboveContent} fullViewport={fullViewport} />,
+        <BeeAnimation aboveContent={aboveContent} fullViewport={fullViewport} />,
       );
       const wrapper = container.firstElementChild as HTMLDivElement;
       const canvas = wrapper.querySelector('canvas') as HTMLCanvasElement;
@@ -164,8 +164,8 @@ describe('BeeTwoAnimation', () => {
       () => ({ left: logoLeft, top: logoTop, width: logoWidth, height: logoHeight }) as DOMRect,
     );
     vi.stubGlobal('innerWidth', width);
-    const createFlight = vi.spyOn(beeTwoGeometry, 'createBeeTwoFlight');
-    const { container } = render(<BeeTwoAnimation />);
+    const createFlight = vi.spyOn(beeGeometry, 'createBeeFlight');
+    const { container } = render(<BeeAnimation />);
     const start = { x: logoLeft + logoWidth * horizontalRatio, y: logoTop + logoHeight / 2 };
     expect(createFlight).toHaveBeenLastCalledWith(
       expect.anything(),
@@ -187,10 +187,10 @@ describe('BeeTwoAnimation', () => {
 
   it('advances the quadrant clock with active frame time, not hidden-tab time', () => {
     const advance = vi.fn<
-      NonNullable<ReturnType<typeof beeTwoGeometry.createBeeTwoFlight>>['advance']
+      NonNullable<ReturnType<typeof beeGeometry.createBeeFlight>>['advance']
     >(() => ({ x: 100, y: 100, angle: 0, phase: 'travel' }));
-    vi.spyOn(beeTwoGeometry, 'createBeeTwoFlight').mockReturnValue({ advance });
-    render(<BeeTwoAnimation />);
+    vi.spyOn(beeGeometry, 'createBeeFlight').mockReturnValue({ advance });
+    render(<BeeAnimation />);
     tick(0);
     tick(100);
     expect(advance).toHaveBeenLastCalledWith(expect.any(Number), 0.1);
@@ -210,7 +210,7 @@ describe('BeeTwoAnimation', () => {
   });
 
   it('positions the bee before its first frame and draws a trail without per-frame renders', () => {
-    const { container } = render(<BeeTwoAnimation />);
+    const { container } = render(<BeeAnimation />);
     const bee = container.querySelector('canvas + div') as HTMLDivElement;
     const initialTransform = bee.style.transform;
     expect(initialTransform).toContain('translate(');
@@ -222,14 +222,14 @@ describe('BeeTwoAnimation', () => {
 
   it('draws uniform dashes across trail sample boundaries', () => {
     let distance = 0;
-    vi.spyOn(beeTwoGeometry, 'createBeeTwoSpeed').mockReturnValue({ advance: () => 70 });
-    vi.spyOn(beeTwoGeometry, 'createBeeTwoFlight').mockReturnValue({
+    vi.spyOn(beeGeometry, 'createBeeSpeed').mockReturnValue({ advance: () => 70 });
+    vi.spyOn(beeGeometry, 'createBeeFlight').mockReturnValue({
       advance: (step) => {
         distance += step;
         return { x: distance, y: 100, angle: 0, phase: 'travel' };
       },
     });
-    render(<BeeTwoAnimation />);
+    render(<BeeAnimation />);
     for (let time = 0; time <= 400; time += 100) tick(time);
     context.moveTo.mockClear();
     context.lineTo.mockClear();
@@ -245,7 +245,7 @@ describe('BeeTwoAnimation', () => {
   });
 
   it('recalculates the container after header and viewport changes', () => {
-    const { container } = render(<BeeTwoAnimation aboveContent={false} fullViewport={false} />);
+    const { container } = render(<BeeAnimation aboveContent={false} fullViewport={false} />);
     const wrapper = container.firstElementChild as HTMLDivElement;
     const canvas = wrapper.querySelector('canvas') as HTMLCanvasElement;
     headerHeight = 200;
@@ -259,18 +259,18 @@ describe('BeeTwoAnimation', () => {
   });
 
   it('rebuilds the flight when switching between above-content and behind-content modes', () => {
-    const createFlight = vi.spyOn(beeTwoGeometry, 'createBeeTwoFlight');
+    const createFlight = vi.spyOn(beeGeometry, 'createBeeFlight');
     const { container, rerender } = render(
-      <BeeTwoAnimation aboveContent={false} fullViewport={false} />,
+      <BeeAnimation aboveContent={false} fullViewport={false} />,
     );
     const wrapper = container.firstElementChild as HTMLDivElement;
-    rerender(<BeeTwoAnimation aboveContent fullViewport={false} />);
+    rerender(<BeeAnimation aboveContent fullViewport={false} />);
     expect(wrapper.style.top).toBe('0px');
     expect(createFlight).toHaveBeenLastCalledWith(
       { width: 1000, height: 800, top: 0 },
       expect.objectContaining({ excludeCenter: false }),
     );
-    rerender(<BeeTwoAnimation aboveContent={false} fullViewport={false} />);
+    rerender(<BeeAnimation aboveContent={false} fullViewport={false} />);
     expect(wrapper.style.top).toBe('160px');
     expect(createFlight).toHaveBeenLastCalledWith(
       { width: 1000, height: 640, top: 160 },
@@ -281,7 +281,7 @@ describe('BeeTwoAnimation', () => {
 
   it('does not animate with reduced motion and responds to preference changes', () => {
     setReducedMotion(true);
-    const { container } = render(<BeeTwoAnimation />);
+    const { container } = render(<BeeAnimation />);
     const wrapper = container.firstElementChild as HTMLDivElement;
     expect(frames.size).toBe(0);
     expect(wrapper.style.visibility).toBe('hidden');
@@ -294,7 +294,7 @@ describe('BeeTwoAnimation', () => {
   });
 
   it('pauses hidden tabs and removes old trail segments without jumping on resume', () => {
-    const { container } = render(<BeeTwoAnimation />);
+    const { container } = render(<BeeAnimation />);
     const bee = container.querySelector('canvas + div') as HTMLDivElement;
     for (let time = 0; time <= 3000; time += 100) tick(time);
     const previousTransform = bee.style.transform;
@@ -319,9 +319,9 @@ describe('BeeTwoAnimation', () => {
   });
 
   it.each([16, 20, 48])('uses the existing clearance formula with a %spx bee', (size) => {
-    const createFlight = vi.spyOn(beeTwoGeometry, 'createBeeTwoFlight');
-    const createSpeed = vi.spyOn(beeTwoGeometry, 'createBeeTwoSpeed');
-    const { container } = render(<BeeTwoAnimation settings={{ ...DEFAULT_BEE_SETTINGS, size }} />);
+    const createFlight = vi.spyOn(beeGeometry, 'createBeeFlight');
+    const createSpeed = vi.spyOn(beeGeometry, 'createBeeSpeed');
+    const { container } = render(<BeeAnimation settings={{ ...DEFAULT_BEE_SETTINGS, size }} />);
     const bee = container.querySelector('canvas + div') as HTMLDivElement;
     expect(bee.style.width).toBe(`${size}px`);
     expect(bee.style.height).toBe(`${size}px`);
@@ -340,9 +340,9 @@ describe('BeeTwoAnimation', () => {
   });
 
   it('applies saved inputs, clears the trail, and replaces rather than duplicates the frame loop', () => {
-    const createFlight = vi.spyOn(beeTwoGeometry, 'createBeeTwoFlight');
-    const createSpeed = vi.spyOn(beeTwoGeometry, 'createBeeTwoSpeed');
-    const { rerender } = render(<BeeTwoAnimation />);
+    const createFlight = vi.spyOn(beeGeometry, 'createBeeFlight');
+    const createSpeed = vi.spyOn(beeGeometry, 'createBeeSpeed');
+    const { rerender } = render(<BeeAnimation />);
     for (let time = 0; time < 500; time += 100) tick(time);
     const previousObservers = [...resizeObservers];
     const settings = {
@@ -358,7 +358,7 @@ describe('BeeTwoAnimation', () => {
       trailWidth: 4,
       trailLifetime: 5,
     };
-    rerender(<BeeTwoAnimation settings={settings} />);
+    rerender(<BeeAnimation settings={settings} />);
     expect(previousObservers.every(({ disconnect }) => disconnect.mock.calls.length === 1)).toBe(
       true,
     );
@@ -379,7 +379,7 @@ describe('BeeTwoAnimation', () => {
     expect(context.stroke).not.toHaveBeenCalled();
     expect(frames.size).toBe(1);
     setReducedMotion(true);
-    rerender(<BeeTwoAnimation settings={{ ...settings, size: 16 }} />);
+    rerender(<BeeAnimation settings={{ ...settings, size: 16 }} />);
     expect(frames.size).toBe(0);
   });
 
@@ -387,8 +387,8 @@ describe('BeeTwoAnimation', () => {
     'uses the configured %s-second trail lifetime, opacity, and width',
     (trailLifetime) => {
       let distance = 0;
-      vi.spyOn(beeTwoGeometry, 'createBeeTwoSpeed').mockReturnValue({ advance: () => 70 });
-      vi.spyOn(beeTwoGeometry, 'createBeeTwoFlight').mockReturnValue({
+      vi.spyOn(beeGeometry, 'createBeeSpeed').mockReturnValue({ advance: () => 70 });
+      vi.spyOn(beeGeometry, 'createBeeFlight').mockReturnValue({
         advance: (step) => {
           distance += step;
           return { x: distance, y: 100, angle: 0, phase: 'travel' };
@@ -399,7 +399,7 @@ describe('BeeTwoAnimation', () => {
         alphas.push(context.globalAlpha);
       });
       render(
-        <BeeTwoAnimation
+        <BeeAnimation
           settings={{ ...DEFAULT_BEE_SETTINGS, trailLifetime, trailOpacity: 0.4, trailWidth: 3.5 }}
         />,
       );
@@ -418,7 +418,7 @@ describe('BeeTwoAnimation', () => {
   it('cleans up frames and listeners, including Strict Mode setup/cleanup', () => {
     const { unmount } = render(
       <StrictMode>
-        <BeeTwoAnimation />
+        <BeeAnimation />
       </StrictMode>,
     );
     expect(frames.size).toBe(1);

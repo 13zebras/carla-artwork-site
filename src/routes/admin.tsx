@@ -83,7 +83,7 @@ function AdminLayout() {
   );
 
   return (
-    <main className='bg-background-2nd h-screen w-full overflow-x-hidden'>
+    <main className='bg-background h-screen w-full overflow-x-hidden'>
       <header
         className={cn(
           'z-20 fixed px-6 lg:px-12 pt-6 pb-4 w-full bg-neutral-800',

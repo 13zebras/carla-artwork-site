@@ -31,48 +31,59 @@ const controlGroups: { title: string; controls: BeeControl[] }[] = [
       {
         keys: ['minSpeed', 'maxSpeed'],
         label: 'Flight speed',
-        description: 'Makes the bee fly faster.',
+        description: 'Bee flies faster.',
       },
-      { keys: ['size'], label: 'Bee size', description: 'Makes the bee bigger.' },
-      { keys: ['loopSize'], label: 'Loop size', description: 'Makes the bee fly bigger loops.' },
+      { keys: ['size'], label: 'Bee size', description: 'Bee smaller or bigger.' },
+      { keys: ['loopSize'], label: 'Loop size', description: 'Bee flies bigger loops.' },
       {
         keys: ['travelIntensity'],
         label: 'Wandering',
-        description: 'Makes the bee wander more between loops.',
+        description: 'Bee wanders more between loops.',
       },
       {
         keys: ['loopSpacing'],
         label: 'Loop frequency',
-        description: 'Makes the bee loop more often.',
+        description: 'Bee loops more often.',
       },
       {
         keys: ['maxQuadrantSeconds'],
         label: 'Exploring',
-        description: 'Makes the bee move to another area sooner.',
+        description: 'Bee moves to another area sooner.',
       },
       {
         keys: ['loopVariation'],
         label: 'Loop variety',
-        description: 'Makes the loops less alike.',
+        description: 'Loops vary more in size.',
       },
-    ],
-  },
-  {
-    title: 'Trail',
-    controls: [
       {
         keys: ['trailLifetime'],
         label: 'Trail duration',
-        description: 'Keeps the trail visible longer.',
+        description: 'Trail visible longer.',
       },
       {
         keys: ['trailOpacity'],
         label: 'Trail opacity',
-        description: 'Higher number makes the trail darker, lower lighter.',
+        description: 'Higher number = trail darker.',
       },
       { keys: ['trailWidth'], label: 'Trail thickness', description: 'Makes the trail thicker.' },
     ],
   },
+  // {
+  //   title: 'Trail',
+  //   controls: [
+  //     {
+  //       keys: ['trailLifetime'],
+  //       label: 'Trail duration',
+  //       description: 'Trail visible longer.',
+  //     },
+  //     {
+  //       keys: ['trailOpacity'],
+  //       label: 'Trail opacity',
+  //       description: 'Higher number = trail darker.',
+  //     },
+  //     { keys: ['trailWidth'], label: 'Trail thickness', description: 'Makes the trail thicker.' },
+  //   ],
+  // },
 ];
 
 function formatSliderValue(value: number) {
@@ -92,35 +103,34 @@ function BeeControlInput(props: Parameters<typeof BeeControlSlider>[0]) {
   if (control.keys[0] !== 'trailWidth') return <BeeControlSlider {...props} />;
 
   return (
-    <fieldset
-      disabled={disabled}
-      aria-describedby='bee-trailWidth-description'
-      className='grid gap-3'
-    >
-      <legend className='mb-3 text-base font-semibold'>{control.label}</legend>
-      <div className='flex flex-wrap gap-6'>
-        {[1, 2, 3, 4].map((width) => (
-          <div key={width} className='flex items-center gap-2'>
-            <input
-              type='radio'
-              id={`bee-trailWidth-${width}`}
-              name='trailWidth'
-              aria-label={`${width}px`}
-              value={width}
-              checked={draft.trailWidth === width}
-              disabled={disabled}
-              onChange={() => onChange({ trailWidth: width })}
-              className='size-4 accent-brand-500 cursor-pointer disabled:cursor-not-allowed'
-            />
-            <Label htmlFor={`bee-trailWidth-${width}`} className='cursor-pointer font-normal'>
-              {width}px
-            </Label>
-          </div>
-        ))}
+    <fieldset disabled={disabled} aria-describedby='bee-trailWidth-description'>
+      <div className='flex flex-col justify-start gap-3.5'>
+        <legend className='mb-0 text-base font-semibold'>{control.label}</legend>
+
+        <div className='flex flex-wrap gap-6 pb-2'>
+          {[1, 2, 3, 4].map((width) => (
+            <div key={width} className='flex items-center gap-2'>
+              <input
+                type='radio'
+                id={`bee-trailWidth-${width}`}
+                name='trailWidth'
+                aria-label={`${width}px`}
+                value={width}
+                checked={draft.trailWidth === width}
+                disabled={disabled}
+                onChange={() => onChange({ trailWidth: width })}
+                className='size-4 accent-brand-500 cursor-pointer disabled:cursor-not-allowed'
+              />
+              <Label htmlFor={`bee-trailWidth-${width}`} className='cursor-pointer font-normal'>
+                {width}px
+              </Label>
+            </div>
+          ))}
+        </div>
+        <p id='bee-trailWidth-description' className='text-sm text-muted-foreground'>
+          {control.description}
+        </p>
       </div>
-      <p id='bee-trailWidth-description' className='text-sm text-muted-foreground'>
-        {control.description}
-      </p>
     </fieldset>
   );
 }
@@ -173,12 +183,15 @@ function BeeControlSlider({
   }
 
   return (
-    <div className='grid gap-3'>
-      <div className='flex items-center justify-between gap-4'>
+    <div className='grid gap-2'>
+      <div className='flex items-center justify-between gap-4 pb-2'>
         <Label id={labelId} htmlFor={id} className='text-base font-semibold'>
           {label}
         </Label>
-        <output aria-labelledby={labelId} className='text-sm tabular-nums text-muted-foreground'>
+        <output
+          aria-labelledby={labelId}
+          className='text-sm tabular-nums font-semibold text-foreground'
+        >
           {displayValue}
         </output>
       </div>
@@ -199,7 +212,7 @@ function BeeControlSlider({
         }}
       />
 
-      <div aria-hidden='true' className='flex justify-between text-xs text-dim-fg'>
+      <div aria-hidden='true' className='flex justify-between text-xs text-muted-foreground/70'>
         <span>{formatControlValue(key, min)}</span>
         <span>{formatControlValue(key, max)}</span>
       </div>
@@ -241,7 +254,7 @@ export function BeeSettingsTab({ bee }: { bee: BeeSettingsSnapshot }) {
 
   return (
     <TabsContent value='bee' className='mx-auto mt-4 w-full max-w-300'>
-      <Card className='rounded-sm bg-card/60 gap-8 px-4'>
+      <Card className='rounded-sm gap-12 px-4 pt-8 pb-10'>
         <CardHeader>
           <CardTitle className='text-2xl font-semibold'>Bee Animation</CardTitle>
           <CardDescription>
@@ -253,8 +266,8 @@ export function BeeSettingsTab({ bee }: { bee: BeeSettingsSnapshot }) {
           <form noValidate onSubmit={handleSubmit} className='grid gap-10'>
             {controlGroups.map(({ title, controls }) => (
               <fieldset key={title} disabled={isSaving} className='grid gap-6'>
-                <legend className='mb-6 text-xl font-semibold'>{title}</legend>
-                <div className='grid grid-cols-2 gap-x-20 gap-y-8'>
+                {/* <legend className='mb-6 text-xl font-semibold'>{title}</legend> */}
+                <div className='grid grid-cols-3 items-start gap-x-18 gap-y-12'>
                   {controls.map((control) => (
                     <BeeControlInput
                       key={control.keys[0]}
@@ -274,7 +287,7 @@ export function BeeSettingsTab({ bee }: { bee: BeeSettingsSnapshot }) {
               </Alert>
             )}
             <div className='grid justify-center gap-6 pt-2'>
-              <div className='flex justify-center items-center gap-6'>
+              <div className='flex justify-center items-center gap-7'>
                 <Button
                   type='submit'
                   variant='brand'
@@ -290,7 +303,7 @@ export function BeeSettingsTab({ bee }: { bee: BeeSettingsSnapshot }) {
                   size='lg'
                   disabled={isSaving || beeSettingsEqual(draft, DEFAULT_BEE_SETTINGS)}
                   onClick={() => setDraft({ ...DEFAULT_BEE_SETTINGS })}
-                  className='min-w-50 rounded-lg text-base font-semibold'
+                  className='min-w-50 rounded-lg text-base font-semibold border-border/30! bg-neutral-900/80! hover:bg-neutral-900! hover:border-border/50! text-neutral-300/90! active:bg-neutral-950/40!'
                 >
                   Reset to defaults
                 </Button>
