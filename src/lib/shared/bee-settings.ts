@@ -2,7 +2,7 @@ export const BEE_SETTING_LIMITS = {
   minSpeed: { min: 15, max: 150 },
   maxSpeed: { min: 15, max: 150 },
   size: { min: 16, max: 48 },
-  trailLifetime: { min: 5, max: 120 },
+  trailLifetime: { min: 10, max: 180 },
   loopSize: { min: 0.03, max: 0.2 },
   travelIntensity: { min: 0, max: 1 },
   loopSpacing: { min: 0.2, max: 1.5 },
@@ -61,8 +61,18 @@ function isReversed(key: BeeSettingKey) {
   return key === 'loopSpacing' || key === 'maxQuadrantSeconds';
 }
 
+export function beeSettingSliderLimits(key: BeeSettingKey): { min: number; max: number } {
+  if (key === 'size' || key === 'trailLifetime') return BEE_SETTING_LIMITS[key];
+  if (key === 'trailOpacity') {
+    const { min, max } = BEE_SETTING_LIMITS[key];
+    return { min: min * 100, max: max * 100 };
+  }
+  return { min: 0, max: 100 };
+}
+
 export function beeSettingToSlider(key: BeeSettingKey, value: number): number {
-  if (key === 'size') return value;
+  if (key === 'size' || key === 'trailLifetime') return value;
+  if (key === 'trailOpacity') return value * 100;
   const { min, max } = BEE_SETTING_LIMITS[key];
   const percentage = ((value - min) / (max - min)) * 100;
   if (isReversed(key)) return 100 - percentage;
@@ -70,7 +80,8 @@ export function beeSettingToSlider(key: BeeSettingKey, value: number): number {
 }
 
 export function sliderToBeeSetting(key: BeeSettingKey, value: number): number {
-  if (key === 'size') return Math.round(value);
+  if (key === 'size' || key === 'trailLifetime') return Math.round(value);
+  if (key === 'trailOpacity') return value / 100;
   const { min, max } = BEE_SETTING_LIMITS[key];
   const percentage = isReversed(key) ? 100 - value : value;
   return Number((min + (percentage / 100) * (max - min)).toFixed(6));

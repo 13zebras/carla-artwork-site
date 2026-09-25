@@ -49,10 +49,10 @@ afterEach(() => {
 });
 
 describe('Bee settings tab', () => {
-  it('shows ten labeled controls with descriptions and pixel-based size bounds', async () => {
+  it('shows labeled controls with descriptions, actual units, and integer readouts', async () => {
     await renderTab();
     const sliders = screen.getAllByRole('slider');
-    expect(sliders).toHaveLength(11); // Speed has two thumbs.
+    expect(sliders).toHaveLength(10); // Speed has two thumbs; thickness uses radios.
     const size = screen.getByRole('slider', { name: 'Bee size' }) as HTMLInputElement;
     expect(size.min).toBe('16');
     expect(size.max).toBe('48');
@@ -64,15 +64,62 @@ describe('Bee settings tab', () => {
     for (const slider of sliders) {
       const descriptionId = slider.getAttribute('aria-describedby');
       expect(descriptionId).toBeTruthy();
-      expect(document.getElementById(descriptionId ?? '')?.textContent).toMatch(/^Makes|^Keeps/);
+      expect(document.getElementById(descriptionId ?? '')?.textContent).toMatch(
+        /^Makes|^Keeps|^Higher/,
+      );
     }
-    for (const slider of sliders.filter((slider) => slider !== size)) {
+    const duration = screen.getByRole('slider', { name: 'Trail duration' }) as HTMLInputElement;
+    expect(duration.min).toBe('10');
+    expect(duration.max).toBe('180');
+    expect(duration.step).toBe('1');
+    expect(duration.value).toBe('90');
+    expect(duration.getAttribute('aria-valuetext')).toBe('90 seconds');
+    expect(screen.getByText('10 seconds')).toBeTruthy();
+    expect(screen.getByText('180 seconds')).toBeTruthy();
+    const opacity = screen.getByRole('slider', { name: 'Trail opacity' }) as HTMLInputElement;
+    expect(opacity.min).toBe('10');
+    expect(opacity.max).toBe('100');
+    expect(opacity.value).toBe('90');
+    expect(opacity.getAttribute('aria-valuetext')).toBe('90 percent');
+    expect(screen.getByText('90%')).toBeTruthy();
+    expect(screen.getByText('Higher number makes the trail darker, lower lighter.')).toBeTruthy();
+    expect(screen.getAllByRole('radio')).toHaveLength(4);
+    expect((screen.getByRole('radio', { name: '2px' }) as HTMLInputElement).checked).toBe(true);
+    for (const output of screen.getAllByRole('status')) {
+      expect(output.textContent).not.toMatch(/\d+\.\d+/);
+    }
+    for (const slider of sliders.filter(
+      (slider) => ![size, duration, opacity].includes(slider as HTMLInputElement),
+    )) {
       expect(slider.getAttribute('min')).toBe('0');
       expect(slider.getAttribute('max')).toBe('100');
     }
     expect(
       (screen.getByRole('button', { name: 'Save Changes' }) as HTMLButtonElement).disabled,
     ).toBe(true);
+  });
+
+  it('saves seconds, actual opacity, and each pixel thickness without altering other settings', async () => {
+    await renderTab();
+    fireEvent.keyDown(screen.getByRole('slider', { name: 'Trail duration' }), {
+      key: 'ArrowRight',
+    });
+    fireEvent.keyDown(screen.getByRole('slider', { name: 'Trail opacity' }), { key: 'ArrowLeft' });
+    for (const width of [1, 2, 3, 4]) {
+      fireEvent.click(screen.getByRole('radio', { name: `${width}px` }));
+      expect((screen.getByRole('radio', { name: `${width}px` }) as HTMLInputElement).checked).toBe(
+        true,
+      );
+      fireEvent.click(screen.getByRole('button', { name: 'Save Changes' }));
+      await waitFor(() => expect(success).toHaveBeenCalledTimes(width));
+      expect(save).toHaveBeenLastCalledWith({
+        data: { ...DEFAULT_BEE_SETTINGS, trailLifetime: 91, trailOpacity: 0.89, trailWidth: width },
+      });
+    }
+    fireEvent.click(screen.getByRole('button', { name: 'Reset to defaults' }));
+    expect((screen.getByRole('radio', { name: '2px' }) as HTMLInputElement).checked).toBe(true);
+    expect(screen.getByText('90%')).toBeTruthy();
+    expect(screen.getByText('90 seconds')).toBeTruthy();
   });
 
   it('supports keyboard size changes and publishes only on Save, preserving other defaults exactly', async () => {
@@ -136,6 +183,9 @@ describe('Bee settings tab', () => {
         screen.getAllByRole('slider').every((slider) => (slider as HTMLInputElement).disabled),
       ).toBe(true),
     );
+    expect(
+      screen.getAllByRole('radio').every((radio) => (radio as HTMLInputElement).disabled),
+    ).toBe(true);
     const savingButton = screen.getByRole('button', { name: 'Saving…' });
     fireEvent.click(savingButton);
     expect(save).toHaveBeenCalledOnce();

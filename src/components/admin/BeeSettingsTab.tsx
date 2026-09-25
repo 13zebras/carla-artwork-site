@@ -12,6 +12,7 @@ import { saveBeeSettings } from '@/lib/functions/bee-settings.functions';
 import {
   DEFAULT_BEE_SETTINGS,
   beeSettingsEqual,
+  beeSettingSliderLimits,
   beeSettingToSlider,
   sliderToBeeSetting,
 } from '@/lib/shared/bee-settings';
@@ -66,8 +67,8 @@ const controlGroups: { title: string; controls: BeeControl[] }[] = [
       },
       {
         keys: ['trailOpacity'],
-        label: 'Trail visibility',
-        description: 'Makes the trail easier to see.',
+        label: 'Trail opacity',
+        description: 'Higher number makes the trail darker, lower lighter.',
       },
       { keys: ['trailWidth'], label: 'Trail thickness', description: 'Makes the trail thicker.' },
     ],
@@ -75,7 +76,53 @@ const controlGroups: { title: string; controls: BeeControl[] }[] = [
 ];
 
 function formatSliderValue(value: number) {
-  return String(Number(value.toFixed(1)));
+  return String(Math.round(value));
+}
+
+function formatControlValue(key: BeeSettingKey, value: number) {
+  const integer = formatSliderValue(value);
+  if (key === 'size') return `${integer}px`;
+  if (key === 'trailLifetime') return `${integer} seconds`;
+  if (key === 'trailOpacity') return `${integer}%`;
+  return integer;
+}
+
+function BeeControlInput(props: Parameters<typeof BeeControlSlider>[0]) {
+  const { control, draft, disabled, onChange } = props;
+  if (control.keys[0] !== 'trailWidth') return <BeeControlSlider {...props} />;
+
+  return (
+    <fieldset
+      disabled={disabled}
+      aria-describedby='bee-trailWidth-description'
+      className='grid gap-3'
+    >
+      <legend className='mb-3 text-base font-semibold'>{control.label}</legend>
+      <div className='flex flex-wrap gap-6'>
+        {[1, 2, 3, 4].map((width) => (
+          <div key={width} className='flex items-center gap-2'>
+            <input
+              type='radio'
+              id={`bee-trailWidth-${width}`}
+              name='trailWidth'
+              aria-label={`${width}px`}
+              value={width}
+              checked={draft.trailWidth === width}
+              disabled={disabled}
+              onChange={() => onChange({ trailWidth: width })}
+              className='size-4 accent-brand-500 cursor-pointer disabled:cursor-not-allowed'
+            />
+            <Label htmlFor={`bee-trailWidth-${width}`} className='cursor-pointer font-normal'>
+              {width}px
+            </Label>
+          </div>
+        ))}
+      </div>
+      <p id='bee-trailWidth-description' className='text-sm text-muted-foreground'>
+        {control.description}
+      </p>
+    </fieldset>
+  );
 }
 
 function BeeControlSlider({
@@ -93,11 +140,11 @@ function BeeControlSlider({
   const id = `bee-${keys[0]}`;
   const labelId = `${id}-label`;
   const descriptionId = `${id}-description`;
-  const isSize = keys[0] === 'size';
+  const key = keys[0];
+  const { min, max } = beeSettingSliderLimits(key);
   const isRange = keys.length === 2;
   const values = keys.map((key) => beeSettingToSlider(key, draft[key]));
-  let displayValue = values.map(formatSliderValue).join(' – ');
-  if (isSize) displayValue = `${draft.size}px`;
+  const displayValue = values.map((value) => formatControlValue(key, value)).join(' – ');
 
   function handleChange(next: number | readonly number[]) {
     const nextValues = typeof next === 'number' ? [next] : next;
@@ -118,8 +165,11 @@ function BeeControlSlider({
   }
 
   function getAriaValueText(_formatted: string, value: number) {
-    if (isSize) return `${value} pixels`;
-    return `${formatSliderValue(value)} out of 100`;
+    const integer = formatSliderValue(value);
+    if (key === 'size') return `${integer} pixels`;
+    if (key === 'trailLifetime') return `${integer} seconds`;
+    if (key === 'trailOpacity') return `${integer} percent`;
+    return `${integer} out of 100`;
   }
 
   return (
@@ -135,8 +185,8 @@ function BeeControlSlider({
       <Slider
         id={id}
         value={values}
-        min={isSize ? 16 : 0}
-        max={isSize ? 48 : 100}
+        min={min}
+        max={max}
         step={1}
         disabled={disabled}
         thumbCollisionBehavior='none'
@@ -148,18 +198,15 @@ function BeeControlSlider({
           getAriaValueText,
         }}
       />
+
+      <div aria-hidden='true' className='flex justify-between text-xs text-dim-fg'>
+        <span>{formatControlValue(key, min)}</span>
+        <span>{formatControlValue(key, max)}</span>
+      </div>
       <p id={descriptionId} className='text-sm text-muted-foreground'>
         {description}
+        {isRange && <span className='ml-2'>Left handle: slowest. Right handle: fastest.</span>}
       </p>
-      <div aria-hidden='true' className='flex justify-between text-xs text-muted-foreground'>
-        <span>{isSize ? '16px' : '0'}</span>
-        <span>{isSize ? '48px' : '100'}</span>
-      </div>
-      {isRange && (
-        <p className='text-xs text-muted-foreground'>
-          Left handle: slowest. Right handle: fastest.
-        </p>
-      )}
     </div>
   );
 }
@@ -194,9 +241,9 @@ export function BeeSettingsTab({ bee }: { bee: BeeSettingsSnapshot }) {
 
   return (
     <TabsContent value='bee' className='mx-auto mt-4 w-full max-w-300'>
-      <Card className='rounded-sm'>
+      <Card className='rounded-sm bg-card/60 gap-8 px-4'>
         <CardHeader>
-          <CardTitle className='text-xl font-semibold'>Bee</CardTitle>
+          <CardTitle className='text-2xl font-semibold'>Bee Animation</CardTitle>
           <CardDescription>
             Adjust the bee and its trail. Changes go live only when you save.
           </CardDescription>
@@ -206,10 +253,10 @@ export function BeeSettingsTab({ bee }: { bee: BeeSettingsSnapshot }) {
           <form noValidate onSubmit={handleSubmit} className='grid gap-10'>
             {controlGroups.map(({ title, controls }) => (
               <fieldset key={title} disabled={isSaving} className='grid gap-6'>
-                <legend className='mb-6 text-lg font-semibold'>{title}</legend>
-                <div className='grid grid-cols-2 gap-x-12 gap-y-8'>
+                <legend className='mb-6 text-xl font-semibold'>{title}</legend>
+                <div className='grid grid-cols-2 gap-x-20 gap-y-8'>
                   {controls.map((control) => (
-                    <BeeControlSlider
+                    <BeeControlInput
                       key={control.keys[0]}
                       control={control}
                       draft={draft}
@@ -226,29 +273,31 @@ export function BeeSettingsTab({ bee }: { bee: BeeSettingsSnapshot }) {
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
-            <div className='grid gap-4 border-t pt-6'>
-              <p className='text-sm text-muted-foreground'>
-                Saved changes reach open website pages within about 15 seconds.
-              </p>
-              <div className='flex items-center gap-4'>
+            <div className='grid justify-center gap-6 pt-2'>
+              <div className='flex justify-center items-center gap-6'>
                 <Button
                   type='submit'
                   variant='brand'
                   size='lg'
                   disabled={isSaving || !hasChanges}
-                  className='min-w-60 rounded-lg text-base font-semibold'
+                  className='min-w-50 rounded-lg text-base font-semibold'
                 >
                   {isSaving ? 'Saving…' : 'Save Changes'}
                 </Button>
                 <Button
                   type='button'
                   variant='outline'
+                  size='lg'
                   disabled={isSaving || beeSettingsEqual(draft, DEFAULT_BEE_SETTINGS)}
                   onClick={() => setDraft({ ...DEFAULT_BEE_SETTINGS })}
+                  className='min-w-50 rounded-lg text-base font-semibold'
                 >
                   Reset to defaults
                 </Button>
               </div>
+              <p className='text-sm text-muted-foreground'>
+                Saved changes reach open website pages within about 15 seconds.
+              </p>
             </div>
           </form>
         </CardContent>

@@ -5,6 +5,7 @@ import {
   BEE_SETTING_LIMITS,
   DEFAULT_BEE_SETTINGS,
   beeSettingsEqual,
+  beeSettingSliderLimits,
   beeSettingToSlider,
   parseBeeSettings,
   sliderToBeeSetting,
@@ -22,15 +23,23 @@ describe('bee settings', () => {
     expect(sliderToBeeSetting('size', size)).toBe(size);
   });
 
-  it.each(BEE_SETTING_KEYS.filter((key) => key !== 'size'))(
-    'maps %s endpoints to the allowed physical bounds',
-    (key) => {
-      const { min, max } = BEE_SETTING_LIMITS[key];
-      const reversed = key === 'loopSpacing' || key === 'maxQuadrantSeconds';
-      expect(sliderToBeeSetting(key, 0)).toBe(reversed ? max : min);
-      expect(sliderToBeeSetting(key, 100)).toBe(reversed ? min : max);
-    },
-  );
+  it.each([10, 90, 180])('keeps trail duration %s in seconds', (seconds) => {
+    expect(beeSettingToSlider('trailLifetime', seconds)).toBe(seconds);
+    expect(sliderToBeeSetting('trailLifetime', seconds)).toBe(seconds);
+  });
+
+  it.each([10, 90, 100])('uses the actual opacity percentage %s', (percentage) => {
+    expect(beeSettingToSlider('trailOpacity', percentage / 100)).toBe(percentage);
+    expect(sliderToBeeSetting('trailOpacity', percentage)).toBe(percentage / 100);
+  });
+
+  it.each(BEE_SETTING_KEYS)('maps %s endpoints to the allowed physical bounds', (key) => {
+    const { min, max } = BEE_SETTING_LIMITS[key];
+    const reversed = key === 'loopSpacing' || key === 'maxQuadrantSeconds';
+    const bounds = beeSettingSliderLimits(key);
+    expect(sliderToBeeSetting(key, bounds.min)).toBe(reversed ? max : min);
+    expect(sliderToBeeSetting(key, bounds.max)).toBe(reversed ? min : max);
+  });
 
   it.each(BEE_SETTING_KEYS)('rejects invalid values for %s', (key) => {
     const { min, max } = BEE_SETTING_LIMITS[key];
