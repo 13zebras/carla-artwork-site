@@ -3,7 +3,6 @@ import { LoaderCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -15,11 +14,13 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { TabsContent } from '@/components/ui/tabs';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { updateArtwork, type AdminDashboard } from '@/lib/functions/artwork-upload.functions';
 import type { ArtworkRecord } from '@/lib/shared/artworks.types';
 import { buildBunnyCdnUrl } from '@/lib/shared/bunny';
 import type { BunnyStorageFile } from '@/lib/shared/bunny.types';
 import type { ArtworkCategoryRecord } from '@/lib/shared/categories.types';
+import { cn } from '@/lib/shared/utils';
 
 import { ArtworkDeleteModal } from './ArtworkDeleteModal';
 import { ArtworkEditModal } from './ArtworkEditModal';
@@ -166,9 +167,12 @@ export function DatabaseRecordsTab({
                     height: 100,
                     format: 'webp',
                   });
+
                   const hasStorageObject = storageByPath.has(record.storagePath);
                   const displayedStatus = statusOverrides[record.id] ?? record.status;
                   const isUpdatingStatus = updatingStatusIds.has(record.id);
+                  const publishTooltip =
+                    displayedStatus === 'published' ? 'Click to unpublish' : 'Click to publish';
                   return (
                     <TableRow
                       key={record.id}
@@ -182,7 +186,7 @@ export function DatabaseRecordsTab({
                         }
                       }}
                     >
-                      <TableCell className='text-center'>
+                      <TableCell className={cn('text-center', !hasStorageObject && 'bg-red-950')}>
                         <img
                           alt={record.alt}
                           className='inline-flex justify-center items-center bg-muted/20 max-w-25 max-h-25 object-contain overflow-hidden'
@@ -191,43 +195,60 @@ export function DatabaseRecordsTab({
                           src={thumbnailUrl}
                         />
                       </TableCell>
-                      <TableCell className='px-3 whitespace-normal'>
-                        <p className='pb-3 font-medium text-lg leading-tight'>{record.title}</p>
-                        <p className='font-mono text-muted-foreground text-xs'>
-                          {record.storagePath}
-                        </p>
+                      <TableCell className=' whitespace-normal'>
+                        <div className='flex flex-col gap-2.25 px-3'>
+                          <p className='font-medium text-lg leading-tight'>{record.title}</p>
+                          {hasStorageObject ? (
+                            <p className='font-mono text-muted-foreground text-xs'>
+                              {record.storagePath}
+                            </p>
+                          ) : (
+                            <div
+                              className={cn(
+                                'inline-flex justify-center items-center w-fit h-5 px-2 text-xs cursor-default rounded-sm text-foreground bg-red-900/70',
+                              )}
+                            >
+                              Image Missing from Bunny Storage
+                            </div>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell className='px-3 whitespace-normal'>
                         <p className='font-medium'>{record.category.label}</p>
                       </TableCell>
                       <TableCell>
                         <div className='flex flex-col items-center gap-4'>
-                          <Button
-                            variant={displayedStatus === 'published' ? 'vibrant' : 'outline'}
-                            size='xs'
-                            className='rounded-lg w-21 transition-colors duration-300 ease-out disabled:opacity-80'
-                            disabled={isUpdatingStatus}
-                            aria-label={`Change ${record.title} status to ${displayedStatus === 'published' ? 'draft' : 'published'}`}
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              void toggleStatus(record, displayedStatus);
-                            }}
-                          >
-                            {isUpdatingStatus ? (
-                              <>
-                                <LoaderCircle className='animate-spin' />
-                                Saving…
-                              </>
-                            ) : (
-                              displayedStatus.charAt(0).toUpperCase() + displayedStatus.slice(1)
-                            )}
-                          </Button>
-                          <Badge
-                            className='w-21 cursor-default'
-                            variant={hasStorageObject ? 'positive' : 'destructive'}
-                          >
-                            {hasStorageObject ? 'Tracked' : 'Missing'}
-                          </Badge>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant={displayedStatus === 'published' ? 'positive' : 'outline'}
+                                size='xs'
+                                className={cn(
+                                  'rounded-lg w-21 transition-colors duration-300 ease-out disabled:opacity-80',
+                                  displayedStatus === 'published' &&
+                                    'bg-green-900/70! hover:bg-green-800! active:bg-green-900! border-green-800',
+                                )}
+                                disabled={isUpdatingStatus}
+                                aria-label={`Change ${record.title} status to ${displayedStatus === 'published' ? 'draft' : 'published'}`}
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  void toggleStatus(record, displayedStatus);
+                                }}
+                              >
+                                {isUpdatingStatus ? (
+                                  <>
+                                    <LoaderCircle className='animate-spin' />
+                                    Saving…
+                                  </>
+                                ) : (
+                                  displayedStatus.charAt(0).toUpperCase() + displayedStatus.slice(1)
+                                )}
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side='top' sideOffset={8}>
+                              {publishTooltip}
+                            </TooltipContent>
+                          </Tooltip>
                         </div>
                       </TableCell>
                       <TableCell
