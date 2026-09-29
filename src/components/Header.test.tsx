@@ -54,6 +54,22 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+describe('Header compact navigation', () => {
+  it('replaces About and the contact icon at the same breakpoint as the hamburger', () => {
+    const { getByRole, getByLabelText } = render(<Header />);
+    const about = getByRole('link', { name: 'About' });
+    const contactIcon = getByLabelText('Contact').querySelector('svg');
+    const hamburger = getByRole('button', { name: 'More pages' });
+
+    expect(about.className).toContain('[@media(width<=370px)]:hidden');
+    expect(contactIcon?.parentElement?.className).toContain('[@media(width<=370px)]:hidden');
+    expect(hamburger.closest('[data-slot="navigation-menu"]')?.className).toContain(
+      '[@media(width<=370px)]:flex',
+    );
+    expect(getByRole('link', { name: 'Shop' }).className).not.toContain('hidden');
+  });
+});
+
 describe('Header portfolio overlap', () => {
   it('changes background and blur only while portfolio content overlaps the header', () => {
     const { container } = render(<Header />);

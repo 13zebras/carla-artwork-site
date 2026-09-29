@@ -2,10 +2,10 @@ import { Link, useLoaderData, useRouterState } from '@tanstack/react-router';
 import { Mail } from 'lucide-react';
 import { useEffect, useRef, type ReactNode } from 'react';
 
+import { ArtworkNavMenu } from '@/components/ArtworkNavMenu';
+import { CompactNavMenu } from '@/components/CompactNavMenu';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { cn } from '@/lib/shared/utils';
-
-import { ArtworkNavMenu } from './ArtworkNavMenu';
-import { ThemeToggle } from './ThemeToggle';
 
 export const linkClassName =
   'flex font-hand-rendered text-muted-foreground text-[0.93rem] xxs:text-base px-1 xxs:px-2 items-center rounded-md hover:text-foreground hover:bg-brand-200/80 active:text-foreground active:bg-brand-300/60 dark:hover:bg-brand-700/80 dark:active:bg-brand-700/70' as const;
@@ -80,7 +80,7 @@ export function Header() {
         isStaging && 'border-t-2 border-t-rose-900',
       )}
     >
-      <div className='relative flex xl:flex-row flex-col justify-end xl:justify-between items-center gap-6 xl:gap-20 px-10 xxs:px-12 xs:px-14 sm:px-18 md:px-20 w-full max-w-7xl h-full'>
+      <div className='relative flex xl:flex-row flex-col justify-end xl:justify-between items-center gap-6 xl:gap-20 px-4 xxs:px-12 xs:px-14 sm:px-18 md:px-20 w-full max-w-7xl h-full'>
         <HomeLogoLink className='hidden xs:block w-full max-w-162.5 h-auto'>
           <img
             data-bee-logo='wide'
@@ -92,7 +92,7 @@ export function Header() {
             className='hidden xs:block w-full h-auto'
           />
         </HomeLogoLink>
-        <HomeLogoLink className='xs:hidden block w-full max-w-83.75 h-auto'>
+        <HomeLogoLink className='xs:hidden block w-full px-2 max-w-80 min-[420px]:max-w-83.75 h-auto'>
           <img
             data-bee-logo='compact'
             src='/header-logos/logo-stacked-335x70.webp'
@@ -104,14 +104,18 @@ export function Header() {
           />
         </HomeLogoLink>
 
-        <nav className='flex justify-between xxs:justify-center xl:justify-end xxs:gap-6 xl:gap-4 xl:mt-4 w-full xs:w-auto max-w-100 xs:max-w-full grow-0'>
+        <nav className='flex justify-between xxs:justify-center xl:justify-end gap-1 xxs:gap-6 xl:gap-4 xl:mt-4 w-full xs:w-auto max-w-86 xs:max-w-full grow-0'>
           <ArtworkNavMenu categories={categories} />
           <a href='/coming-soon' className={linkClassName} target='_blank'>
             Shop
           </a>
           <Link
             to='/about'
-            className={cn(linkClassName, pathname === '/about' && activeLinkClassName)}
+            className={cn(
+              linkClassName,
+              '[@media(width<=370px)]:hidden',
+              pathname === '/about' && activeLinkClassName,
+            )}
           >
             About
           </Link>
@@ -127,14 +131,16 @@ export function Header() {
           </Link>
           <Link
             to='/contact'
+            aria-label='Contact'
             className={cn(
               linkClassName,
-              'xs:hidden',
+              'xs:hidden [@media(width<=370px)]:hidden',
               pathname === '/contact' && activeLinkClassName,
             )}
           >
-            <Mail className='size-6' />
+            <Mail className='size-6' aria-hidden='true' />
           </Link>
+          <CompactNavMenu />
         </nav>
         <ThemeToggle className='top-2 xs:top-3 right-2 xs:right-3 sm:right-4 z-50 absolute' />
       </div>
