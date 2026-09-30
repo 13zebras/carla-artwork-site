@@ -258,6 +258,33 @@ describe('BeeAnimation', () => {
     expect(frames.size).toBe(1);
   });
 
+  it('keeps the flight when mobile toolbars change the visible height while scrolling', () => {
+    // jsdom has no layout: report a stable 100lvh probe, as mobile browsers do.
+    const getRect = HTMLElement.prototype.getBoundingClientRect;
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (
+      this: HTMLElement,
+    ) {
+      if (this.classList.contains('h-lvh') && !this.classList.contains('bee-animation')) {
+        return { height: 850 } as DOMRect;
+      }
+      return getRect.call(this);
+    });
+    const createFlight = vi.spyOn(beeGeometry, 'createBeeFlight');
+    const { container } = render(<BeeAnimation />);
+    const wrapper = container.firstElementChild as HTMLDivElement;
+    const canvas = wrapper.querySelector('canvas') as HTMLCanvasElement;
+    expect(wrapper.style.height).toBe('850px');
+    expect(canvas.height).toBe(1700);
+
+    vi.stubGlobal('innerHeight', 740);
+    act(() => window.dispatchEvent(new Event('resize')));
+    vi.stubGlobal('innerHeight', 850);
+    act(() => window.dispatchEvent(new Event('resize')));
+
+    expect(createFlight).toHaveBeenCalledTimes(1);
+    expect(canvas.height).toBe(1700);
+  });
+
   it('rebuilds the flight when switching between above-content and behind-content modes', () => {
     const createFlight = vi.spyOn(beeGeometry, 'createBeeFlight');
     const { container, rerender } = render(

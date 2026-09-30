@@ -55,6 +55,7 @@ export function BeeAnimation({
   const viewportRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const beeRef = useRef<HTMLDivElement>(null);
+  const heightProbeRef = useRef<HTMLDivElement>(null);
   const usesFullViewport = aboveContent || fullViewport;
   const topClasses = usesFullViewport ? 'top-0' : 'top-44 xxs:top-42 xs:top-40 sm:top-42 xl:top-38';
   const layerClass = aboveContent ? 'z-30' : '-z-10';
@@ -77,7 +78,8 @@ export function BeeAnimation({
     const viewport = viewportRef.current;
     const canvas = canvasRef.current;
     const bee = beeRef.current;
-    if (!viewport || !canvas || !bee) return;
+    const heightProbe = heightProbeRef.current;
+    if (!viewport || !canvas || !bee || !heightProbe) return;
     const context = canvas.getContext('2d');
     if (!context) return;
 
@@ -205,12 +207,10 @@ export function BeeAnimation({
 
     const measure = () => {
       const headerHeight = header?.getBoundingClientRect().height ?? 0;
-      const next = getBeeArea(
-        window.innerWidth,
-        window.innerHeight,
-        headerHeight,
-        usesFullViewport,
-      );
+      // Mobile toolbars change innerHeight (and fire resize) while scrolling, which
+      // would rebuild the flight. 100lvh stays fixed; browsers without lvh fall back.
+      const viewportHeight = heightProbe.getBoundingClientRect().height || window.innerHeight;
+      const next = getBeeArea(window.innerWidth, viewportHeight, headerHeight, usesFullViewport);
       const nextPixelRatio = window.devicePixelRatio || 1;
       const isWide = window.innerWidth >= XS_BREAKPOINT_PX;
       const logo = isWide ? wideLogo : compactLogo;
@@ -236,6 +236,7 @@ export function BeeAnimation({
       pixelRatio = nextPixelRatio;
       initialPoint = nextInitialPoint;
       viewport.style.top = `${area.top}px`;
+      viewport.style.height = `${area.height}px`;
       canvas.width = Math.round(area.width * pixelRatio);
       canvas.height = Math.round(area.height * pixelRatio);
       context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
@@ -297,12 +298,13 @@ export function BeeAnimation({
       ref={viewportRef}
       aria-hidden='true'
       className={cn(
-        'bee-animation pointer-events-none invisible fixed inset-x-0 bottom-0 overflow-hidden',
+        'bee-animation pointer-events-none invisible fixed inset-x-0 h-lvh overflow-hidden',
         trailColor,
         topClasses,
         layerClass,
       )}
     >
+      <div ref={heightProbeRef} className='absolute top-0 left-0 w-0 h-lvh' />
       <canvas ref={canvasRef} aria-hidden='true' className='absolute inset-0 size-full' />
       <div
         ref={beeRef}
