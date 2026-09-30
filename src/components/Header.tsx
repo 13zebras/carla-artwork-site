@@ -104,7 +104,7 @@ export function Header() {
           />
         </HomeLogoLink>
 
-        <nav className='flex justify-between xxs:justify-center xl:justify-end gap-1 xxs:gap-6 xl:gap-4 xl:mt-4 w-full xs:w-auto max-w-86 xs:max-w-full grow-0'>
+        <nav className='flex justify-between xxs:justify-center xl:justify-end gap-3 xxs:gap-6 xl:gap-4 xl:mt-4 px-4 w-full xs:w-auto max-[370px]:max-w-70 max-w-85 xs:max-w-full grow-0'>
           <ArtworkNavMenu categories={categories} />
           <a href='/coming-soon' className={linkClassName} target='_blank'>
             Shop
@@ -113,7 +113,7 @@ export function Header() {
             to='/about'
             className={cn(
               linkClassName,
-              '[@media(width<=370px)]:hidden',
+              'max-[370px]:hidden',
               pathname === '/about' && activeLinkClassName,
             )}
           >
@@ -134,15 +134,15 @@ export function Header() {
             aria-label='Contact'
             className={cn(
               linkClassName,
-              'xs:hidden [@media(width<=370px)]:hidden',
+              'xs:hidden max-[370px]:hidden',
               pathname === '/contact' && activeLinkClassName,
             )}
           >
             <Mail className='size-6' aria-hidden='true' />
           </Link>
-          <CompactNavMenu />
+          <CompactNavMenu className='max-[370px]:flex' />
         </nav>
-        <ThemeToggle className='top-2 xs:top-3 right-2 xs:right-3 sm:right-4 z-50 absolute' />
+        <ThemeToggle className='top-2.5 xs:top-3 right-3 sm:right-4 z-50 absolute' />
       </div>
     </header>
   );

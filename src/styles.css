@@ -43,6 +43,9 @@
 
 @theme inline {
   --font-hand-rendered: 'Hand_rendered Ink', sans-serif;
+  --breakpoint-xs: 35rem;
+  --breakpoint-xxs: 28.75rem;
+
   --color-background: var(--background);
   --color-background-2nd: var(--background-2nd);
   --color-foreground: var(--foreground);
@@ -63,8 +66,6 @@
   --color-ring: var(--ring);
   --color-shadow-card: var(--card-shadow-color);
   --shadow-card: var(--card-shadow);
-  --breakpoint-xs: 35rem;
-  --breakpoint-xxs: 28.75rem;
 
   --color-destructive: var(--destructive);
   --color-positive: var(--positive);

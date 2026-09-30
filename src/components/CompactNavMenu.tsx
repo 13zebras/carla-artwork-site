@@ -17,7 +17,7 @@ const links = [
   { to: '/contact', label: 'Contact' },
 ] as const;
 
-export function CompactNavMenu() {
+export function CompactNavMenu({ className }: { className?: string }) {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
 
   return (
@@ -25,7 +25,7 @@ export function CompactNavMenu() {
       render={<div />}
       viewport={false}
       align='end'
-      className='hidden flex-none [@media(width<=370px)]:flex'
+      className={cn('hidden flex-none', className)}
     >
       <NavigationMenuList>
         <NavigationMenuItem>
@@ -37,7 +37,7 @@ export function CompactNavMenu() {
             )}
           >
             <span aria-hidden='true'>
-              <Menu className='size-6' />
+              <Menu className='size-5.5' />
             </span>
           </NavigationMenuTrigger>
           <NavigationMenuContent className='z-50 shadow-shadow-card group-data-[viewport=false]/navigation-menu:shadow-xl group-data-[viewport=false]/navigation-menu:border border-border-2nd group-data-[viewport=false]/navigation-menu:rounded-xs w-max max-w-75'>
