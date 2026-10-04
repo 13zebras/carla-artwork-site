@@ -1,8 +1,6 @@
-import { Bug } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 
-import { DEFAULT_BEE_SETTINGS } from '@/lib/shared/bee-settings';
-import type { BeeSettings } from '@/lib/shared/bee-settings';
+import { BeeIcon } from '@/components/BeeIcon';
 import {
   beeTrailOpacity,
   createBeeFlight,
@@ -10,6 +8,8 @@ import {
   getBeeArea,
 } from '@/lib/shared/bee-animation';
 import type { BeePoint, BeePose } from '@/lib/shared/bee-animation';
+import { DEFAULT_BEE_SETTINGS } from '@/lib/shared/bee-settings';
+import type { BeeSettings } from '@/lib/shared/bee-settings';
 import { cn } from '@/lib/shared/utils';
 
 // Above-content mode removes the central exclusion and always uses the full viewport.
@@ -29,7 +29,6 @@ const MAX_TURN = 60;
 const MIN_SPEED_CHANGE_SECONDS = 3;
 const MAX_SPEED_CHANGE_SECONDS = 6;
 const TRAIL_SAMPLES_PER_SECOND = 30;
-const beeColor = 'text-neutral-950 dark:text-neutral-50';
 const trailColor = 'text-neutral-950 dark:text-neutral-50';
 
 const TRAIL_DASH_LENGTH = 8;
@@ -104,8 +103,9 @@ export function BeeAnimation({
     let color = getComputedStyle(viewport).color;
 
     const adjustedTrailOpacity = aboveContent ? TRAIL_OPACITY : TRAIL_OPACITY * 0.5;
+    // The bee artwork faces left, so turn it half a circle to face the heading.
     const positionBee = (pose: BeePose) => {
-      bee.style.transform = `translate(${pose.x}px, ${pose.y}px) translate(-50%, -50%) rotate(${pose.angle + Math.PI / 2}rad)`;
+      bee.style.transform = `translate(${pose.x}px, ${pose.y}px) translate(-50%, -50%) rotate(${pose.angle + Math.PI}rad)`;
     };
 
     const paintTrail = (now: number) => {
@@ -311,7 +311,7 @@ export function BeeAnimation({
         className='absolute top-0 left-0 will-change-transform'
         style={{ width: settings.size, height: settings.size }}
       >
-        <Bug className={cn('size-full', beeColor)} />
+        <BeeIcon size={settings.size} className='block' />
       </div>
     </div>
   );
