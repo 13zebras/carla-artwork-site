@@ -61,10 +61,10 @@ describe('Header compact navigation', () => {
     const contactIcon = getByLabelText('Contact').querySelector('svg');
     const hamburger = getByRole('button', { name: 'More pages' });
 
-    expect(about.className).toContain('[@media(width<=370px)]:hidden');
-    expect(contactIcon?.parentElement?.className).toContain('[@media(width<=370px)]:hidden');
+    expect(about.className).toContain('max-[370px]:hidden');
+    expect(contactIcon?.parentElement?.className).toContain('max-[370px]:hidden');
     expect(hamburger.closest('[data-slot="navigation-menu"]')?.className).toContain(
-      '[@media(width<=370px)]:flex',
+      'max-[370px]:flex',
     );
     expect(getByRole('link', { name: 'Shop' }).className).not.toContain('hidden');
   });

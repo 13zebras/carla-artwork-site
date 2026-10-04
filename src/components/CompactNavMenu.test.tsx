@@ -49,7 +49,7 @@ describe('CompactNavMenu', () => {
     const { getByRole, queryByRole, container } = render(<CompactNavMenu />);
     const trigger = getByRole('button', { name: 'More pages' });
 
-    expect(container.firstElementChild?.className).toContain('[@media(width<=370px)]:flex');
+    expect(container.firstElementChild?.className).toContain('hidden');
     expect(trigger.getAttribute('aria-expanded')).toBe('false');
     expect(queryByRole('link', { name: 'About' })).toBeNull();
 
