@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { createBeeFlight, getBeeArea } from '@/lib/shared/bee-animation';
 import {
   BEE_SETTING_KEYS,
   BEE_SETTING_LIMITS,
@@ -11,7 +12,6 @@ import {
   parseBeeSettings,
   sliderToBeeSetting,
 } from '@/lib/shared/bee-settings';
-import { createBeeFlight, getBeeArea } from '@/lib/shared/bee-animation';
 
 describe('bee settings', () => {
   it.each(BEE_SETTING_KEYS)('round-trips the exact default for %s', (key) => {

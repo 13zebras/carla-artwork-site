@@ -101,8 +101,7 @@ describe('bee container geometry', () => {
       // Active time triggers quadrant exploration as it does in the component.
       for (let index = 0; index < 20000; index++) {
         const point = flight.advance(4, 0.04);
-        if (!isSafe(point, area))
-          throw new Error(`Unsafe bee position: ${JSON.stringify(point)}`);
+        if (!isSafe(point, area)) throw new Error(`Unsafe bee position: ${JSON.stringify(point)}`);
         if (point.y < area.height * 0.4) visited.top = true;
         if (point.x > area.width * 0.6) visited.right = true;
         if (point.y > area.height * 0.6) visited.bottom = true;
@@ -190,21 +189,24 @@ describe('bee container geometry', () => {
     },
   );
 
-  it.each([true, false])('respects the expanded central exclusion (full viewport=%s)', (fullViewport) => {
-    const area = getBeeArea(1000, 900, 160, fullViewport);
-    const flight = requireFlight(
-      createBeeFlight(area, { ...settings, travelIntensity: 1 }, seededRandom(43)),
-    );
-    let unsafePoint: BeePoint | undefined;
-    for (let index = 0; index < 20000; index++) {
-      const point = flight.advance(4);
-      if (!isSafe(point, area)) {
-        unsafePoint = point;
-        break;
+  it.each([true, false])(
+    'respects the expanded central exclusion (full viewport=%s)',
+    (fullViewport) => {
+      const area = getBeeArea(1000, 900, 160, fullViewport);
+      const flight = requireFlight(
+        createBeeFlight(area, { ...settings, travelIntensity: 1 }, seededRandom(43)),
+      );
+      let unsafePoint: BeePoint | undefined;
+      for (let index = 0; index < 20000; index++) {
+        const point = flight.advance(4);
+        if (!isSafe(point, area)) {
+          unsafePoint = point;
+          break;
+        }
       }
-    }
-    expect(unsafePoint).toBeUndefined();
-  });
+      expect(unsafePoint).toBeUndefined();
+    },
+  );
 
   it.each([
     [1000, 800, 1.3, -0.1],

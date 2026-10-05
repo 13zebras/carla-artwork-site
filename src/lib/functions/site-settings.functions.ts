@@ -19,4 +19,3 @@ export const setDemoMode = createServerFn({ method: 'POST' })
     await requireAdminFromRequest();
     return updateDemoMode(data.demoMode);
   });
-

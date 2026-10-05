@@ -1,10 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { BeePoint } from '@/lib/shared/bee-animation';
-import {
-  createBeeCourseChanges,
-  createBeeQuadrantTravel,
-} from '@/lib/shared/bee-quadrant-travel';
+import { createBeeCourseChanges, createBeeQuadrantTravel } from '@/lib/shared/bee-quadrant-travel';
 
 function seededRandom(seed: number) {
   let state = seed;
