@@ -76,22 +76,6 @@ const controlGroups: { title: string; controls: BeeControl[] }[] = [
       },
     ],
   },
-  // {
-  //   title: 'Trail',
-  //   controls: [
-  //     {
-  //       keys: ['trailLifetime'],
-  //       label: 'Trail duration',
-  //       description: 'Trail visible longer.',
-  //     },
-  //     {
-  //       keys: ['trailOpacity'],
-  //       label: 'Trail opacity',
-  //       description: 'Higher number = trail darker.',
-  //     },
-  //     { keys: ['trailWidth'], label: 'Trail thickness', description: 'Makes the trail thicker.' },
-  //   ],
-  // },
 ];
 
 function formatSliderValue(value: number) {
@@ -122,8 +106,8 @@ function BeeControlInput(props: Parameters<typeof BeeControlSlider>[0]) {
         <legend className='mb-0 text-base font-semibold'>{control.label}</legend>
 
         <div className='flex flex-wrap gap-6 pb-2'>
-          {[1, 2, 3, 4].map((width) => (
-            <div key={width} className='flex items-center gap-2'>
+          {[1, 2, 3].map((width) => (
+            <div key={width} className='flex items-center gap-3'>
               <input
                 type='radio'
                 id={`bee-trailWidth-${width}`}
