@@ -1,7 +1,7 @@
 export const BEE_SETTING_LIMITS = {
   minSpeed: { min: 15, max: 150 },
   maxSpeed: { min: 15, max: 150 },
-  size: { min: 16, max: 48 },
+  size: { min: 24, max: 48 },
   trailLifetime: { min: 10, max: 180 },
   loopSize: { min: 0.03, max: 0.2 },
   travelIntensity: { min: 0, max: 1 },
@@ -10,6 +10,8 @@ export const BEE_SETTING_LIMITS = {
   maxQuadrantSeconds: { min: 3, max: 20 },
   loopVariation: { min: 0, max: 0.4 },
   trailWidth: { min: 0.5, max: 4 },
+  // Outline gray as a fraction of white: 0 = black, 1 = white.
+  outlineGray: { min: 0, max: 1 },
 } as const;
 
 export type BeeSettingKey = keyof typeof BEE_SETTING_LIMITS;
@@ -20,7 +22,7 @@ export type BeeSettingsSnapshot = { settings: BeeSettings; revision: number };
 export const DEFAULT_BEE_SETTINGS: Readonly<BeeSettings> = Object.freeze({
   minSpeed: 30,
   maxSpeed: 80,
-  size: 20,
+  size: 32,
   trailLifetime: 90,
   loopSize: 0.15,
   travelIntensity: 0.9,
@@ -29,6 +31,7 @@ export const DEFAULT_BEE_SETTINGS: Readonly<BeeSettings> = Object.freeze({
   maxQuadrantSeconds: 7,
   loopVariation: 0.4,
   trailWidth: 2,
+  outlineGray: 0.6,
 });
 
 export const BEE_SETTING_KEYS = Object.keys(BEE_SETTING_LIMITS) as BeeSettingKey[];
@@ -55,6 +58,13 @@ export function parseBeeSettings(input: unknown): BeeSettings {
     throw new Error('Slowest speed cannot exceed fastest speed');
   }
   return settings;
+}
+
+export function beeOutlineColor(gray: number): string {
+  const channel = Math.round(gray * 255)
+    .toString(16)
+    .padStart(2, '0');
+  return `#${channel.repeat(3)}`;
 }
 
 function isReversed(key: BeeSettingKey) {

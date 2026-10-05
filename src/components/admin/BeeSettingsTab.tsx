@@ -66,6 +66,11 @@ const controlGroups: { title: string; controls: BeeControl[] }[] = [
         description: 'Higher number = trail darker.',
       },
       { keys: ['trailWidth'], label: 'Trail thickness', description: 'Makes the trail thicker.' },
+      {
+        keys: ['outlineGray'],
+        label: 'Bee outline',
+        description: 'Higher number = lighter outline.',
+      },
     ],
   },
   // {
@@ -95,7 +100,13 @@ function formatControlValue(key: BeeSettingKey, value: number) {
   if (key === 'size') return `${integer}px`;
   if (key === 'trailLifetime') return `${integer} seconds`;
   if (key === 'trailOpacity') return `${integer}%`;
+  if (key === 'outlineGray') return `${integer}% white`;
   return integer;
+}
+
+function formatEndpoint(key: BeeSettingKey, value: number) {
+  if (key === 'outlineGray') return value === 0 ? 'Black' : 'White';
+  return formatControlValue(key, value);
 }
 
 function BeeControlInput(props: Parameters<typeof BeeControlSlider>[0]) {
@@ -179,6 +190,7 @@ function BeeControlSlider({
     if (key === 'size') return `${integer} pixels`;
     if (key === 'trailLifetime') return `${integer} seconds`;
     if (key === 'trailOpacity') return `${integer} percent`;
+    if (key === 'outlineGray') return `${integer} percent white`;
     return `${integer} out of 100`;
   }
 
@@ -213,8 +225,8 @@ function BeeControlSlider({
       />
 
       <div aria-hidden='true' className='flex justify-between text-xs text-muted-foreground/70'>
-        <span>{formatControlValue(key, min)}</span>
-        <span>{formatControlValue(key, max)}</span>
+        <span>{formatEndpoint(key, min)}</span>
+        <span>{formatEndpoint(key, max)}</span>
       </div>
       <p id={descriptionId} className='text-sm text-muted-foreground'>
         {description}

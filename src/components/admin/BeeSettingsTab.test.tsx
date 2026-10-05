@@ -52,14 +52,14 @@ describe('Bee settings tab', () => {
   it('shows labeled controls with descriptions, actual units, and integer readouts', async () => {
     await renderTab();
     const sliders = screen.getAllByRole('slider');
-    expect(sliders).toHaveLength(10); // Speed has two thumbs; thickness uses radios.
+    expect(sliders).toHaveLength(11); // Speed has two thumbs; thickness uses radios.
     const size = screen.getByRole('slider', { name: 'Bee size' }) as HTMLInputElement;
-    expect(size.min).toBe('16');
+    expect(size.min).toBe('24');
     expect(size.max).toBe('48');
     expect(size.step).toBe('1');
-    expect(size.value).toBe('20');
-    expect(size.getAttribute('aria-valuetext')).toBe('20 pixels');
-    expect(screen.getByText('16px')).toBeTruthy();
+    expect(size.value).toBe('32');
+    expect(size.getAttribute('aria-valuetext')).toBe('32 pixels');
+    expect(screen.getByText('24px')).toBeTruthy();
     expect(screen.getByText('48px')).toBeTruthy();
     for (const slider of sliders) {
       const descriptionId = slider.getAttribute('aria-describedby');
@@ -83,6 +83,12 @@ describe('Bee settings tab', () => {
     expect(opacity.getAttribute('aria-valuetext')).toBe('90 percent');
     expect(screen.getByText('90%')).toBeTruthy();
     expect(screen.getByText('Higher number = trail darker.')).toBeTruthy();
+    const outline = screen.getByRole('slider', { name: 'Bee outline' }) as HTMLInputElement;
+    expect(outline.value).toBe('60');
+    expect(outline.getAttribute('aria-valuetext')).toBe('60 percent white');
+    expect(screen.getByText('60% white')).toBeTruthy();
+    expect(screen.getByText('Black')).toBeTruthy();
+    expect(screen.getByText('White')).toBeTruthy();
     expect(screen.getAllByRole('radio')).toHaveLength(4);
     expect((screen.getByRole('radio', { name: '2px' }) as HTMLInputElement).checked).toBe(true);
     for (const output of screen.getAllByRole('status')) {
@@ -126,17 +132,17 @@ describe('Bee settings tab', () => {
     await renderTab();
     const size = screen.getByRole('slider', { name: 'Bee size' });
     fireEvent.keyDown(size, { key: 'ArrowRight' });
-    expect((size as HTMLInputElement).value).toBe('21');
+    expect((size as HTMLInputElement).value).toBe('33');
     expect(save).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Save Changes' }));
     await waitFor(() => expect(success).toHaveBeenCalledOnce());
-    expect(save).toHaveBeenCalledWith({ data: { ...DEFAULT_BEE_SETTINGS, size: 21 } });
+    expect(save).toHaveBeenCalledWith({ data: { ...DEFAULT_BEE_SETTINGS, size: 33 } });
     expect(
       (screen.getByRole('button', { name: 'Save Changes' }) as HTMLButtonElement).disabled,
     ).toBe(true);
     await act(async () => fireEvent.click(screen.getByRole('tab', { name: 'Other' })));
     await act(async () => fireEvent.click(screen.getByRole('tab', { name: 'Bee' })));
-    expect((screen.getByRole('slider', { name: 'Bee size' }) as HTMLInputElement).value).toBe('21');
+    expect((screen.getByRole('slider', { name: 'Bee size' }) as HTMLInputElement).value).toBe('33');
   });
 
   it('gives speed endpoints separate names and prevents crossing with keyboard controls', async () => {
@@ -173,9 +179,9 @@ describe('Bee settings tab', () => {
         finish = resolve;
       }),
     );
-    await renderTab({ ...DEFAULT_BEE_SETTINGS, size: 32 });
+    await renderTab({ ...DEFAULT_BEE_SETTINGS, size: 40 });
     fireEvent.click(screen.getByRole('button', { name: 'Reset to defaults' }));
-    expect((screen.getByRole('slider', { name: 'Bee size' }) as HTMLInputElement).value).toBe('20');
+    expect((screen.getByRole('slider', { name: 'Bee size' }) as HTMLInputElement).value).toBe('32');
     expect(save).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Save Changes' }));
     await waitFor(() =>

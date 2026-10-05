@@ -4,6 +4,7 @@ import {
   BEE_SETTING_KEYS,
   BEE_SETTING_LIMITS,
   DEFAULT_BEE_SETTINGS,
+  beeOutlineColor,
   beeSettingsEqual,
   beeSettingSliderLimits,
   beeSettingToSlider,
@@ -18,9 +19,17 @@ describe('bee settings', () => {
     expect(sliderToBeeSetting(key, beeSettingToSlider(key, initial))).toBe(initial);
   });
 
-  it.each([16, 20, 48])('keeps size %s in pixels', (size) => {
+  it.each([24, 32, 48])('keeps size %s in pixels', (size) => {
     expect(beeSettingToSlider('size', size)).toBe(size);
     expect(sliderToBeeSetting('size', size)).toBe(size);
+  });
+
+  it.each([
+    [0, '#000000'],
+    [0.6, '#999999'],
+    [1, '#ffffff'],
+  ])('converts outline gray %s to %s', (gray, color) => {
+    expect(beeOutlineColor(gray)).toBe(color);
   });
 
   it.each([10, 90, 180])('keeps trail duration %s in seconds', (seconds) => {
@@ -56,7 +65,7 @@ describe('bee settings', () => {
         /Bee settings must be an object|Unknown bee setting|must be between/,
       );
     }
-    expect(() => parseBeeSettings({ ...DEFAULT_BEE_SETTINGS, size: 20.5 })).toThrow(
+    expect(() => parseBeeSettings({ ...DEFAULT_BEE_SETTINGS, size: 32.5 })).toThrow(
       'Bee size must be a whole number',
     );
     expect(() => parseBeeSettings({ ...DEFAULT_BEE_SETTINGS, minSpeed: 90, maxSpeed: 80 })).toThrow(

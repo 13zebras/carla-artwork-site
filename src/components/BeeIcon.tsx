@@ -15,12 +15,13 @@ const INK =
 /**
  * Bee icon.
  *
- * size      Rendered width and height in CSS pixels (square box).
- * outline   White outline width in CSS pixels. 0 removes it.
- *           Default: 1 below 100px, 2 at 100px and above.
- * highlight Width of the white highlight lines in CSS pixels. 0 removes them.
- *           Default: 1 at 32px and above, off below that (they're too small to
- *           read under 32px and just look like specks).
+ * size          Rendered width and height in CSS pixels (square box).
+ * outline       Colored outline width in CSS pixels. 0 removes it.
+ *               Default: 1 below 100px, 2 at 100px and above.
+ * outlineColor  The color of the outline (stroke).
+ * highlight     Width of the white highlight lines in CSS pixels. 0 removes them.
+ *               Default: 1 at 32px and above, off below that (they're too small to
+ *               read under 32px and just look like specks).
  *
  * The outline and highlights are measured in screen pixels, so they stay the
  * same thickness at every size. The bee is scaled down just enough that the
@@ -29,11 +30,19 @@ const INK =
 type BeeIconProps = Omit<SVGProps<SVGSVGElement>, 'width' | 'height'> & {
   size?: number;
   outline?: number;
+  outlineColor?: string;
   highlight?: number;
   title?: string;
 };
 
-export function BeeIcon({ size = 32, outline, highlight, title, ...rest }: BeeIconProps) {
+export function BeeIcon({
+  size = 32,
+  outline,
+  outlineColor = '#999',
+  highlight,
+  title,
+  ...rest
+}: BeeIconProps) {
   const hl = highlight ?? (size >= 32 ? 1 : 0);
   const o = Math.max(0, outline ?? (size >= 100 ? 2 : 1));
   const k = (size - 2 * o) / D; // CSS px per drawing unit
@@ -58,7 +67,7 @@ export function BeeIcon({ size = 32, outline, highlight, title, ...rest }: BeeIc
           d={INK}
           fill='#040000'
           fillRule='evenodd'
-          stroke='#fff'
+          stroke={outlineColor}
           strokeWidth={2 * m}
           strokeLinejoin='round'
         />

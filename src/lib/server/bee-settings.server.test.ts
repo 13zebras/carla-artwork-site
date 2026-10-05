@@ -80,7 +80,7 @@ describe('persisted bee settings', () => {
 
   it('increments the revision atomically across concurrent saves', async () => {
     const results = await Promise.all([
-      updateBeeSettings({ ...DEFAULT_BEE_SETTINGS, size: 16 }),
+      updateBeeSettings({ ...DEFAULT_BEE_SETTINGS, size: 24 }),
       updateBeeSettings({ ...DEFAULT_BEE_SETTINGS, size: 48 }),
     ]);
     expect(results.map(({ revision }) => revision).sort()).toEqual([1, 2]);

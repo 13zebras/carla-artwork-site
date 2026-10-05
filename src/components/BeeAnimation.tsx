@@ -8,7 +8,7 @@ import {
   getBeeArea,
 } from '@/lib/shared/bee-animation';
 import type { BeePoint, BeePose } from '@/lib/shared/bee-animation';
-import { DEFAULT_BEE_SETTINGS } from '@/lib/shared/bee-settings';
+import { DEFAULT_BEE_SETTINGS, beeOutlineColor } from '@/lib/shared/bee-settings';
 import type { BeeSettings } from '@/lib/shared/bee-settings';
 import { cn } from '@/lib/shared/utils';
 
@@ -311,7 +311,11 @@ export function BeeAnimation({
         className='absolute top-0 left-0 will-change-transform'
         style={{ width: settings.size, height: settings.size }}
       >
-        <BeeIcon size={settings.size} className='block' />
+        <BeeIcon
+          outlineColor={beeOutlineColor(settings.outlineGray)}
+          size={settings.size}
+          className='block'
+        />
       </div>
     </div>
   );
