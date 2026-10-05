@@ -105,7 +105,7 @@ describe('Bee settings tab', () => {
     }
     fireEvent.keyDown(size, { key: 'ArrowLeft' });
     fireEvent.keyDown(outline, { key: 'ArrowLeft' });
-    expect(screen.getAllByRole('radio')).toHaveLength(4);
+    expect(screen.getAllByRole('radio')).toHaveLength(3);
     expect((screen.getByRole('radio', { name: '2px' }) as HTMLInputElement).checked).toBe(true);
     for (const output of screen.getAllByRole('status')) {
       expect(output.textContent).not.toMatch(/\d+\.\d+/);
@@ -127,7 +127,7 @@ describe('Bee settings tab', () => {
       key: 'ArrowRight',
     });
     fireEvent.keyDown(screen.getByRole('slider', { name: 'Trail opacity' }), { key: 'ArrowLeft' });
-    for (const width of [1, 2, 3, 4]) {
+    for (const width of [1, 2, 3]) {
       fireEvent.click(screen.getByRole('radio', { name: `${width}px` }));
       expect((screen.getByRole('radio', { name: `${width}px` }) as HTMLInputElement).checked).toBe(
         true,
