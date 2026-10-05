@@ -1,0 +1,31 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    target-branch: staging
+    schedule:
+      interval: weekly
+      day: monday
+    # Skip releases younger than this; most malicious or broken publishes are pulled by then.
+    cooldown:
+      default-days: 5
+    open-pull-requests-limit: 5
+    groups:
+      # One PR for all patch/minor bumps (auto-merged once CI passes).
+      minor-and-patch:
+        update-types: [minor, patch]
+      # Majors get one PR together for manual review.
+      major:
+        update-types: [major]
+
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: staging
+    schedule:
+      interval: weekly
+      day: monday
+    cooldown:
+      default-days: 5
+    groups:
+      actions:
+        patterns: ['*']
