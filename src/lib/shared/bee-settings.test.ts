@@ -116,9 +116,11 @@ for (const [width, height] of [
 }
 
 describe('existing geometry with configurable inputs', () => {
-  // Give each deterministic combination its own test budget and failure report.
+  // Small loops with zero wandering can exceed 5 seconds on shared CI runners.
+  // Keep all 3,000 samples and give only these simulations a larger time budget.
   it.each(geometryCases)(
     'keeps $width × $height safe (size=$size, variation=$variation, wandering=$intensity, loops=$loopSize)',
+    { timeout: 15_000 },
     ({ width, height, size, variation, intensity, loopSize }) => {
       const area = getBeeArea(width, height, 160, true);
       const clearance = Math.hypot(size, size) / 2 + 4;
