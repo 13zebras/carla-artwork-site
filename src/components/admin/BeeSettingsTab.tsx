@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { SubmitEvent } from 'react';
 import { toast } from 'sonner';
 
+import { BeeIcon } from '@/components/BeeIcon';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,6 +12,7 @@ import { TabsContent } from '@/components/ui/tabs';
 import { saveBeeSettings } from '@/lib/functions/bee-settings.functions';
 import {
   DEFAULT_BEE_SETTINGS,
+  beeOutlineColor,
   beeSettingsEqual,
   beeSettingSliderLimits,
   beeSettingToSlider,
@@ -202,8 +204,16 @@ function BeeControlSlider({
         </Label>
         <output
           aria-labelledby={labelId}
-          className='text-sm tabular-nums font-semibold text-foreground'
+          className='flex items-center gap-2 text-sm tabular-nums font-semibold text-foreground'
         >
+          {/* Live preview; negative margin keeps the taller icon from shifting the row. */}
+          {key === 'outlineGray' && (
+            <BeeIcon
+              size={32}
+              outlineColor={beeOutlineColor(draft.outlineGray)}
+              className='-my-1'
+            />
+          )}
           {displayValue}
         </output>
       </div>
