@@ -22,6 +22,11 @@ const FULL_VIEWPORT = true;
 // Icon clearance offsets this margin; smaller random loops may not reach its limit.
 const OUTER_PADDING_RATIO = -0.08;
 
+// Mobile toolbars change the visible height while scrolling (about 13% in iOS Safari,
+// up to roughly 20% with two toolbars or in landscape). Smaller height changes resize
+// the canvas but keep the current flight; larger ones plan a new flight from the logo.
+const FLIGHT_RESTART_HEIGHT_RATIO = 0.25;
+
 // Degrees for each of the two gradual, randomly left/right quadrant-travel turns.
 const MIN_TURN = 40;
 const MAX_TURN = 60;
@@ -94,7 +99,8 @@ export function BeeAnimation({
     );
     let flight: ReturnType<typeof createBeeFlight> = null;
     let area = getBeeArea(0, 0, 0, usesFullViewport);
-    let initialPoint: BeePoint | undefined;
+    // The area the current flight was planned for; the canvas can resize without it.
+    let flightArea = area;
     let pixelRatio = 0;
     let frame: number | null = null;
     let previousTime: number | null = null;
@@ -207,39 +213,45 @@ export function BeeAnimation({
 
     const measure = () => {
       const headerHeight = header?.getBoundingClientRect().height ?? 0;
-      // Mobile toolbars change innerHeight (and fire resize) while scrolling, which
-      // would rebuild the flight. 100lvh stays fixed; browsers without lvh fall back.
+      // Mobile toolbars change innerHeight (and fire resize) while scrolling. 100lvh
+      // stays fixed in most browsers; browsers without lvh fall back.
       const viewportHeight = heightProbe.getBoundingClientRect().height || window.innerHeight;
       const next = getBeeArea(window.innerWidth, viewportHeight, headerHeight, usesFullViewport);
       const nextPixelRatio = window.devicePixelRatio || 1;
-      const isWide = window.innerWidth >= XS_BREAKPOINT_PX;
-      const logo = isWide ? wideLogo : compactLogo;
-      const logoBounds = logo?.getBoundingClientRect();
-      const nextInitialPoint =
-        usesFullViewport && logoBounds
-          ? {
-              x: logoBounds.left + logoBounds.width * (isWide ? 0.06 : 0.12),
-              y: logoBounds.top + logoBounds.height * 0.5 - next.top,
-            }
-          : undefined;
       if (
         next.width === area.width &&
         next.height === area.height &&
         next.top === area.top &&
-        nextPixelRatio === pixelRatio &&
-        nextInitialPoint?.x === initialPoint?.x &&
-        nextInitialPoint?.y === initialPoint?.y
+        nextPixelRatio === pixelRatio
       ) {
         return;
       }
       area = next;
       pixelRatio = nextPixelRatio;
-      initialPoint = nextInitialPoint;
       viewport.style.top = `${area.top}px`;
       viewport.style.height = `${area.height}px`;
       canvas.width = Math.round(area.width * pixelRatio);
       canvas.height = Math.round(area.height * pixelRatio);
       context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+
+      // Where lvh still follows the toolbars, keep flying; the trail repaints next frame.
+      const heightChange =
+        Math.abs(area.height - flightArea.height) / Math.max(area.height, flightArea.height);
+      if (flight && area.width === flightArea.width && heightChange < FLIGHT_RESTART_HEIGHT_RATIO) {
+        return;
+      }
+
+      // The logo only sets where a new flight starts; moving it never restarts one.
+      const isWide = window.innerWidth >= XS_BREAKPOINT_PX;
+      const logo = isWide ? wideLogo : compactLogo;
+      const logoBounds = logo?.getBoundingClientRect();
+      const initialPoint =
+        usesFullViewport && logoBounds
+          ? {
+              x: logoBounds.left + logoBounds.width * (isWide ? 0.06 : 0.12),
+              y: logoBounds.top + logoBounds.height * 0.5 - area.top,
+            }
+          : undefined;
 
       // Computed dimensions still work when reduced-motion CSS hides the wrapper.
       // Half the icon diagonal protects a rotated bee; include the trail stroke.
@@ -260,6 +272,7 @@ export function BeeAnimation({
         clearance,
         initialPoint,
       });
+      flightArea = area;
       trail = [];
       lastSampleTime = -Infinity;
       if (flight) positionBee(flight.advance(0));
@@ -268,8 +281,6 @@ export function BeeAnimation({
 
     const headerObserver = new ResizeObserver(measure);
     if (header && !usesFullViewport) headerObserver.observe(header);
-    if (usesFullViewport && wideLogo) headerObserver.observe(wideLogo);
-    if (usesFullViewport && compactLogo) headerObserver.observe(compactLogo);
     const themeObserver = new MutationObserver(() => {
       color = getComputedStyle(viewport).color;
     });

@@ -4,8 +4,8 @@ import { StrictMode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { BeeAnimation } from '@/components/BeeAnimation';
-import { DEFAULT_BEE_SETTINGS } from '@/lib/shared/bee-settings';
 import * as beeGeometry from '@/lib/shared/bee-animation';
+import { DEFAULT_BEE_SETTINGS } from '@/lib/shared/bee-settings';
 
 let frames: Map<number, FrameRequestCallback>;
 let nextFrame: number;
@@ -34,6 +34,19 @@ function tick(milliseconds: number) {
     frames.clear();
     for (const callback of pending) callback(milliseconds);
   });
+}
+
+// jsdom has no layout: report the 100lvh probe height a mobile browser would.
+function mockLvhProbe(height: () => number) {
+  const getRect = HTMLElement.prototype.getBoundingClientRect;
+  vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(
+    function (this: HTMLElement) {
+      if (this.classList.contains('h-lvh') && !this.classList.contains('bee-animation')) {
+        return { height: height() } as DOMRect;
+      }
+      return getRect.call(this);
+    },
+  );
 }
 
 function setReducedMotion(matches: boolean) {
@@ -175,20 +188,16 @@ describe('BeeAnimation', () => {
     tick(0);
     expect(bee.style.transform).toContain(`translate(${start.x}px, ${start.y}px)`);
 
+    // The logo only sets where a flight starts; shifting it later never restarts one.
     logoLeft += 25;
-    act(() => resizeObservers[0].callback([], resizeObservers[0] as unknown as ResizeObserver));
-    expect(createFlight).toHaveBeenLastCalledWith(
-      expect.anything(),
-      expect.objectContaining({ initialPoint: { ...start, x: start.x + 25 } }),
-    );
-    tick(100);
-    expect(bee.style.transform).toContain(`translate(${start.x + 25}px, ${start.y}px)`);
+    act(() => window.dispatchEvent(new Event('resize')));
+    expect(createFlight).toHaveBeenCalledTimes(1);
   });
 
   it('advances the quadrant clock with active frame time, not hidden-tab time', () => {
-    const advance = vi.fn<
-      NonNullable<ReturnType<typeof beeGeometry.createBeeFlight>>['advance']
-    >(() => ({ x: 100, y: 100, angle: 0, phase: 'travel' }));
+    const advance = vi.fn<NonNullable<ReturnType<typeof beeGeometry.createBeeFlight>>['advance']>(
+      () => ({ x: 100, y: 100, angle: 0, phase: 'travel' }),
+    );
     vi.spyOn(beeGeometry, 'createBeeFlight').mockReturnValue({ advance });
     render(<BeeAnimation />);
     tick(0);
@@ -259,16 +268,7 @@ describe('BeeAnimation', () => {
   });
 
   it('keeps the flight when mobile toolbars change the visible height while scrolling', () => {
-    // jsdom has no layout: report a stable 100lvh probe, as mobile browsers do.
-    const getRect = HTMLElement.prototype.getBoundingClientRect;
-    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (
-      this: HTMLElement,
-    ) {
-      if (this.classList.contains('h-lvh') && !this.classList.contains('bee-animation')) {
-        return { height: 850 } as DOMRect;
-      }
-      return getRect.call(this);
-    });
+    mockLvhProbe(() => 850);
     const createFlight = vi.spyOn(beeGeometry, 'createBeeFlight');
     const { container } = render(<BeeAnimation />);
     const wrapper = container.firstElementChild as HTMLDivElement;
@@ -283,6 +283,54 @@ describe('BeeAnimation', () => {
 
     expect(createFlight).toHaveBeenCalledTimes(1);
     expect(canvas.height).toBe(1700);
+  });
+
+  it('keeps the flight and its trail when lvh itself follows the mobile toolbars', () => {
+    let lvh = 850;
+    mockLvhProbe(() => lvh);
+    const createFlight = vi.spyOn(beeGeometry, 'createBeeFlight');
+    const { container } = render(<BeeAnimation />);
+    const wrapper = container.firstElementChild as HTMLDivElement;
+    const canvas = wrapper.querySelector('canvas') as HTMLCanvasElement;
+    for (let time = 0; time <= 500; time += 100) tick(time);
+
+    // Toolbars animating in over several resize events, up to a 20% change.
+    for (const height of [800, 740, 680]) {
+      lvh = height;
+      act(() => window.dispatchEvent(new Event('resize')));
+    }
+    expect(createFlight).toHaveBeenCalledTimes(1);
+    expect(wrapper.style.height).toBe('680px');
+    expect(canvas.height).toBe(1360);
+
+    context.stroke.mockClear();
+    tick(600);
+    expect(context.stroke).toHaveBeenCalled();
+    expect(frames.size).toBe(1);
+  });
+
+  it('plans a new flight after a large height change or any width change', () => {
+    let lvh = 850;
+    mockLvhProbe(() => lvh);
+    const createFlight = vi.spyOn(beeGeometry, 'createBeeFlight');
+    render(<BeeAnimation />);
+
+    // Measured against the height the flight was planned for, not the last resize.
+    lvh = 700;
+    act(() => window.dispatchEvent(new Event('resize')));
+    expect(createFlight).toHaveBeenCalledTimes(1);
+    lvh = 600;
+    act(() => window.dispatchEvent(new Event('resize')));
+    expect(createFlight).toHaveBeenCalledTimes(2);
+    expect(createFlight).toHaveBeenLastCalledWith(
+      expect.objectContaining({ height: 600 }),
+      expect.anything(),
+    );
+
+    vi.stubGlobal('innerWidth', 900);
+    act(() => window.dispatchEvent(new Event('resize')));
+    expect(createFlight).toHaveBeenCalledTimes(3);
+    expect(frames.size).toBe(1);
   });
 
   it('rebuilds the flight when switching between above-content and behind-content modes', () => {
