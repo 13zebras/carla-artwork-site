@@ -86,7 +86,7 @@ describe('Bee settings tab', () => {
     const outline = screen.getByRole('slider', { name: 'Bee outline' }) as HTMLInputElement;
     expect(outline.value).toBe('60');
     expect(outline.getAttribute('aria-valuetext')).toBe('60 percent white');
-    expect(screen.getByText('60% white')).toBeTruthy();
+    expect(screen.getByText('#999999')).toBeTruthy();
     expect(screen.getByText('Black')).toBeTruthy();
     expect(screen.getByText('White')).toBeTruthy();
     const previews = ['light', 'dark'].map((mode) =>
@@ -98,6 +98,7 @@ describe('Bee settings tab', () => {
     }
     fireEvent.keyDown(size, { key: 'ArrowRight' });
     fireEvent.keyDown(outline, { key: 'ArrowRight' });
+    expect(screen.getByText('#9c9c9c')).toBeTruthy();
     for (const preview of previews) {
       expect(preview.getAttribute('width')).toBe('33');
       expect(preview.querySelector('path[stroke="#9c9c9c"]')).toBeTruthy();

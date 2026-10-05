@@ -87,7 +87,7 @@ function formatControlValue(key: BeeSettingKey, value: number) {
   if (key === 'size') return `${integer}px`;
   if (key === 'trailLifetime') return `${integer} seconds`;
   if (key === 'trailOpacity') return `${integer}%`;
-  if (key === 'outlineGray') return `${integer}% white`;
+  if (key === 'outlineGray') return beeOutlineColor(sliderToBeeSetting(key, value));
   return integer;
 }
 
