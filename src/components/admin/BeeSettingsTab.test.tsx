@@ -89,9 +89,20 @@ describe('Bee settings tab', () => {
     expect(screen.getByText('60% white')).toBeTruthy();
     expect(screen.getByText('Black')).toBeTruthy();
     expect(screen.getByText('White')).toBeTruthy();
-    expect(document.querySelector('path[stroke="#999999"]')).toBeTruthy();
+    const previews = ['light', 'dark'].map((mode) =>
+      screen.getByRole('img', { name: `Bee on ${mode} mode background` }),
+    );
+    for (const preview of previews) {
+      expect(preview.getAttribute('width')).toBe('32');
+      expect(preview.querySelector('path[stroke="#999999"]')).toBeTruthy();
+    }
+    fireEvent.keyDown(size, { key: 'ArrowRight' });
     fireEvent.keyDown(outline, { key: 'ArrowRight' });
-    expect(document.querySelector('path[stroke="#9c9c9c"]')).toBeTruthy();
+    for (const preview of previews) {
+      expect(preview.getAttribute('width')).toBe('33');
+      expect(preview.querySelector('path[stroke="#9c9c9c"]')).toBeTruthy();
+    }
+    fireEvent.keyDown(size, { key: 'ArrowLeft' });
     fireEvent.keyDown(outline, { key: 'ArrowLeft' });
     expect(screen.getAllByRole('radio')).toHaveLength(4);
     expect((screen.getByRole('radio', { name: '2px' }) as HTMLInputElement).checked).toBe(true);

@@ -19,6 +19,7 @@ import {
   sliderToBeeSetting,
 } from '@/lib/shared/bee-settings';
 import type { BeeSettingKey, BeeSettings, BeeSettingsSnapshot } from '@/lib/shared/bee-settings';
+import { cn } from '@/lib/shared/utils';
 
 type BeeControl = {
   keys: BeeSettingKey[];
@@ -204,16 +205,8 @@ function BeeControlSlider({
         </Label>
         <output
           aria-labelledby={labelId}
-          className='flex items-center gap-2 text-sm tabular-nums font-semibold text-foreground'
+          className='text-sm tabular-nums font-semibold text-foreground'
         >
-          {/* Live preview; negative margin keeps the taller icon from shifting the row. */}
-          {key === 'outlineGray' && (
-            <BeeIcon
-              size={32}
-              outlineColor={beeOutlineColor(draft.outlineGray)}
-              className='-my-1'
-            />
-          )}
           {displayValue}
         </output>
       </div>
@@ -242,6 +235,42 @@ function BeeControlSlider({
         {description}
         {isRange && <span className='ml-2'>Left handle: slowest. Right handle: fastest.</span>}
       </p>
+    </div>
+  );
+}
+
+// The public site's light and dark page backgrounds, independent of the admin's theme.
+const previewBackgrounds = [
+  { label: 'Light mode', className: 'bg-neutral-100' },
+  { label: 'Dark mode', className: 'bg-(--theme-dark-background)' },
+];
+
+function BeePreview({ draft }: { draft: BeeSettings }) {
+  const outlineColor = beeOutlineColor(draft.outlineGray);
+  return (
+    <div className='grid gap-2'>
+      <p className='pb-2 text-base font-semibold'>Preview</p>
+      <div className='grid grid-cols-2 gap-4'>
+        {previewBackgrounds.map(({ label, className }) => (
+          <figure key={label} className='grid gap-1.5'>
+            <div
+              className={cn(
+                'flex h-20 items-center justify-center rounded-md border border-border/30',
+                className,
+              )}
+            >
+              <BeeIcon
+                size={draft.size}
+                outlineColor={outlineColor}
+                title={`Bee on ${label.toLowerCase()} background`}
+              />
+            </div>
+            <figcaption className='text-center text-xs text-muted-foreground/70'>
+              {label}
+            </figcaption>
+          </figure>
+        ))}
+      </div>
     </div>
   );
 }
@@ -299,6 +328,7 @@ export function BeeSettingsTab({ bee }: { bee: BeeSettingsSnapshot }) {
                       onChange={updateDraft}
                     />
                   ))}
+                  <BeePreview draft={draft} />
                 </div>
               </fieldset>
             ))}
