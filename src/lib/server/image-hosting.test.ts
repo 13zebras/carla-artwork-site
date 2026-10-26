@@ -19,6 +19,7 @@ import {
 } from '@/lib/server/artwork-upload.server';
 import {
   getArtworkById,
+  getPublishedArtworkBySlug,
   insertArtwork,
   listPublishedArtworks,
   listPublishedArtworksByCategoryId,
@@ -40,7 +41,22 @@ import {
   updateDemoMode,
 } from '@/lib/server/site-settings.server';
 import type { ArtworkRecord } from '@/lib/shared/artworks.types';
-import { buildBunnyCdnUrl } from '@/lib/shared/bunny';
+import { buildImageUrl } from '@/lib/shared/image';
+
+import type { ImageBucket } from './imageStorage.server';
+
+const { bucket } = vi.hoisted(() => ({
+  bucket: {
+    get: vi.fn<ImageBucket['get']>(),
+    put: vi.fn<ImageBucket['put']>(),
+    delete: vi.fn<ImageBucket['delete']>(),
+    list: vi.fn<ImageBucket['list']>(),
+  },
+}));
+
+vi.mock('@/lib/server/runtimeContext.server', () => ({
+  getWorkerBindings: () => ({ ARTWORK_IMAGES: bucket }),
+}));
 
 async function resetDatabase() {
   await ensureSchema();
@@ -64,6 +80,10 @@ async function seedTestCategories() {
 }
 
 beforeEach(async () => {
+  bucket.get.mockReset();
+  bucket.put.mockReset();
+  bucket.delete.mockReset();
+  bucket.list.mockReset();
   await resetDatabase();
   await seedTestCategories();
 });
@@ -87,7 +107,7 @@ function createTestArtwork(overrides: Partial<ArtworkRecord> = {}) {
     alt: 'Test artwork alt text',
     originalFilename: 'test-artwork.jpg',
     storagePath: 'artworks/test-artwork.jpg',
-    cdnUrl: 'https://carla.b-cdn.net/artworks/test-artwork.jpg',
+    cdnUrl: '/media/artworks/test-artwork.jpg',
     contentType: 'image/jpeg',
     width: 800,
     height: 600,
@@ -101,72 +121,56 @@ function createTestArtwork(overrides: Partial<ArtworkRecord> = {}) {
   } satisfies ArtworkRecord;
 }
 
-function stubBunnyDelete(status: number) {
-  const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(new Response(null, { status }));
-  vi.stubGlobal('fetch', fetchMock);
-  return fetchMock;
-}
-
-describe('buildBunnyCdnUrl', () => {
+describe('buildImageUrl', () => {
   it('appends optimization params once', () => {
     expect(
-      buildBunnyCdnUrl('https://carla.b-cdn.net/artworks/2026/test.jpg', {
+      buildImageUrl('/media/artworks/2026/test.jpg', {
         width: 800,
         format: 'webp',
       }),
-    ).toBe('https://carla.b-cdn.net/artworks/2026/test.jpg?width=800&format=webp');
+    ).toBe('/media/artworks/2026/test.jpg?width=800&format=webp');
   });
 });
 
 describe('artwork deletion', () => {
-  it('deletes Bunny storage before deleting the database record', async () => {
+  it('deletes R2 storage before deleting the database record', async () => {
     const record = createTestArtwork();
     await insertArtwork(record);
-    const fetchMock = stubBunnyDelete(204);
+    bucket.delete.mockResolvedValue(undefined);
 
     await expect(deleteArtworkWithStorage(record.id)).resolves.toMatchObject({ id: record.id });
 
-    expect(fetchMock).toHaveBeenCalledWith(
-      'http://127.0.0.1:3999/test-zone/artworks/test-artwork.jpg',
-      expect.objectContaining({ method: 'DELETE' }),
-    );
+    expect(bucket.delete).toHaveBeenCalledWith('artworks/test-artwork.jpg');
     await expect(getArtworkById(record.id)).resolves.toBeUndefined();
   });
 
-  it('deletes the database record when Bunny storage is already missing', async () => {
+  it('deletes the database record when R2 storage is already missing', async () => {
     const record = createTestArtwork();
     await insertArtwork(record);
-    stubBunnyDelete(404);
+    bucket.delete.mockResolvedValue(undefined);
 
     await deleteArtworkWithStorage(record.id);
 
     await expect(getArtworkById(record.id)).resolves.toBeUndefined();
   });
 
-  it('keeps the database record when Bunny storage deletion fails', async () => {
+  it('keeps the database record when R2 storage deletion fails', async () => {
     const record = createTestArtwork();
     await insertArtwork(record);
-    const fetchMock = vi
-      .fn<typeof fetch>()
-      .mockResolvedValue(new Response('Bunny failed', { status: 500 }));
-    vi.stubGlobal('fetch', fetchMock);
+    bucket.delete.mockRejectedValue(new Error('R2 storage deletion failed'));
 
-    await expect(deleteArtworkWithStorage(record.id)).rejects.toThrow(
-      'Bunny storage delete failed with 500',
-    );
+    await expect(deleteArtworkWithStorage(record.id)).rejects.toThrow('R2 storage deletion failed');
 
     await expect(getArtworkById(record.id)).resolves.toMatchObject({ id: record.id });
   });
 
-  it('reports missing artwork ids without calling Bunny storage', async () => {
-    const fetchMock = vi.fn<typeof fetch>();
-    vi.stubGlobal('fetch', fetchMock);
-
+  it('reports missing artwork ids without calling R2 storage', async () => {
     await expect(deleteArtworkWithStorage('missing-artwork-id')).rejects.toThrow(
       'Artwork not found',
     );
 
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(bucket.get).not.toHaveBeenCalled();
+    expect(bucket.delete).not.toHaveBeenCalled();
   });
 });
 
@@ -183,14 +187,14 @@ describe('public artwork listing', () => {
         id: 'later-artwork',
         slug: 'later-artwork',
         storagePath: 'artworks/later-artwork.jpg',
-        cdnUrl: 'https://carla.b-cdn.net/artworks/later-artwork.jpg',
+        cdnUrl: '/media/artworks/later-artwork.jpg',
         sortOrder: 20,
       }),
       createTestArtwork({
         id: 'first-artwork',
         slug: 'first-artwork',
         storagePath: 'artworks/first-artwork.jpg',
-        cdnUrl: 'https://carla.b-cdn.net/artworks/first-artwork.jpg',
+        cdnUrl: 'https://legacy-cdn.example/artworks/first-artwork.jpg',
         sortOrder: 10,
       }),
       createTestArtwork({
@@ -215,6 +219,12 @@ describe('public artwork listing', () => {
     const artworks = await listPublishedArtworks();
 
     expect(artworks.map((artwork) => artwork.slug)).toEqual(['first-artwork', 'later-artwork']);
+    await expect(getArtworkById('first-artwork')).resolves.toMatchObject({
+      cdnUrl: '/media/artworks/first-artwork.jpg',
+    });
+    await expect(getPublishedArtworkBySlug('first-artwork')).resolves.toMatchObject({
+      cdnUrl: '/media/artworks/first-artwork.jpg',
+    });
     expect(artworks[0]).toEqual({
       slug: 'first-artwork',
       title: 'Test Artwork',
@@ -223,7 +233,7 @@ describe('public artwork listing', () => {
         categorySlug: 'fine-art-collage',
         label: 'Fine Art Collage',
       },
-      cdnUrl: 'https://carla.b-cdn.net/artworks/first-artwork.jpg',
+      cdnUrl: '/media/artworks/first-artwork.jpg',
       alt: 'Test artwork alt text',
       width: 800,
       height: 600,
@@ -242,6 +252,7 @@ describe('public artwork listing', () => {
         id: 'target-first',
         slug: 'target-first',
         storagePath: 'artworks/target-first.jpg',
+        cdnUrl: 'https://legacy-cdn.example/artworks/target-first.jpg',
         sortOrder: 10,
       }),
       createTestArtwork({
@@ -266,6 +277,7 @@ describe('public artwork listing', () => {
     const artworks = await listPublishedArtworksByCategoryId('c002');
 
     expect(artworks.map((artwork) => artwork.slug)).toEqual(['target-first', 'target-later']);
+    expect(artworks[0].cdnUrl).toBe('/media/artworks/target-first.jpg');
     expect(artworks[0]?.category).toEqual({
       id: 'c002',
       categorySlug: 'fine-art-collage',
@@ -309,7 +321,7 @@ describe('site settings', () => {
     });
   });
 
-  it('builds stable Bunny paths for both about photos', () => {
+  it('builds stable R2 paths for both about photos', () => {
     expect(buildAboutImageStoragePath('mobile', 'png')).toBe(
       'siteImages/about-page-photo-mobile.png',
     );
@@ -320,7 +332,7 @@ describe('site settings', () => {
 });
 
 describe('artwork metadata updates', () => {
-  it('updates editable fields without moving or renaming the Bunny object', async () => {
+  it('updates editable fields without moving or renaming the R2 object', async () => {
     const record = createTestArtwork();
     await insertArtwork(record);
 
@@ -552,7 +564,7 @@ describe('artwork storage paths', () => {
   });
 });
 
-describe('linking existing Bunny images', () => {
+describe('linking existing R2 images', () => {
   it('maps file extensions to content types', () => {
     expect(contentTypeFromExtension('photo.jpg')).toBe('image/jpeg');
     expect(contentTypeFromExtension('photo.JPEG')).toBe('image/jpeg');
@@ -579,13 +591,17 @@ describe('linking existing Bunny images', () => {
     );
   });
 
-  it('builds a record from an existing Bunny object without uploading', async () => {
-    const fetchMock = vi
-      .fn<typeof fetch>()
-      .mockResolvedValue(
-        new Response(ONE_PIXEL_PNG, { status: 200, headers: { 'content-type': 'image/png' } }),
-      );
-    vi.stubGlobal('fetch', fetchMock);
+  it('builds a record from an existing R2 object without uploading', async () => {
+    bucket.get.mockResolvedValue({
+      key: 'artworks/blue-bird.png',
+      size: ONE_PIXEL_PNG.byteLength,
+      uploaded: new Date(),
+      httpEtag: '"fixture"',
+      body: new ReadableStream(),
+      writeHttpMetadata: (headers: Headers) => headers.set('Content-Type', 'image/png'),
+      arrayBuffer: async () => Uint8Array.from(ONE_PIXEL_PNG).buffer,
+      httpMetadata: { contentType: 'image/png' },
+    });
 
     const record = await prepareExistingArtworkRecord({
       storagePath: 'artworks/blue-bird.png',
@@ -597,13 +613,10 @@ describe('linking existing Bunny images', () => {
       status: 'draft',
     });
 
-    expect(fetchMock).toHaveBeenCalledWith(
-      'http://127.0.0.1:3999/test-zone/artworks/blue-bird.png',
-      expect.objectContaining({ method: 'GET' }),
-    );
+    expect(bucket.get).toHaveBeenCalledWith('artworks/blue-bird.png');
     expect(record).toMatchObject({
       storagePath: 'artworks/blue-bird.png',
-      cdnUrl: 'https://carla.b-cdn.net/artworks/blue-bird.png',
+      cdnUrl: '/media/artworks/blue-bird.png',
       originalFilename: 'blue-bird.png',
       contentType: 'image/png',
       width: 1,
@@ -621,11 +634,9 @@ describe('linking existing Bunny images', () => {
     await insertArtwork(
       createTestArtwork({
         storagePath: 'artworks/taken.png',
-        cdnUrl: 'https://carla.b-cdn.net/artworks/taken.png',
+        cdnUrl: '/media/artworks/taken.png',
       }),
     );
-    const fetchMock = vi.fn<typeof fetch>();
-    vi.stubGlobal('fetch', fetchMock);
 
     await expect(
       prepareExistingArtworkRecord({
@@ -639,13 +650,11 @@ describe('linking existing Bunny images', () => {
       }),
     ).rejects.toThrow('already linked');
 
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(bucket.get).not.toHaveBeenCalled();
+    expect(bucket.delete).not.toHaveBeenCalled();
   });
 
   it('rejects unsupported file extensions without fetching', async () => {
-    const fetchMock = vi.fn<typeof fetch>();
-    vi.stubGlobal('fetch', fetchMock);
-
     await expect(
       prepareExistingArtworkRecord({
         storagePath: 'artworks/photo.gif',
@@ -658,6 +667,7 @@ describe('linking existing Bunny images', () => {
       }),
     ).rejects.toThrow('Only JPEG, PNG, or WebP images can be linked');
 
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(bucket.get).not.toHaveBeenCalled();
+    expect(bucket.delete).not.toHaveBeenCalled();
   });
 });

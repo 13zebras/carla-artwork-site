@@ -1,7 +1,7 @@
 import { useWindowSize } from 'usehooks-ts';
 
 import type { ArtworkPageArtwork } from '@/lib/shared/artworks.types';
-import { buildBunnyCdnUrl } from '@/lib/shared/bunny';
+import { buildImageUrl } from '@/lib/shared/image';
 import { getParagraphs } from '@/lib/shared/utils';
 
 const mobileBreakpoint = 640;
@@ -24,7 +24,7 @@ function getArtworkImageUrl(
     windowWidth < mobileBreakpoint ? windowWidth * mobileImageBuffer : windowWidth;
   const requestedWidth = Math.min(artwork.width, maximumPageWidth, Math.ceil(bufferedWidth));
 
-  return buildBunnyCdnUrl(artwork.cdnUrl, { width: requestedWidth });
+  return buildImageUrl(artwork.cdnUrl, { width: requestedWidth });
 }
 
 export function ArtworkPage({ artwork }: ArtworkPageProps) {

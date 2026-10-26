@@ -3,6 +3,8 @@ import path from 'node:path';
 
 import { imageSize } from 'image-size';
 
+import { getImageUrl } from '@/lib/shared/image';
+
 import type {
   AdminDashboardData,
   BulkArtworkUploadError,
@@ -36,15 +38,14 @@ import {
   updateArtworkMetadata,
 } from './artworks.server';
 import { requireAdminFromRequest } from './auth-session.server';
-import {
-  deleteFromBunnyStorage,
-  downloadFromBunnyStorage,
-  getBunnyCdnUrl,
-  listBunnyStorageFiles,
-  uploadToBunnyStorage,
-} from './bunny.server';
 import { listCategories } from './categories.server';
 import { ensureSchema } from './db.server';
+import {
+  deleteImage,
+  downloadImage,
+  listImageStorageFiles,
+  uploadImage,
+} from './imageStorage.server';
 import { getSiteSettings } from './site-settings.server';
 
 type BulkPreparationResult =
@@ -273,7 +274,7 @@ async function prepareArtworkRecord(
     ...input,
     slug,
     storagePath,
-    cdnUrl: getBunnyCdnUrl(storagePath),
+    cdnUrl: getImageUrl(storagePath),
   });
 }
 
@@ -283,7 +284,7 @@ export async function listAdminDashboard() {
 
   const [records, storageFiles, allCategories, siteSettings] = await Promise.all([
     listArtworkRecords(),
-    listBunnyStorageFiles(),
+    listImageStorageFiles(),
     listCategories({ includeArchived: true }),
     getSiteSettings(),
   ]);
@@ -311,7 +312,7 @@ export async function deleteArtworkWithStorage(id: string) {
     throw new Error('Artwork not found');
   }
 
-  await deleteFromBunnyStorage(record.storagePath);
+  await deleteImage(record.storagePath);
   await deleteArtworkById(record.id);
 
   return record;
@@ -326,7 +327,7 @@ export async function uploadSingleArtwork(formData: FormData) {
   await ensureSchema();
   const { file, record } = await prepareSingleArtwork(formData);
 
-  await uploadToBunnyStorage({
+  await uploadImage({
     storagePath: record.storagePath,
     file,
     contentType: record.contentType,
@@ -336,7 +337,7 @@ export async function uploadSingleArtwork(formData: FormData) {
   try {
     return await insertArtwork(record);
   } catch (error) {
-    await deleteFromBunnyStorage(record.storagePath);
+    await deleteImage(record.storagePath);
     throw error;
   }
 }
@@ -355,7 +356,7 @@ export async function prepareExistingArtworkRecord(
     throw new Error('This storage path is already linked to a record');
   }
 
-  const { buffer } = await downloadFromBunnyStorage(input.storagePath);
+  const { buffer } = await downloadImage(input.storagePath);
   const imageMeta = readImageMetaFromBuffer(buffer, { contentType, name: input.storagePath });
 
   return prepareArtworkRecord({
@@ -512,7 +513,7 @@ export async function uploadBulkArtworks(formData: FormData): Promise<BulkArtwor
 
   try {
     for (const { file, record } of prepared.preparedRows) {
-      await uploadToBunnyStorage({
+      await uploadImage({
         storagePath: record.storagePath,
         file,
         contentType: record.contentType,
@@ -523,7 +524,7 @@ export async function uploadBulkArtworks(formData: FormData): Promise<BulkArtwor
     }
   } catch (error) {
     const cleanupResults = await Promise.allSettled(
-      uploadedPaths.map((storagePath) => deleteFromBunnyStorage(storagePath)),
+      uploadedPaths.map((storagePath) => deleteImage(storagePath)),
     );
     const cleanupFailures = cleanupResults.filter((result) => result.status === 'rejected').length;
     throw new Error(
@@ -537,7 +538,7 @@ export async function uploadBulkArtworks(formData: FormData): Promise<BulkArtwor
     return { ok: true, insertedCount: records.length, records };
   } catch (error) {
     const cleanupResults = await Promise.allSettled(
-      records.map((record) => deleteFromBunnyStorage(record.storagePath)),
+      records.map((record) => deleteImage(record.storagePath)),
     );
     const cleanupFailures = cleanupResults.filter((result) => result.status === 'rejected').length;
     throw new Error(

@@ -1,6 +1,6 @@
 import { getRequestHeader } from '@tanstack/react-start/server';
 
-import { auth } from './auth-config.server';
+import { getAuth } from './auth-config.server';
 import { getServerEnv } from './env.server';
 
 function getCookieHeaders(): HeadersInit {
@@ -13,7 +13,7 @@ function getCookieHeaders(): HeadersInit {
 }
 
 export async function getSessionFromRequest() {
-  return auth.api.getSession({ headers: getCookieHeaders() });
+  return getAuth().api.getSession({ headers: getCookieHeaders() });
 }
 
 export async function requireAdminFromRequest() {

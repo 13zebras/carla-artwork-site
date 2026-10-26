@@ -11,15 +11,15 @@ import {
 import { TabsContent } from '@/components/ui/tabs';
 import type { AdminDashboard } from '@/lib/functions/artwork-upload.functions';
 import type { ArtworkRecord } from '@/lib/shared/artworks.types';
-import type { BunnyStorageFile } from '@/lib/shared/bunny.types';
+import type { ImageStorageFile } from '@/lib/shared/image.types';
 import { dateFormatter } from '@/lib/shared/utils';
 
-type BunnyStorageTabProps = {
+type ImageStorageTabProps = {
   dashboard: AdminDashboard;
   recordByStoragePath: Map<string, ArtworkRecord>;
 };
 
-function formatSizeLabel(sizeBytes: BunnyStorageFile['sizeBytes']) {
+function formatSizeLabel(sizeBytes: ImageStorageFile['sizeBytes']) {
   if (sizeBytes === null) {
     return '—';
   }
@@ -42,24 +42,24 @@ function formatSizeLabel(sizeBytes: BunnyStorageFile['sizeBytes']) {
   return `${size.toFixed(fractionDigits)} ${units[unitIndex]}`;
 }
 
-export function BunnyStorageTab({ dashboard, recordByStoragePath }: BunnyStorageTabProps) {
+export function ImageStorageTab({ dashboard, recordByStoragePath }: ImageStorageTabProps) {
   return (
     <TabsContent value='storage' className='mx-auto mt-4 w-full max-w-300'>
       {dashboard.storageFiles.length === 0 ? (
         <Card className='p-8 rounded-sm h-40'>
           <CardContent className='flex flex-col justify-center items-start gap-6 h-full'>
-            <h2 className='font-bold text-xl'>Empty Bunny Image Storage</h2>
+            <h2 className='font-bold text-xl'>Empty Image Storage</h2>
             <h3 className='font-semibold text-base'>
-              No artworks have been uploaded to Bunny CDN.
+              No artworks have been uploaded to image storage.
             </h3>
           </CardContent>
         </Card>
       ) : (
         <Card className='gap-5 pt-5 pb-0 border-b-0 rounded-sm w-full max-w-300 overflow-hidden'>
           <CardHeader className='flex flex-col gap-2'>
-            <CardTitle className='font-semibold text-xl'>Bunny Storage Image Files</CardTitle>
+            <CardTitle className='font-semibold text-xl'>Stored Image Files</CardTitle>
             <CardDescription>
-              Images stored in Bunny CDN, with untracked files called out explicitly.
+              Stored images, with untracked files called out explicitly.
             </CardDescription>
           </CardHeader>
           <CardContent className='p-0'>

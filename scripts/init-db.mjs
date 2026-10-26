@@ -99,12 +99,16 @@ export async function runMigrations(databaseUrl) {
 
 async function main() {
   loadEnv(path.join(repoRoot, '.env.local'));
-  const databaseUrl = process.env.DATABASE_URL;
+  const databaseUrl = process.env.DATABASE_URL_UNPOOLED ?? process.env.DATABASE_URL;
   if (!databaseUrl) {
     throw new Error('DATABASE_URL is not set (checked .env.local and the environment)');
   }
 
-  console.log(`→ Connecting to: ${databaseUrl.replace(/:[^:@]+@/, ':****@')}`);
+  if (new URL(databaseUrl).hostname.includes('-pooler.')) {
+    throw new Error('Migrations require a direct Neon URL. Set DATABASE_URL_UNPOOLED.');
+  }
+
+  console.log('→ Applying database migrations.');
   const migrationCount = await runMigrations(databaseUrl);
   console.log(`✓ Database is current (${migrationCount} migrations).`);
 }

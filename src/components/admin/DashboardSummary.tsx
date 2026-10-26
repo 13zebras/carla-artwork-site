@@ -1,6 +1,6 @@
 import type { AdminDashboard } from '@/lib/functions/artwork-upload.functions';
 import type { ArtworkRecord } from '@/lib/shared/artworks.types';
-import type { BunnyStorageFile } from '@/lib/shared/bunny.types';
+import type { ImageStorageFile } from '@/lib/shared/image.types';
 import { cn } from '@/lib/shared/utils';
 
 import { Card, CardTitle, CardContent } from '../ui/card';
@@ -10,7 +10,7 @@ const dashboardSummaryCard =
 
 type DashboardSummaryProps = {
   dashboard: AdminDashboard;
-  untrackedFiles: BunnyStorageFile[];
+  untrackedFiles: ImageStorageFile[];
   missingRecords: ArtworkRecord[];
 };
 
@@ -31,7 +31,7 @@ export function DashboardSummary({
         </CardContent>
       </Card>
       <Card className={dashboardSummaryCard}>
-        <CardTitle className='text-sm text-center'>Bunny Image Files</CardTitle>
+        <CardTitle className='text-sm text-center'>Image Files</CardTitle>
         <CardContent className='px-0 tabular-nums text-xl text-center'>
           {dashboard.storageFiles.length.toLocaleString('en-US')}
         </CardContent>

@@ -6,6 +6,7 @@ import pg from 'pg';
 import { afterAll, beforeAll } from 'vitest';
 
 import { closeDb, ensureSchema } from '@/lib/server/db.server';
+import { initializeNodeTestContext } from '@/lib/server/runtimeContext.server';
 
 const execFileAsync = promisify(execFile);
 
@@ -18,10 +19,6 @@ const envDefaults = {
   AUTH_EMAIL_FROM: 'Carla Stine <admin@example.com>',
   CONTACT_EMAIL_TO: 'contact@example.com',
   TURNSTILE_SECRET_KEY: '1x0000000000000000000000000000000AA',
-  BUNNY_STORAGE_ZONE: 'test-zone',
-  BUNNY_STORAGE_PASSWORD: 'test-password',
-  BUNNY_STORAGE_ENDPOINT: 'http://127.0.0.1:3999',
-  BUNNY_CDN_BASE_URL: 'https://carla.b-cdn.net',
 };
 
 for (const [key, value] of Object.entries(envDefaults)) {
@@ -29,6 +26,8 @@ for (const [key, value] of Object.entries(envDefaults)) {
     process.env[key] = value;
   }
 }
+
+initializeNodeTestContext(process.env);
 
 function quoteIdentifier(value: string) {
   return `"${value.replaceAll('"', '""')}"`;

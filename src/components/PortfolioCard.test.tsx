@@ -14,7 +14,7 @@ const artwork: PortfolioArtwork = {
     categorySlug: 'illustration',
     label: 'Illustration',
   },
-  cdnUrl: 'https://carla.b-cdn.net/artworks/blue-garden.jpg',
+  cdnUrl: '/media/artworks/blue-garden.jpg',
   alt: 'Blue flowers in a garden',
   width: 1600,
   height: 2400,
@@ -31,28 +31,26 @@ describe('PortfolioCard', () => {
     const mobileSource = container.querySelector('source');
 
     expect(link.getAttribute('href')).toBe('/artwork/blue-garden');
-    expect(image.getAttribute('src')).toBe(
-      'https://carla.b-cdn.net/artworks/blue-garden.jpg?width=575&format=webp',
-    );
+    expect(image.getAttribute('src')).toBe('/media/artworks/blue-garden.jpg?width=575&format=webp');
     expect(image.getAttribute('srcset')).toBe(
       [
-        'https://carla.b-cdn.net/artworks/blue-garden.jpg?width=350&format=webp 350w',
-        'https://carla.b-cdn.net/artworks/blue-garden.jpg?width=448&format=webp 448w',
-        'https://carla.b-cdn.net/artworks/blue-garden.jpg?width=575&format=webp 575w',
-        'https://carla.b-cdn.net/artworks/blue-garden.jpg?width=700&format=webp 700w',
-        'https://carla.b-cdn.net/artworks/blue-garden.jpg?width=746&format=webp 746w',
-        'https://carla.b-cdn.net/artworks/blue-garden.jpg?width=896&format=webp 896w',
-        'https://carla.b-cdn.net/artworks/blue-garden.jpg?width=1150&format=webp 1150w',
+        '/media/artworks/blue-garden.jpg?width=350&format=webp 350w',
+        '/media/artworks/blue-garden.jpg?width=448&format=webp 448w',
+        '/media/artworks/blue-garden.jpg?width=575&format=webp 575w',
+        '/media/artworks/blue-garden.jpg?width=700&format=webp 700w',
+        '/media/artworks/blue-garden.jpg?width=746&format=webp 746w',
+        '/media/artworks/blue-garden.jpg?width=896&format=webp 896w',
+        '/media/artworks/blue-garden.jpg?width=1150&format=webp 1150w',
       ].join(', '),
     );
     expect(mobileSource?.getAttribute('srcset')).toBe(
       [
-        'https://carla.b-cdn.net/artworks/blue-garden.jpg?width=350&format=webp 350w',
-        'https://carla.b-cdn.net/artworks/blue-garden.jpg?width=448&format=webp 448w',
-        'https://carla.b-cdn.net/artworks/blue-garden.jpg?width=575&format=webp 575w',
-        'https://carla.b-cdn.net/artworks/blue-garden.jpg?width=700&format=webp 700w',
-        'https://carla.b-cdn.net/artworks/blue-garden.jpg?width=746&format=webp 746w',
-        'https://carla.b-cdn.net/artworks/blue-garden.jpg?width=896&format=webp 896w',
+        '/media/artworks/blue-garden.jpg?width=350&format=webp 350w',
+        '/media/artworks/blue-garden.jpg?width=448&format=webp 448w',
+        '/media/artworks/blue-garden.jpg?width=575&format=webp 575w',
+        '/media/artworks/blue-garden.jpg?width=700&format=webp 700w',
+        '/media/artworks/blue-garden.jpg?width=746&format=webp 746w',
+        '/media/artworks/blue-garden.jpg?width=896&format=webp 896w',
       ].join(', '),
     );
     expect(mobileSource?.getAttribute('media')).toBe('(max-width: 639px)');
@@ -77,11 +75,9 @@ describe('PortfolioCard', () => {
 
     const image = screen.getByRole('img', { name: artwork.alt });
 
-    expect(image.getAttribute('src')).toBe(
-      'https://carla.b-cdn.net/artworks/blue-garden.jpg?width=320&format=webp',
-    );
+    expect(image.getAttribute('src')).toBe('/media/artworks/blue-garden.jpg?width=320&format=webp');
     expect(image.getAttribute('srcset')).toBe(
-      'https://carla.b-cdn.net/artworks/blue-garden.jpg?width=320&format=webp 320w',
+      '/media/artworks/blue-garden.jpg?width=320&format=webp 320w',
     );
   });
 });

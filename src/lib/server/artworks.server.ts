@@ -1,5 +1,7 @@
 import { sql, type Kysely, type Transaction } from 'kysely';
 
+import { getImageUrl } from '@/lib/shared/image';
+
 import type {
   ArtworkMetadataUpdate,
   ArtworkPageArtwork,
@@ -47,7 +49,7 @@ function mapRow(row: ArtworkRow): ArtworkRecord {
     alt: row.alt,
     originalFilename: row.original_filename,
     storagePath: row.storage_path,
-    cdnUrl: row.cdn_url,
+    cdnUrl: getImageUrl(row.storage_path),
     contentType: row.content_type,
     width: row.width,
     height: row.height,
@@ -143,6 +145,7 @@ export async function listArtworkRecords() {
 }
 
 type PortfolioArtworkRow = {
+  storage_path: string;
   slug: string;
   title: string;
   category_id: string;
@@ -163,7 +166,7 @@ function mapPortfolioArtworkRow(row: PortfolioArtworkRow): PortfolioArtwork {
       categorySlug: row.category_slug,
       label: row.category_label,
     },
-    cdnUrl: row.cdn_url,
+    cdnUrl: getImageUrl(row.storage_path),
     alt: row.alt,
     width: row.width,
     height: row.height,
@@ -179,6 +182,7 @@ export async function listPublishedArtworks() {
       artwork_categories.category_slug,
       artwork_categories.label as category_label,
       artworks.cdn_url,
+      artworks.storage_path,
       artworks.alt,
       artworks.width,
       artworks.height
@@ -204,6 +208,7 @@ export async function getPublishedArtworkBySlug(
       artwork_categories.category_slug,
       artwork_categories.label as category_label,
       artworks.cdn_url,
+      artworks.storage_path,
       artworks.alt,
       artworks.width,
       artworks.height
@@ -235,6 +240,7 @@ export async function listPublishedArtworksByCategoryId(categoryId: string) {
       artwork_categories.category_slug,
       artwork_categories.label as category_label,
       artworks.cdn_url,
+      artworks.storage_path,
       artworks.alt,
       artworks.width,
       artworks.height

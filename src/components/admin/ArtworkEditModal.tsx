@@ -26,8 +26,8 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { updateArtwork } from '@/lib/functions/artwork-upload.functions';
 import type { ArtworkRecord } from '@/lib/shared/artworks.types';
-import { buildBunnyCdnUrl } from '@/lib/shared/bunny';
 import type { ArtworkCategoryRecord } from '@/lib/shared/categories.types';
+import { buildImageUrl } from '@/lib/shared/image';
 
 type ArtworkEditModalProps = {
   record: ArtworkRecord;
@@ -174,7 +174,7 @@ export function ArtworkEditModal({ record, activeCategories, onClose }: ArtworkE
     }
   }
 
-  const previewUrl = buildBunnyCdnUrl(record.cdnUrl, {
+  const previewUrl = buildImageUrl(record.cdnUrl, {
     width: 120,
     height: 120,
     format: 'webp',
@@ -205,7 +205,7 @@ export function ArtworkEditModal({ record, activeCategories, onClose }: ArtworkE
                 ) : null}
               </div>
               <div className='flex flex-col justify-center gap-3 text-sm'>
-                <span className='text-muted-foreground text-lg'>Bunny storage path:</span>
+                <span className='text-muted-foreground text-lg'>image storage path:</span>
                 <span className='font-mono text-foreground break-all'>{record.storagePath}</span>
               </div>
             </div>

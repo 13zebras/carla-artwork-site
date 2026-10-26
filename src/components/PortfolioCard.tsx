@@ -1,5 +1,5 @@
 import type { PortfolioArtwork } from '@/lib/shared/artworks.types';
-import { buildBunnyCdnUrl } from '@/lib/shared/bunny';
+import { buildImageUrl } from '@/lib/shared/image';
 
 type PortfolioCardProps = {
   artwork: PortfolioArtwork;
@@ -28,14 +28,14 @@ function getCandidateWidths(sourceWidth: number, maximumWidth: number) {
 function buildImageSrcSet(cdnUrl: string, sourceWidth: number, maximumWidth: number) {
   return getCandidateWidths(sourceWidth, maximumWidth)
     .map((width) => {
-      const url = buildBunnyCdnUrl(cdnUrl, { width, format: 'webp' });
+      const url = buildImageUrl(cdnUrl, { width, format: 'webp' });
       return `${url} ${width}w`;
     })
     .join(', ');
 }
 
 export function PortfolioCard({ artwork, priority = false }: PortfolioCardProps) {
-  const imageUrl = buildBunnyCdnUrl(artwork.cdnUrl, {
+  const imageUrl = buildImageUrl(artwork.cdnUrl, {
     width: Math.min(artwork.width, fallbackImageWidth),
     format: 'webp',
   });

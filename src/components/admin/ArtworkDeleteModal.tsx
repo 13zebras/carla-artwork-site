@@ -82,7 +82,7 @@ export function ArtworkDeleteModal({ record, onClose }: ArtworkDeleteModalProps)
           >
             {isFinalConfirmation
               ? 'This action cannot be undone.'
-              : 'This will permanently delete the database record and remove the image from Bunny Storage.'}
+              : 'This will permanently delete the database record and remove the image from Image Storage.'}
           </DialogDescription>
         </DialogHeader>
 

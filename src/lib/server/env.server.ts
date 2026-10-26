@@ -1,3 +1,5 @@
+import { getRuntimeContext } from './runtimeContext.server';
+
 type ServerEnv = {
   DATABASE_URL: string;
   BETTER_AUTH_SECRET: string;
@@ -7,20 +9,16 @@ type ServerEnv = {
   AUTH_EMAIL_FROM: string;
   CONTACT_EMAIL_TO: string;
   TURNSTILE_SECRET_KEY: string;
-  BUNNY_STORAGE_ZONE: string;
-  BUNNY_STORAGE_PASSWORD: string;
-  BUNNY_STORAGE_ENDPOINT: string;
-  BUNNY_CDN_BASE_URL: string;
 };
 
-let cachedEnv: ServerEnv | null = null;
+const envKey = Symbol('server-env');
 
 function normalizeOrigin(value: string): string {
   return value.trim().replace(/\/+$/, '');
 }
 
 function requiredEnv(name: string): string | undefined {
-  const value = process.env[name];
+  const value = getRuntimeContext().values[name];
   if (value == null || value.trim() === '') {
     return undefined;
   }
@@ -43,6 +41,8 @@ function parseAdminEmails(value: string): string[] {
 }
 
 export function getServerEnv(): ServerEnv {
+  const context = getRuntimeContext();
+  const cachedEnv = context.resources.get(envKey) as ServerEnv | undefined;
   if (cachedEnv) {
     return cachedEnv;
   }
@@ -76,32 +76,12 @@ export function getServerEnv(): ServerEnv {
     requiredEnv('TURNSTILE_SECRET_KEY'),
     missing,
   );
-  const bunnyStorageZone = collectRequiredEnv(
-    'BUNNY_STORAGE_ZONE',
-    requiredEnv('BUNNY_STORAGE_ZONE'),
-    missing,
-  );
-  const bunnyStoragePassword = collectRequiredEnv(
-    'BUNNY_STORAGE_PASSWORD',
-    requiredEnv('BUNNY_STORAGE_PASSWORD'),
-    missing,
-  );
-  const bunnyStorageEndpointRaw = collectRequiredEnv(
-    'BUNNY_STORAGE_ENDPOINT',
-    requiredEnv('BUNNY_STORAGE_ENDPOINT'),
-    missing,
-  );
-  const bunnyCdnBaseUrlRaw = collectRequiredEnv(
-    'BUNNY_CDN_BASE_URL',
-    requiredEnv('BUNNY_CDN_BASE_URL'),
-    missing,
-  );
 
   if (missing.length > 0) {
     throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
   }
 
-  cachedEnv = {
+  const env: ServerEnv = {
     DATABASE_URL: databaseUrl,
     BETTER_AUTH_SECRET: betterAuthSecret,
     BETTER_AUTH_URL: normalizeOrigin(betterAuthUrlRaw),
@@ -110,13 +90,10 @@ export function getServerEnv(): ServerEnv {
     AUTH_EMAIL_FROM: authEmailFrom,
     CONTACT_EMAIL_TO: contactEmailTo,
     TURNSTILE_SECRET_KEY: turnstileSecretKey,
-    BUNNY_STORAGE_ZONE: bunnyStorageZone,
-    BUNNY_STORAGE_PASSWORD: bunnyStoragePassword,
-    BUNNY_STORAGE_ENDPOINT: normalizeOrigin(bunnyStorageEndpointRaw),
-    BUNNY_CDN_BASE_URL: normalizeOrigin(bunnyCdnBaseUrlRaw),
   };
 
-  return cachedEnv;
+  context.resources.set(envKey, env);
+  return env;
 }
 
 export type { ServerEnv };

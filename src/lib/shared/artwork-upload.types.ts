@@ -2,8 +2,8 @@ import type { BeeSettingsSnapshot } from '@/lib/shared/bee-settings';
 
 import type { AboutContent } from './about.types';
 import type { ArtworkRecord } from './artworks.types';
-import type { BunnyStorageFile } from './bunny.types';
 import type { ArtworkCategoryRecord } from './categories.types';
+import type { ImageStorageFile } from './image.types';
 
 export type BulkArtworkUploadError = {
   row: number;
@@ -14,7 +14,7 @@ export type BulkArtworkUploadError = {
 export type AdminDashboardData = {
   dashboard: {
     records: ArtworkRecord[];
-    storageFiles: BunnyStorageFile[];
+    storageFiles: ImageStorageFile[];
     activeCategories: ArtworkCategoryRecord[];
   };
   archivedCategories: ArtworkCategoryRecord[];
@@ -38,6 +38,6 @@ export type BulkArtworkUploadResult = BulkArtworkUploadSuccess | BulkArtworkUplo
 
 export type AdminDashboard = {
   records: ArtworkRecord[];
-  storageFiles: BunnyStorageFile[];
+  storageFiles: ImageStorageFile[];
   activeCategories: ArtworkCategoryRecord[];
 };

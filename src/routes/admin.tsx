@@ -11,11 +11,11 @@ import { useState } from 'react';
 import { AboutPageTab } from '@/components/admin/AboutPageTab';
 import { BeeSettingsTab } from '@/components/admin/BeeSettingsTab';
 import { BulkImageUploadModal } from '@/components/admin/BulkImageUploadModal';
-import { BunnyStorageTab } from '@/components/admin/BunnyStorageTab';
 import { CategoriesTab } from '@/components/admin/CategoriesTab';
 import { DashboardSummary } from '@/components/admin/DashboardSummary';
 import { DatabaseRecordsTab } from '@/components/admin/DatabaseRecordsTab';
 import { DemoModeSwitch } from '@/components/admin/DemoModeSwitch';
+import { ImageStorageTab } from '@/components/admin/ImageStorageTab';
 import { ImageUploadModal } from '@/components/admin/ImageUploadModal';
 import { UploadActionButtons } from '@/components/admin/UploadActionButtons';
 import { Button } from '@/components/ui/button';
@@ -150,7 +150,7 @@ function AdminLayout() {
                   Database Records
                 </TabsTrigger>
                 <TabsTrigger className='text-base' value='storage'>
-                  Bunny Image Storage
+                  Image Storage
                 </TabsTrigger>
                 <TabsTrigger className='text-base' value='categories'>
                   Categories
@@ -174,7 +174,7 @@ function AdminLayout() {
               storageByPath={storageByPath}
             />
 
-            <BunnyStorageTab dashboard={dashboard} recordByStoragePath={recordByStoragePath} />
+            <ImageStorageTab dashboard={dashboard} recordByStoragePath={recordByStoragePath} />
 
             <CategoriesTab allCategories={allCategories} />
 

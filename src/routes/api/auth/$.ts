@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 
-import { auth } from '@/lib/server/auth-config.server';
+import { getAuth } from '@/lib/server/auth-config.server';
 import { ensureSchema } from '@/lib/server/db.server';
 
 export const Route = createFileRoute('/api/auth/$')({
@@ -8,11 +8,11 @@ export const Route = createFileRoute('/api/auth/$')({
     handlers: {
       GET: async ({ request }: { request: Request }) => {
         await ensureSchema();
-        return auth.handler(request);
+        return getAuth().handler(request);
       },
       POST: async ({ request }: { request: Request }) => {
         await ensureSchema();
-        return auth.handler(request);
+        return getAuth().handler(request);
       },
     },
   },

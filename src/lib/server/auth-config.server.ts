@@ -5,35 +5,50 @@ import { Resend } from 'resend';
 
 import { getKysely } from './db.server';
 import { getServerEnv } from './env.server';
+import { getRuntimeContext } from './runtimeContext.server';
 
-const env = getServerEnv();
-const resend = new Resend(env.RESEND_API_KEY);
+const authKey = Symbol('auth');
 
-export const auth = betterAuth({
-  database: { db: getKysely(), type: 'postgres' },
-  secret: env.BETTER_AUTH_SECRET,
-  baseURL: env.BETTER_AUTH_URL,
-  plugins: [
-    magicLink({
-      async sendMagicLink({ email, url }) {
-        if (!env.ADMIN_EMAILS.includes(email.toLowerCase())) {
-          throw new Error('Unauthorized email');
-        }
+function createAuth() {
+  const env = getServerEnv();
+  const resend = new Resend(env.RESEND_API_KEY);
 
-        const { error } = await resend.emails.send({
-          from: env.AUTH_EMAIL_FROM,
-          to: email,
-          subject: 'Sign in to Carla Stine admin',
-          html: `<p>Use this link to sign in:</p><p><a href="${url}">${url}</a></p><p>This link expires soon.</p>`,
-          text: `Use this link to sign in: ${url}\n\nThis link expires soon.`,
-        });
+  return betterAuth({
+    database: { db: getKysely(), type: 'postgres' },
+    secret: env.BETTER_AUTH_SECRET,
+    baseURL: env.BETTER_AUTH_URL,
+    plugins: [
+      magicLink({
+        async sendMagicLink({ email, url }) {
+          if (!env.ADMIN_EMAILS.includes(email.toLowerCase())) {
+            throw new Error('Unauthorized email');
+          }
 
-        if (error) {
-          console.error('Resend failed to send admin magic link', error);
-          throw new Error(error.message || 'Unable to send sign-in email');
-        }
-      },
-    }),
-    tanstackStartCookies(),
-  ],
-});
+          const { error } = await resend.emails.send({
+            from: env.AUTH_EMAIL_FROM,
+            to: email,
+            subject: 'Sign in to Carla Stine admin',
+            html: `<p>Use this link to sign in:</p><p><a href="${url}">${url}</a></p><p>This link expires soon.</p>`,
+            text: `Use this link to sign in: ${url}\n\nThis link expires soon.`,
+          });
+
+          if (error) {
+            console.error('Resend failed to send admin magic link', error);
+            throw new Error(error.message || 'Unable to send sign-in email');
+          }
+        },
+      }),
+      tanstackStartCookies(),
+    ],
+  });
+}
+
+export function getAuth(): ReturnType<typeof createAuth> {
+  const context = getRuntimeContext();
+  let auth = context.resources.get(authKey) as ReturnType<typeof createAuth> | undefined;
+  if (!auth) {
+    auth = createAuth();
+    context.resources.set(authKey, auth);
+  }
+  return auth;
+}

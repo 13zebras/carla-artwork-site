@@ -1,0 +1,9 @@
+# Local Worker secrets. Copy to .dev.vars (gitignored).
+# Database connections come from the HYPERDRIVE binding, not this file.
+BETTER_AUTH_SECRET="replace-with-a-random-secret-at-least-32-characters"
+BETTER_AUTH_URL="http://localhost:3000"
+ADMIN_EMAIL="admin@example.com"
+RESEND_API_KEY="replace-with-a-fresh-sending-key"
+AUTH_EMAIL_FROM="Carla Stine <noreply@email.carlastine.com>"
+CONTACT_EMAIL_TO="admin@example.com"
+TURNSTILE_SECRET_KEY="replace-with-your-turnstile-secret"

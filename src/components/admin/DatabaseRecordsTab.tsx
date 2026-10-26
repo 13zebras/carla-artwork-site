@@ -17,9 +17,9 @@ import { TabsContent } from '@/components/ui/tabs';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { updateArtwork, type AdminDashboard } from '@/lib/functions/artwork-upload.functions';
 import type { ArtworkRecord } from '@/lib/shared/artworks.types';
-import { buildBunnyCdnUrl } from '@/lib/shared/bunny';
-import type { BunnyStorageFile } from '@/lib/shared/bunny.types';
 import type { ArtworkCategoryRecord } from '@/lib/shared/categories.types';
+import { buildImageUrl } from '@/lib/shared/image';
+import type { ImageStorageFile } from '@/lib/shared/image.types';
 import { cn } from '@/lib/shared/utils';
 
 import { ArtworkDeleteModal } from './ArtworkDeleteModal';
@@ -29,7 +29,7 @@ import { ArtworkInfoDrawer } from './ArtworkInfoDrawer';
 type DatabaseRecordsTabProps = {
   dashboard: AdminDashboard;
   activeCategories: ArtworkCategoryRecord[];
-  storageByPath: Map<string, BunnyStorageFile>;
+  storageByPath: Map<string, ImageStorageFile>;
 };
 
 const MINIMUM_STATUS_FEEDBACK_MS = 400;
@@ -146,7 +146,7 @@ export function DatabaseRecordsTab({
           <CardHeader className='flex flex-col gap-2'>
             <CardTitle className='font-semibold text-xl'>Database Artwork Records</CardTitle>
             <CardDescription>
-              Full data for each image in the database with Bunny storage previews
+              Full data for each image in the database with image storage previews
             </CardDescription>
           </CardHeader>
           <CardContent className='p-0'>
@@ -162,7 +162,7 @@ export function DatabaseRecordsTab({
               </TableHeader>
               <TableBody>
                 {dashboard.records.map((record) => {
-                  const thumbnailUrl = buildBunnyCdnUrl(record.cdnUrl, {
+                  const thumbnailUrl = buildImageUrl(record.cdnUrl, {
                     width: 100,
                     height: 100,
                     format: 'webp',
@@ -208,7 +208,7 @@ export function DatabaseRecordsTab({
                                 'inline-flex justify-center items-center w-fit h-5 px-2 text-xs cursor-default rounded-sm text-foreground bg-red-900/70',
                               )}
                             >
-                              Image Missing from Bunny Storage
+                              Image Missing from Image Storage
                             </div>
                           )}
                         </div>

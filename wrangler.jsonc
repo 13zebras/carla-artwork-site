@@ -1,0 +1,19 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "carla-site-staging",
+  "main": "src/server.ts",
+  "compatibility_date": "2026-10-12",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+  "vars": { "APP_ENVIRONMENT": "staging" },
+  "hyperdrive": [
+    {
+      "binding": "HYPERDRIVE",
+      // Replace after the staging Neon database and Hyperdrive are provisioned.
+      "id": "00000000000000000000000000000000",
+      "localConnectionString": "postgresql://postgres:postgres@127.0.0.1:5432/carla",
+    },
+  ],
+  "r2_buckets": [{ "binding": "ARTWORK_IMAGES", "bucket_name": "carla-site-staging-images" }],
+  "images": { "binding": "IMAGES" },
+}

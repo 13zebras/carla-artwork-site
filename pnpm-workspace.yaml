@@ -1,4 +1,7 @@
 packages:
   - .
+verifyDepsBeforeRun: warn
 allowBuilds:
   better-sqlite3: true
+  esbuild: true
+  workerd: true

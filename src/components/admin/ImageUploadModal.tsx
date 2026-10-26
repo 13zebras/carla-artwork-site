@@ -29,12 +29,12 @@ import {
   uploadSingleArtwork,
 } from '@/lib/functions/artwork-upload.functions';
 import type { ArtworkRecord } from '@/lib/shared/artworks.types';
-import type { BunnyStorageFile } from '@/lib/shared/bunny.types';
 import type { ArtworkCategoryRecord } from '@/lib/shared/categories.types';
+import type { ImageStorageFile } from '@/lib/shared/image.types';
 
 type ImageUploadModalProps = {
   activeCategories: ArtworkCategoryRecord[];
-  untrackedFiles?: BunnyStorageFile[];
+  untrackedFiles?: ImageStorageFile[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
 };
@@ -204,7 +204,7 @@ export function ImageUploadModal({
                       checked={mode === 'link'}
                       onChange={() => setMode('link')}
                       disabled={untrackedFiles.length === 0}
-                      aria-label='Link existing Bunny image'
+                      aria-label='Link stored image'
                       className='size-4 accent-brand-500 cursor-pointer disabled:cursor-not-allowed'
                     />
                     <Label
@@ -215,7 +215,7 @@ export function ImageUploadModal({
                           : 'cursor-pointer font-normal'
                       }
                     >
-                      Link existing Bunny image
+                      Link stored image
                     </Label>
                   </div>
                 </div>
@@ -235,7 +235,7 @@ export function ImageUploadModal({
                 </Field.Root>
               ) : (
                 <Field.Root name='storage_path' className='gap-3 grid'>
-                  <RequiredLabel htmlFor='storage_path'>Existing Bunny image</RequiredLabel>
+                  <RequiredLabel htmlFor='storage_path'>Stored image</RequiredLabel>
                   <Select
                     name='storage_path'
                     required
@@ -244,7 +244,7 @@ export function ImageUploadModal({
                   >
                     <SelectTrigger id='storage_path' className='min-w-94'>
                       <SelectValue
-                        placeholder='Select an image stored in Bunny but not in database'
+                        placeholder='Select an image stored in storage but not in database'
                         className='ph'
                       />
                     </SelectTrigger>

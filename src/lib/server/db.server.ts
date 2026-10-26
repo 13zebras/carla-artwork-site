@@ -2,28 +2,46 @@ import { Kysely, PostgresDialect, sql } from 'kysely';
 import pg from 'pg';
 
 import { getServerEnv } from './env.server';
+import { getRuntimeContext } from './runtimeContext.server';
 
 type AppDatabase = Record<string, never>;
 
 const LATEST_MIGRATION = '007_bee_outline_gray.sql';
 
-let pool: pg.Pool | undefined;
-let db: Kysely<AppDatabase> | undefined;
-let schemaPromise: Promise<void> | undefined;
+type DatabaseState = {
+  pool?: pg.Pool;
+  db?: Kysely<AppDatabase>;
+  schemaPromise?: Promise<void>;
+};
+const databaseKey = Symbol('database');
+
+function getDatabaseState(): DatabaseState {
+  const context = getRuntimeContext();
+  let state = context.resources.get(databaseKey) as DatabaseState | undefined;
+  if (!state) {
+    state = {};
+    context.resources.set(databaseKey, state);
+    const requestDatabase = state;
+    context.cleanups.add(() => destroyDatabase(requestDatabase));
+  }
+  return state;
+}
 
 export function getPool(): pg.Pool {
-  if (!pool) {
+  const state = getDatabaseState();
+  if (!state.pool) {
     const { DATABASE_URL } = getServerEnv();
-    pool = new pg.Pool({ connectionString: DATABASE_URL });
+    state.pool = new pg.Pool({ connectionString: DATABASE_URL, max: 5 });
   }
-  return pool;
+  return state.pool;
 }
 
 export function getKysely(): Kysely<AppDatabase> {
-  if (!db) {
-    db = new Kysely<AppDatabase>({ dialect: new PostgresDialect({ pool: getPool() }) });
+  const state = getDatabaseState();
+  if (!state.db) {
+    state.db = new Kysely<AppDatabase>({ dialect: new PostgresDialect({ pool: getPool() }) });
   }
-  return db;
+  return state.db;
 }
 
 export function toIsoTimestamp(value: Date | string) {
@@ -31,10 +49,11 @@ export function toIsoTimestamp(value: Date | string) {
 }
 
 export function ensureSchema(): Promise<void> {
-  if (!schemaPromise) {
-    schemaPromise = assertSchemaIsCurrent();
+  const state = getDatabaseState();
+  if (!state.schemaPromise) {
+    state.schemaPromise = assertSchemaIsCurrent();
   }
-  return schemaPromise;
+  return state.schemaPromise;
 }
 
 async function assertSchemaIsCurrent() {
@@ -58,11 +77,20 @@ async function assertSchemaIsCurrent() {
   }
 }
 
-export async function closeDb(): Promise<void> {
-  if (db) {
-    await db.destroy();
-    db = undefined;
+async function destroyDatabase(state: DatabaseState): Promise<void> {
+  const { db, pool } = state;
+  state.db = undefined;
+  state.pool = undefined;
+  state.schemaPromise = undefined;
+  try {
+    await db?.destroy();
+  } finally {
+    // Kysely initializes its driver lazily. Also close a pool obtained directly
+    // through getPool(), even if no Kysely query initialized the driver.
+    if (pool && !pool.ended) await pool.end();
   }
-  pool = undefined;
-  schemaPromise = undefined;
+}
+
+export async function closeDb(): Promise<void> {
+  await destroyDatabase(getDatabaseState());
 }

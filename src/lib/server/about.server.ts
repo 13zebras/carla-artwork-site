@@ -2,10 +2,12 @@ import { createHash } from 'node:crypto';
 
 import { imageSize } from 'image-size';
 
+import { getImageUrl } from '@/lib/shared/image';
+
 import type { AboutContent } from '../shared/about.types';
 import { requireAdminFromRequest } from './auth-session.server';
-import { deleteFromBunnyStorage, getBunnyCdnUrl, uploadToBunnyStorage } from './bunny.server';
 import { ensureSchema } from './db.server';
+import { deleteImage, uploadImage } from './imageStorage.server';
 import { getSiteSettings, updateAboutSettings } from './site-settings.server';
 
 const MAX_IMAGE_SIZE = 50_000_000;
@@ -22,10 +24,8 @@ function getVersionedImageUrl(storagePath: string | null, updatedAt: string) {
     return null;
   }
 
-  const cdnUrl = getBunnyCdnUrl(storagePath);
-  const url = new URL(cdnUrl);
-  url.searchParams.set('v', updatedAt);
-  return url.toString();
+  const cdnUrl = getImageUrl(storagePath);
+  return `${cdnUrl}?v=${encodeURIComponent(updatedAt)}`;
 }
 
 export function toAboutContent(
@@ -96,7 +96,7 @@ export function buildAboutImageStoragePath(
 
 async function uploadAboutImage(image: AboutImage, variant: 'mobile' | 'desktop') {
   const storagePath = buildAboutImageStoragePath(variant, image.extension);
-  await uploadToBunnyStorage({
+  await uploadImage({
     storagePath,
     file: image.file,
     contentType: image.contentType,
@@ -161,7 +161,7 @@ export async function saveAboutContent(formData: FormData) {
   if (current.aboutDesktopImagePath && current.aboutDesktopImagePath !== desktopImagePath) {
     stalePaths.add(current.aboutDesktopImagePath);
   }
-  await Promise.all([...stalePaths].map((storagePath) => deleteFromBunnyStorage(storagePath)));
+  await Promise.all([...stalePaths].map((storagePath) => deleteImage(storagePath)));
 
   const settings = await updateAboutSettings({
     aboutText: text,

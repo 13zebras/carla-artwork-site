@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/drawer';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import type { ArtworkRecord } from '@/lib/shared/artworks.types';
-import { buildBunnyCdnUrl } from '@/lib/shared/bunny';
+import { buildImageUrl } from '@/lib/shared/image';
 import { dateFormatter } from '@/lib/shared/utils';
 
 import { Dialog, DialogContent, DialogClose, DialogTrigger } from '../ui/dialog';
@@ -50,13 +50,13 @@ export function ArtworkInfoDrawer({ record, onClose }: ArtworkInfoDrawerProps) {
 }
 
 function ArtworkInfoDrawerContent({ record }: { record: ArtworkRecord }) {
-  const thumbnailUrl = buildBunnyCdnUrl(record.cdnUrl, {
+  const thumbnailUrl = buildImageUrl(record.cdnUrl, {
     width: 480,
     height: 480,
     format: 'webp',
   });
 
-  const previewUrl = buildBunnyCdnUrl(record.cdnUrl);
+  const previewUrl = buildImageUrl(record.cdnUrl);
 
   const createdAt = new Date(record.createdAt);
   const updatedAt = new Date(record.updatedAt);
