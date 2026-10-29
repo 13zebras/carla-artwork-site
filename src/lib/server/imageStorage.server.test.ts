@@ -130,7 +130,7 @@ describe('R2 image storage', () => {
     expect(transform.mock.calls.map(([options]) => options.width)).toEqual([
       120, 350, 448, 480, 575,
     ]);
-    expect(output).toHaveBeenCalledWith({ format: 'image/webp' });
+    expect(output).toHaveBeenCalledWith({ format: 'image/webp', quality: 85 });
     expect(bucket.put.mock.calls.map(([key]) => key)).toEqual([
       'variants/artworks/image.jpg/w120.webp',
       'variants/artworks/image.jpg/w350.webp',

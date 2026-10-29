@@ -38,7 +38,7 @@ export type ImageBucket = {
 
 type ImageTransform = {
   transform(options: { width: number; fit: 'scale-down' }): ImageTransform;
-  output(options: { format: 'image/webp' }): Promise<{ response(): Response }>;
+  output(options: { format: 'image/webp'; quality: number }): Promise<{ response(): Response }>;
 };
 
 export type ImageBindings = {
@@ -87,7 +87,9 @@ export async function storeImageVariants(storagePath: string, sourceWidth: numbe
   for (const width of getStoredVariantWidths(sourceWidth)) {
     const output = await IMAGES.input(new Blob([bytes]).stream())
       .transform({ width, fit: 'scale-down' })
-      .output({ format: 'image/webp' });
+      // Without a quality setting the binding writes lossless WebP, which is
+      // larger than the original.
+      .output({ format: 'image/webp', quality: 85 });
     // R2 needs a known length, so buffer each copy instead of streaming it.
     await ARTWORK_IMAGES.put(
       getImageVariantPath(storagePath, width),
