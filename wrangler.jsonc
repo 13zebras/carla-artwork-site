@@ -9,8 +9,7 @@
   "hyperdrive": [
     {
       "binding": "HYPERDRIVE",
-      // Replace after the staging Neon database and Hyperdrive are provisioned.
-      "id": "00000000000000000000000000000000",
+      "id": "e9b792bda97d4e17ad341e625fcd81f7",
       "localConnectionString": "postgresql://postgres:postgres@127.0.0.1:5432/carla",
     },
   ],
