@@ -31,26 +31,26 @@ describe('PortfolioCard', () => {
     const mobileSource = container.querySelector('source');
 
     expect(link.getAttribute('href')).toBe('/artwork/blue-garden');
-    expect(image.getAttribute('src')).toBe('/media/artworks/blue-garden.jpg?width=575&format=webp');
+    expect(image.getAttribute('src')).toBe('/media/variants/artworks/blue-garden.jpg/w575.webp');
     expect(image.getAttribute('srcset')).toBe(
       [
-        '/media/artworks/blue-garden.jpg?width=350&format=webp 350w',
-        '/media/artworks/blue-garden.jpg?width=448&format=webp 448w',
-        '/media/artworks/blue-garden.jpg?width=575&format=webp 575w',
-        '/media/artworks/blue-garden.jpg?width=700&format=webp 700w',
-        '/media/artworks/blue-garden.jpg?width=746&format=webp 746w',
-        '/media/artworks/blue-garden.jpg?width=896&format=webp 896w',
-        '/media/artworks/blue-garden.jpg?width=1150&format=webp 1150w',
+        '/media/variants/artworks/blue-garden.jpg/w350.webp 350w',
+        '/media/variants/artworks/blue-garden.jpg/w448.webp 448w',
+        '/media/variants/artworks/blue-garden.jpg/w575.webp 575w',
+        '/media/variants/artworks/blue-garden.jpg/w700.webp 700w',
+        '/media/variants/artworks/blue-garden.jpg/w746.webp 746w',
+        '/media/variants/artworks/blue-garden.jpg/w896.webp 896w',
+        '/media/variants/artworks/blue-garden.jpg/w1150.webp 1150w',
       ].join(', '),
     );
     expect(mobileSource?.getAttribute('srcset')).toBe(
       [
-        '/media/artworks/blue-garden.jpg?width=350&format=webp 350w',
-        '/media/artworks/blue-garden.jpg?width=448&format=webp 448w',
-        '/media/artworks/blue-garden.jpg?width=575&format=webp 575w',
-        '/media/artworks/blue-garden.jpg?width=700&format=webp 700w',
-        '/media/artworks/blue-garden.jpg?width=746&format=webp 746w',
-        '/media/artworks/blue-garden.jpg?width=896&format=webp 896w',
+        '/media/variants/artworks/blue-garden.jpg/w350.webp 350w',
+        '/media/variants/artworks/blue-garden.jpg/w448.webp 448w',
+        '/media/variants/artworks/blue-garden.jpg/w575.webp 575w',
+        '/media/variants/artworks/blue-garden.jpg/w700.webp 700w',
+        '/media/variants/artworks/blue-garden.jpg/w746.webp 746w',
+        '/media/variants/artworks/blue-garden.jpg/w896.webp 896w',
       ].join(', '),
     );
     expect(mobileSource?.getAttribute('media')).toBe('(max-width: 639px)');
@@ -70,14 +70,12 @@ describe('PortfolioCard', () => {
     expect(screen.getByText(artwork.category.label)).toBeTruthy();
   });
 
-  it('does not request an image wider than its source', () => {
+  it('serves the original when the source is narrower than every stored copy', () => {
     render(<PortfolioCard artwork={{ ...artwork, width: 320, height: 480 }} />);
 
     const image = screen.getByRole('img', { name: artwork.alt });
 
-    expect(image.getAttribute('src')).toBe('/media/artworks/blue-garden.jpg?width=320&format=webp');
-    expect(image.getAttribute('srcset')).toBe(
-      '/media/artworks/blue-garden.jpg?width=320&format=webp 320w',
-    );
+    expect(image.getAttribute('src')).toBe('/media/artworks/blue-garden.jpg');
+    expect(image.getAttribute('srcset')).toBe('/media/artworks/blue-garden.jpg 320w');
   });
 });

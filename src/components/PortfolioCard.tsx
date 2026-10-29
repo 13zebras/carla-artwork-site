@@ -1,5 +1,5 @@
 import type { PortfolioArtwork } from '@/lib/shared/artworks.types';
-import { buildImageUrl } from '@/lib/shared/image';
+import { buildImageSrcSet, buildImageUrl } from '@/lib/shared/image';
 
 type PortfolioCardProps = {
   artwork: PortfolioArtwork;
@@ -18,33 +18,12 @@ const portfolioImageSizes = [
   '373px',
 ].join(', ');
 
-function getCandidateWidths(sourceWidth: number, maximumWidth: number) {
-  const largestWidth = Math.min(sourceWidth, maximumWidth);
-  const widths = responsiveImageWidths.filter((width) => width < largestWidth);
-
-  return [...widths, largestWidth];
-}
-
-function buildImageSrcSet(cdnUrl: string, sourceWidth: number, maximumWidth: number) {
-  return getCandidateWidths(sourceWidth, maximumWidth)
-    .map((width) => {
-      const url = buildImageUrl(cdnUrl, { width, format: 'webp' });
-      return `${url} ${width}w`;
-    })
-    .join(', ');
-}
+const mobileImageWidths = responsiveImageWidths.filter((width) => width <= mobileMaximumImageWidth);
 
 export function PortfolioCard({ artwork, priority = false }: PortfolioCardProps) {
-  const imageUrl = buildImageUrl(artwork.cdnUrl, {
-    width: Math.min(artwork.width, fallbackImageWidth),
-    format: 'webp',
-  });
-  const imageSrcSet = buildImageSrcSet(artwork.cdnUrl, artwork.width, maximumImageWidth);
-  const mobileImageSrcSet = buildImageSrcSet(
-    artwork.cdnUrl,
-    artwork.width,
-    mobileMaximumImageWidth,
-  );
+  const imageUrl = buildImageUrl(artwork.cdnUrl, fallbackImageWidth, artwork.width);
+  const imageSrcSet = buildImageSrcSet(artwork.cdnUrl, artwork.width, responsiveImageWidths);
+  const mobileImageSrcSet = buildImageSrcSet(artwork.cdnUrl, artwork.width, mobileImageWidths);
   return (
     <article className='shadow-card mb-8 break-inside-avoid'>
       <a

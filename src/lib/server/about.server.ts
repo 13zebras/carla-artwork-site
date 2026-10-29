@@ -10,7 +10,7 @@ import { ensureSchema } from './db.server';
 import { deleteImage, uploadImage } from './imageStorage.server';
 import { getSiteSettings, updateAboutSettings } from './site-settings.server';
 
-const MAX_IMAGE_SIZE = 50_000_000;
+const MAX_IMAGE_SIZE = 20_000_000;
 
 type AboutImage = {
   file: File;
@@ -55,7 +55,7 @@ function isRemovalRequested(value: FormDataEntryValue | null) {
 
 async function prepareImage(file: File): Promise<AboutImage> {
   if (file.size > MAX_IMAGE_SIZE) {
-    throw new Error(`File ${file.name} is larger than 50MB`);
+    throw new Error(`File ${file.name} is larger than 20MB`);
   }
 
   const types = {

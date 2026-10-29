@@ -162,11 +162,7 @@ export function DatabaseRecordsTab({
               </TableHeader>
               <TableBody>
                 {dashboard.records.map((record) => {
-                  const thumbnailUrl = buildImageUrl(record.cdnUrl, {
-                    width: 100,
-                    height: 100,
-                    format: 'webp',
-                  });
+                  const thumbnailUrl = buildImageUrl(record.cdnUrl, 100, record.width);
 
                   const hasStorageObject = storageByPath.has(record.storagePath);
                   const displayedStatus = statusOverrides[record.id] ?? record.status;

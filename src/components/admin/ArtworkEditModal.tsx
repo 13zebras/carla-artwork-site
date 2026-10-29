@@ -174,11 +174,7 @@ export function ArtworkEditModal({ record, activeCategories, onClose }: ArtworkE
     }
   }
 
-  const previewUrl = buildImageUrl(record.cdnUrl, {
-    width: 120,
-    height: 120,
-    format: 'webp',
-  });
+  const previewUrl = buildImageUrl(record.cdnUrl, 120, record.width);
 
   return (
     <Dialog open onOpenChange={handleOpenChange}>

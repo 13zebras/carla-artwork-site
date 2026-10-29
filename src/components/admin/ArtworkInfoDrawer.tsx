@@ -50,13 +50,9 @@ export function ArtworkInfoDrawer({ record, onClose }: ArtworkInfoDrawerProps) {
 }
 
 function ArtworkInfoDrawerContent({ record }: { record: ArtworkRecord }) {
-  const thumbnailUrl = buildImageUrl(record.cdnUrl, {
-    width: 480,
-    height: 480,
-    format: 'webp',
-  });
+  const thumbnailUrl = buildImageUrl(record.cdnUrl, 480, record.width);
 
-  const previewUrl = buildImageUrl(record.cdnUrl);
+  const previewUrl = record.cdnUrl;
 
   const createdAt = new Date(record.createdAt);
   const updatedAt = new Date(record.updatedAt);

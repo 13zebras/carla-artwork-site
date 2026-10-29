@@ -1,3 +1,8 @@
+import {
+  getImageVariantPath,
+  getStoredVariantWidths,
+  imageVariantWidths,
+} from '@/lib/shared/image';
 import type { ImageStorageFile } from '@/lib/shared/image.types';
 
 import { getWorkerBindings } from './runtimeContext.server';
@@ -20,10 +25,10 @@ export type ImageBucket = {
   get(key: string): Promise<StoredImage | null>;
   put(
     key: string,
-    value: ReadableStream<Uint8Array>,
-    options: { httpMetadata: { contentType: string }; sha256: string },
+    value: ReadableStream<Uint8Array> | ArrayBuffer,
+    options: { httpMetadata: { contentType: string }; sha256?: string },
   ): Promise<unknown>;
-  delete(key: string): Promise<void>;
+  delete(keys: string | string[]): Promise<void>;
   list(options: { prefix: string; cursor?: string }): Promise<{
     objects: StoredImageMetadata[];
     truncated: boolean;
@@ -31,11 +36,9 @@ export type ImageBucket = {
   }>;
 };
 
-type ImageFormat = 'image/jpeg' | 'image/png' | 'image/webp' | 'image/avif';
-
 type ImageTransform = {
-  transform(options: { width?: number; height?: number; fit: 'scale-down' }): ImageTransform;
-  output(options: { format: ImageFormat; quality?: number }): Promise<{ response(): Response }>;
+  transform(options: { width: number; fit: 'scale-down' }): ImageTransform;
+  output(options: { format: 'image/webp' }): Promise<{ response(): Response }>;
 };
 
 export type ImageBindings = {
@@ -45,7 +48,7 @@ export type ImageBindings = {
 
 function validateStoragePath(storagePath: string) {
   if (
-    !/^(artworks|siteImages)\//.test(storagePath) ||
+    !/^(artworks|siteImages|variants\/artworks)\//.test(storagePath) ||
     storagePath.includes('\\') ||
     Array.from(storagePath).some((character) => character.charCodeAt(0) < 32) ||
     storagePath.split('/').some((segment) => !segment || segment === '.' || segment === '..')
@@ -72,8 +75,38 @@ export async function uploadImage({
   });
 }
 
+/**
+ * Stores a WebP copy of an uploaded artwork at each site width. This runs once
+ * per upload; visitors only ever receive stored files, never live transforms.
+ */
+export async function storeImageVariants(storagePath: string, sourceWidth: number) {
+  const { ARTWORK_IMAGES, IMAGES } = getWorkerBindings();
+  const original = await ARTWORK_IMAGES.get(validateStoragePath(storagePath));
+  if (!original) throw new Error(`Image storage file not found: ${storagePath}`);
+  const bytes = await original.arrayBuffer();
+  for (const width of getStoredVariantWidths(sourceWidth)) {
+    const output = await IMAGES.input(new Blob([bytes]).stream())
+      .transform({ width, fit: 'scale-down' })
+      .output({ format: 'image/webp' });
+    // R2 needs a known length, so buffer each copy instead of streaming it.
+    await ARTWORK_IMAGES.put(
+      getImageVariantPath(storagePath, width),
+      await output.response().arrayBuffer(),
+      { httpMetadata: { contentType: 'image/webp' } },
+    );
+  }
+}
+
+export async function deleteImageVariants(storagePath: string) {
+  validateStoragePath(storagePath);
+  await getWorkerBindings().ARTWORK_IMAGES.delete(
+    imageVariantWidths.map((width) => getImageVariantPath(storagePath, width)),
+  );
+}
+
 export async function deleteImage(storagePath: string) {
   await getWorkerBindings().ARTWORK_IMAGES.delete(validateStoragePath(storagePath));
+  if (storagePath.startsWith('artworks/')) await deleteImageVariants(storagePath);
 }
 
 export async function downloadImage(storagePath: string) {
@@ -109,22 +142,6 @@ export async function listImageStorageFiles(prefix = 'artworks/'): Promise<Image
   return files;
 }
 
-function readDimension(params: URLSearchParams, name: string, maximum: number) {
-  const value = params.get(name);
-  if (value === null) return undefined;
-  if (!/^\d+$/.test(value)) throw new Error(`Invalid ${name}`);
-  const number = Number(value);
-  if (number < 1 || number > maximum) throw new Error(`Invalid ${name}`);
-  return number;
-}
-
-const imageFormats: Record<string, ImageFormat> = {
-  jpeg: 'image/jpeg',
-  png: 'image/png',
-  webp: 'image/webp',
-  avif: 'image/avif',
-};
-
 async function originalResponse(image: StoredImage, headers: Headers, head: boolean) {
   image.writeHttpMetadata(headers);
   headers.set('Cache-Control', 'public, max-age=300');
@@ -139,7 +156,7 @@ async function originalResponse(image: StoredImage, headers: Headers, head: bool
   return new Response(head ? null : image.body, { headers });
 }
 
-/** Handles /media/* before the application's router, on any deployed hostname. */
+/** Serves stored images under /media/*. It never transforms on request. */
 export async function handleMediaRequest(
   request: Request,
   bindings: ImageBindings,
@@ -147,55 +164,16 @@ export async function handleMediaRequest(
   if (request.method !== 'GET' && request.method !== 'HEAD') {
     return new Response('Method not allowed', { status: 405, headers: { Allow: 'GET, HEAD' } });
   }
-  const url = new URL(request.url);
   let storagePath: string;
-  let width: number | undefined;
-  let height: number | undefined;
-  let quality: number | undefined;
-  let format: ImageFormat | undefined;
   try {
-    storagePath = validateStoragePath(decodeURIComponent(url.pathname.slice('/media/'.length)));
-    width = readDimension(url.searchParams, 'width', 4096);
-    height = readDimension(url.searchParams, 'height', 4096);
-    quality = readDimension(url.searchParams, 'quality', 100);
-    const requestedFormat = url.searchParams.get('format');
-    if (requestedFormat !== null) {
-      if (!Object.hasOwn(imageFormats, requestedFormat)) throw new Error('Invalid image format');
-      format = imageFormats[requestedFormat];
-      if (!format) throw new Error('Invalid image format');
-    }
+    const pathname = new URL(request.url).pathname;
+    storagePath = validateStoragePath(decodeURIComponent(pathname.slice('/media/'.length)));
   } catch {
     return new Response('Invalid image request', { status: 400 });
   }
 
   const image = await bindings.ARTWORK_IMAGES.get(storagePath);
   if (!image) return new Response('Image not found', { status: 404 });
-  const headers = new Headers({
-    'Cache-Control': 'public, max-age=300',
-    'X-Content-Type-Options': 'nosniff',
-  });
-  const head = request.method === 'HEAD';
-  const contentType = image.httpMetadata?.contentType?.split(';')[0];
-  const inputFormat = Object.values(imageFormats).find((value) => value === contentType);
-  const shouldTransform =
-    width !== undefined || height !== undefined || format !== undefined || quality !== undefined;
-  // Existing uploads permit 50 MB. Images accepts 20 MB; preserve larger or
-  // unsupported originals instead of breaking their existing public URLs.
-  if (!shouldTransform || image.size > 20_000_000 || !inputFormat) {
-    return originalResponse(image, headers, head);
-  }
-  try {
-    const output = await bindings.IMAGES.input(image.body)
-      .transform({ width, height, fit: 'scale-down' })
-      .output({ format: format ?? inputFormat, quality });
-    const response = output.response();
-    for (const [name, value] of headers) response.headers.set(name, value);
-    if (head) await response.body?.cancel();
-    return new Response(head ? null : response.body, response);
-  } catch (error) {
-    console.error('Image transformation failed; serving original', error);
-    const original = await bindings.ARTWORK_IMAGES.get(storagePath);
-    if (!original) return new Response('Image not found', { status: 404 });
-    return originalResponse(original, headers, head);
-  }
+  const headers = new Headers({ 'X-Content-Type-Options': 'nosniff' });
+  return originalResponse(image, headers, request.method === 'HEAD');
 }

@@ -1,38 +1,23 @@
-import { useWindowSize } from 'usehooks-ts';
-
 import type { ArtworkPageArtwork } from '@/lib/shared/artworks.types';
-import { buildImageUrl } from '@/lib/shared/image';
+import { buildImageSrcSet, buildImageUrl, imageVariantWidths } from '@/lib/shared/image';
 import { getParagraphs } from '@/lib/shared/utils';
 
-const mobileBreakpoint = 640;
 const maximumPageWidth = 1000;
-const mobileImageBuffer = 1.1;
+const artworkImageWidths = imageVariantWidths.filter(
+  (width) => width >= 350 && width <= maximumPageWidth,
+);
 
 type ArtworkPageProps = {
   artwork: ArtworkPageArtwork;
 };
 
-function getArtworkImageUrl(
-  artwork: ArtworkPageArtwork,
-  windowWidth: number | undefined,
-): string | undefined {
-  if (windowWidth === undefined) {
-    return undefined;
-  }
-
-  const bufferedWidth =
-    windowWidth < mobileBreakpoint ? windowWidth * mobileImageBuffer : windowWidth;
-  const requestedWidth = Math.min(artwork.width, maximumPageWidth, Math.ceil(bufferedWidth));
-
-  return buildImageUrl(artwork.cdnUrl, { width: requestedWidth });
-}
-
 export function ArtworkPage({ artwork }: ArtworkPageProps) {
-  const { width: windowWidth } = useWindowSize({ initializeWithValue: false });
-  const imageUrl = getArtworkImageUrl(artwork, windowWidth);
   const descriptionParagraphs = artwork.description ? getParagraphs(artwork.description) : [];
 
   const maxFigureWidth = artwork.width > maximumPageWidth ? maximumPageWidth : artwork.width;
+  const imageUrl = buildImageUrl(artwork.cdnUrl, maxFigureWidth, artwork.width);
+  const imageSrcSet = buildImageSrcSet(artwork.cdnUrl, artwork.width, artworkImageWidths);
+  const imageSizes = `(max-width: ${maxFigureWidth}px) 100vw, ${maxFigureWidth}px`;
 
   return (
     <main
@@ -55,18 +40,18 @@ export function ArtworkPage({ artwork }: ArtworkPageProps) {
         className='shadow-card mx-auto w-full'
         style={{ aspectRatio: `${artwork.width} / ${artwork.height}`, maxWidth: maxFigureWidth }}
       >
-        {imageUrl ? (
-          <img
-            src={imageUrl}
-            alt={artwork.alt}
-            width={artwork.width}
-            height={artwork.height}
-            loading='eager'
-            decoding='sync'
-            fetchPriority='high'
-            className='block w-full h-auto'
-          />
-        ) : null}
+        <img
+          src={imageUrl}
+          srcSet={imageSrcSet}
+          sizes={imageSizes}
+          alt={artwork.alt}
+          width={artwork.width}
+          height={artwork.height}
+          loading='eager'
+          decoding='sync'
+          fetchPriority='high'
+          className='block w-full h-auto'
+        />
       </figure>
     </main>
   );

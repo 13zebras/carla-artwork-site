@@ -42,8 +42,10 @@ import { listCategories } from './categories.server';
 import { ensureSchema } from './db.server';
 import {
   deleteImage,
+  deleteImageVariants,
   downloadImage,
   listImageStorageFiles,
+  storeImageVariants,
   uploadImage,
 } from './imageStorage.server';
 import { getSiteSettings } from './site-settings.server';
@@ -69,6 +71,11 @@ type ImageMeta = {
   sizeBytes: number;
   extension: 'jpg' | 'png' | 'webp';
 };
+
+// Cloudflare Images limits for making the stored copies at upload.
+const MAX_UPLOAD_BYTES = 20_000_000;
+const MAX_IMAGE_DIMENSION = 12_000;
+const MAX_IMAGE_PIXELS = 100_000_000;
 
 function extensionFromContentType(contentType: string): ImageMeta['extension'] | null {
   const extensionByMime: Record<string, ImageMeta['extension']> = {
@@ -99,8 +106,8 @@ function validateImageFile(file: File) {
   if (file.size === 0) {
     throw new Error(`File ${file.name} is empty`);
   }
-  if (file.size > 50_000_000) {
-    throw new Error(`File ${file.name} is larger than 50MB`);
+  if (file.size > MAX_UPLOAD_BYTES) {
+    throw new Error(`File ${file.name} is larger than 20MB`);
   }
 
   const contentType = file.type || '';
@@ -125,6 +132,14 @@ export function readImageMetaFromBuffer(
   const dimensions = imageSize(buffer);
   if (typeof dimensions.width !== 'number' || typeof dimensions.height !== 'number') {
     throw new Error(`Could not read dimensions for ${opts.name}`);
+  }
+  if (
+    Math.max(dimensions.width, dimensions.height) > MAX_IMAGE_DIMENSION ||
+    dimensions.width * dimensions.height > MAX_IMAGE_PIXELS
+  ) {
+    throw new Error(
+      `${opts.name} is too large: images must be at most 12,000 pixels on a side and 100 megapixels`,
+    );
   }
 
   return {
@@ -335,6 +350,7 @@ export async function uploadSingleArtwork(formData: FormData) {
   });
 
   try {
+    await storeImageVariants(record.storagePath, record.width);
     return await insertArtwork(record);
   } catch (error) {
     await deleteImage(record.storagePath);
@@ -376,7 +392,14 @@ export async function registerExistingArtwork(input: ExistingArtworkInput) {
   await requireAdminFromRequest();
   await ensureSchema();
   const record = await prepareExistingArtworkRecord(input);
-  return insertArtwork(record);
+  // The original was already in storage, so a failure only removes the new copies.
+  try {
+    await storeImageVariants(record.storagePath, record.width);
+    return await insertArtwork(record);
+  } catch (error) {
+    await deleteImageVariants(record.storagePath);
+    throw error;
+  }
 }
 
 export async function updateArtworkRecord(input: ArtworkMetadataUpdate) {
@@ -520,6 +543,7 @@ export async function uploadBulkArtworks(formData: FormData): Promise<BulkArtwor
         checksumSha256: record.checksumSha256,
       });
       uploadedPaths.push(record.storagePath);
+      await storeImageVariants(record.storagePath, record.width);
       records.push(record);
     }
   } catch (error) {

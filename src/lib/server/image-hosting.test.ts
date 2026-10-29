@@ -122,13 +122,10 @@ function createTestArtwork(overrides: Partial<ArtworkRecord> = {}) {
 }
 
 describe('buildImageUrl', () => {
-  it('appends optimization params once', () => {
-    expect(
-      buildImageUrl('/media/artworks/2026/test.jpg', {
-        width: 800,
-        format: 'webp',
-      }),
-    ).toBe('/media/artworks/2026/test.jpg?width=800&format=webp');
+  it('points at the stored copy for the requested width', () => {
+    expect(buildImageUrl('/media/artworks/2026/test.jpg', 800, 2000)).toBe(
+      '/media/variants/artworks/2026/test.jpg/w896.webp',
+    );
   });
 });
 
