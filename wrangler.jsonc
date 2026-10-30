@@ -5,6 +5,10 @@
   "compatibility_date": "2026-10-12",
   "compatibility_flags": ["nodejs_compat"],
   "observability": { "enabled": true },
+  // Spending guardrails. Normal pages use under 250 ms CPU; uploads hash and resize images.
+  "limits": { "cpu_ms": 5000, "subrequests": 200 },
+  // workers.dev stays on: it is the only staging URL.
+  "preview_urls": false,
   "vars": { "APP_ENVIRONMENT": "staging" },
   "hyperdrive": [
     {

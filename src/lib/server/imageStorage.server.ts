@@ -146,7 +146,8 @@ export async function listImageStorageFiles(prefix = 'artworks/'): Promise<Image
 
 async function originalResponse(image: StoredImage, headers: Headers, head: boolean) {
   image.writeHttpMetadata(headers);
-  headers.set('Cache-Control', 'public, max-age=300');
+  // Each upload gets a new random key, so a stored file's bytes never change.
+  headers.set('Cache-Control', 'public, max-age=31536000, immutable');
   // Never execute an unexpected storage object as same-origin HTML or SVG.
   if (!/^image\/(jpeg|png|webp|avif|gif)$/.test(headers.get('Content-Type') ?? '')) {
     headers.set('Content-Type', 'application/octet-stream');

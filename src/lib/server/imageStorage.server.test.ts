@@ -201,7 +201,7 @@ describe('Worker media responses', () => {
     expect(response.status).toBe(200);
     expect(response.headers.get('Content-Type')).toBe('image/jpeg');
     expect(response.headers.get('ETag')).toBe('"image-etag"');
-    expect(response.headers.get('Cache-Control')).toBe('public, max-age=300');
+    expect(response.headers.get('Cache-Control')).toBe('public, max-age=31536000, immutable');
     expect(await response.text()).toBe('original');
     const head = await handleMediaRequest(new Request(url, { method: 'HEAD' }), bindings);
     expect(head.headers.get('Content-Length')).toBe('8');
